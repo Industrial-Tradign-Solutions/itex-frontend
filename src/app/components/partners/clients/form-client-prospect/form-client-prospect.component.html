@@ -1,0 +1,490 @@
+@if(formClient && showForm) {
+  <div [class]="'p-fluid w-full animate__animated animate__' + animation" >
+    <form [formGroup]="formClient" (ngSubmit)="onSubmit()">
+      <p-scrollPanel [style]="{ width: '100%', height: '57rem' }">
+        <div class="grid mt-1">
+          <div class="col-12 md:col-6">
+            <div class="formgrid grid">
+              <div class="field col-12 md:col-3 lg:col-2 xl:col-2 mt-3">
+                <p-floatLabel>
+                  <input
+                    pInputText
+                    formControlName="code"
+                    maxlength="3"
+                    type="text"/>
+                    <label>
+                      Code
+                      <span class="required">*</span>
+                    </label>
+                </p-floatLabel>
+              </div>
+              <div class="field col-12 md:col-3 lg:col-4 xl:col-4 mt-3">
+                <p-floatLabel>
+                  <input
+                    pInputText
+                    formControlName="name"
+                    maxlength="300"
+                    type="text"/>
+                    <label>
+                      Name
+                      <span class="required">*</span>
+                    </label>
+                </p-floatLabel>
+              </div>
+              <div class="field col-12 md:col-3 lg:col-3 xl:col-3 mt-3" >
+                <p-floatLabel>
+                  <input
+                    pInputText
+                    formControlName="taxId"
+                    maxlength="35"
+                    type="text"/>
+                  <label>
+                    Tax ID
+                    @if( viewRequired) {
+                      <span class="required">*</span>
+                    }
+                  </label>
+                </p-floatLabel>
+              </div>
+              <div class="field col-12 md:col-3 lg:col-3 xl:col-3 mt-3">
+                <p-floatLabel>
+                  <p-dropdown
+                    (onClick)="loadIndustries()"
+                    [options]="listIndustries()"
+                    optionLabel="name"
+                    [filter]="true"
+                    filterBy="name"
+                    formControlName="industryId"
+                    optionValue="id"/>
+                  <label>
+                    Industry
+                    @if(viewRequired) {
+                      <span class="required">*</span>
+                    }
+                  </label>
+                </p-floatLabel>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 md:col-6">
+            <div class="formgrid grid">
+              <div class="field col-12 md:col-3 lg:col-3 xl:col-3 mt-3" >
+                <p-floatLabel>
+                  <p-dropdown
+                    [options]="listPaymentTerms()"
+                    optionLabel="value"
+                    formControlName="paymentTerms"
+                    optionValue="key" />
+                  <label>
+                    Payment Terms
+                    @if(viewRequired) {
+                      <span class="required">*</span>
+                    }
+                  </label>
+                </p-floatLabel>
+              </div>
+              <div class="field col-12 md:col-3 lg:col-3 xl:col-3 mt-3" >
+                <p-floatLabel>
+                  <p-dropdown
+                    [options]="listPaymentMethods()"
+                    optionLabel="value"
+                    formControlName="paymentMethod"
+                    optionValue="key" />
+                  <label>
+                    Payment Method
+                  </label>
+                </p-floatLabel>
+              </div>
+              <div class="field col-12 md:col-3 lg:col-3 xl:col-3 mt-3">
+                <p-floatLabel>
+                  <p-dropdown
+                    [options]="listLanguaje()"
+                    optionLabel="value"
+                    formControlName="language"
+                    optionValue="key" />
+                  <label>
+                    Language
+                  </label>
+                </p-floatLabel>
+              </div>
+              <div class="field col-12 md:col-3 lg:col-3 xl:col-3 mt-3">
+                <p-floatLabel>
+                  <p-dropdown
+                    [options]="listClientStatus()"
+                    optionLabel="value"
+                    formControlName="status"
+                    appendTo="body"
+                    (onChange)="changStatus(true)"
+                    optionValue="key" />
+                  <label>
+                    Status
+                  </label>
+                </p-floatLabel>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 md:col-12">
+            <div class="formgrid grid">
+              <div class="field col-12 md:col-3 mt-3">
+                <p-floatLabel>
+                  <input
+                    pInputText
+                    formControlName="address"
+                    maxlength="500"
+                    type="text"/>
+                    <label>
+                      Address
+                    </label>
+                </p-floatLabel>
+              </div>
+              <div class="field col-12 md:col-3 lg:col-2 xl:col-2 mt-3">
+                <p-floatLabel>
+                  <p-autoComplete
+                    formControlName="cityId"
+                    [suggestions]="filteredCities"
+                    (completeMethod)="searchCity($event)"
+                    optionValue="id"
+                    (onSelect)="changeCity($event)"
+                    [showClear]="true"
+                    (onFocus)="loadCities()"
+                    optionLabel="name"/>
+                  <label>
+                    City
+                  </label>
+                </p-floatLabel>
+              </div>
+              <div class="field col-12 md:col-3 lg:col-2 xl:col-2 mt-3">
+                <p-floatLabel>
+                  <input
+                    pInputText
+                    formControlName="stateName"
+                    type="text"/>
+                    <label>
+                      State
+                    </label>
+                </p-floatLabel>
+              </div>
+              <div class="field col-12 md:col-3 lg:col-2 xl:col-2 mt-3">
+                <p-floatLabel>
+                  <input
+                    pInputText
+                    formControlName="countryName"
+                    type="text"/>
+                    <label>
+                      Country
+                    </label>
+                </p-floatLabel>
+              </div>
+              <div class="field col-12 md:col-1 lg:col-1 xl:col-1 mt-3">
+                <p-floatLabel>
+                  <input
+                    pInputText
+                    formControlName="zipCode"
+                    maxlength="30"
+                    type="text"/>
+                    <label>
+                      Zip Code
+                    </label>
+                </p-floatLabel>
+              </div>
+              <div class="field col-12 md:col-3 lg:col-2 xl:col-2 mt-3">
+                <p-floatLabel>
+                  <input
+                    pInputText
+                    formControlName="webSite"
+                    maxlength="200"
+                    type="text"/>
+                    <label>
+                      Website
+                    </label>
+                </p-floatLabel>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 md:col-5">
+            <div class="formgrid grid">
+              <div class="field col-12 md:col-4 lg:col-3 mt-3" >
+                <p-floatLabel>
+                  <p-inputNumber
+                    formControlName="countryCode"
+                    [minFractionDigits]="0"
+                    [maxlength]="3"
+                    [useGrouping]="false"
+                    mode="decimal"/>
+                    <label>
+                      Country Code
+                    </label>
+                </p-floatLabel>
+              </div>
+              <div class="field col-12 md:col-4 lg:col-3 mt-3" >
+                <p-floatLabel>
+                  <p-inputNumber
+                    formControlName="cityCode"
+                    [minFractionDigits]="0"
+                    [maxlength]="3"
+                    [useGrouping]="false"
+                    mode="decimal"/>
+                    <label>
+                      City Code
+                    </label>
+                </p-floatLabel>
+              </div>
+              <div class="field col-12 md:col-4 lg:col-6 mt-3">
+                <p-floatLabel>
+                  <p-inputNumber
+                    formControlName="phoneNumber"
+                    [minFractionDigits]="0"
+                    [maxlength]="15"
+                    [useGrouping]="false"
+                    mode="decimal"/>
+                    <label>
+                      Phone Number
+                    </label>
+                </p-floatLabel>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 md:col-7">
+            <div class="formgrid grid">
+              <div class="field col-12 mt-3">
+                <p-floatLabel>
+                  <textarea
+                    [rows]="6"
+                    pInputTextarea
+                    style="resize: none"
+                    formControlName="notes">
+                  </textarea>
+                  <label>
+                    Notes
+                  </label>
+                </p-floatLabel>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p-tabView formArrayName="infoByDepartment" [style]="{'margin-top':'-1.7rem'}">
+          @for(infoDep of infoByDepartment.controls; track infoDep; let i = $index) {
+            <p-tabPanel [header]="infoByDepartment.value[i].departmentName"  [formGroupName]="i" >
+              <ng-template pTemplate="content">
+                <div class="grid">
+                  <div class="col-12 md:col-9">
+                    <p-table
+                    [value]="getlistContact(i).controls"
+                    [loading]="loading()"
+                    styleClass="p-datatable-sm"
+                    dataKey="value.localId"
+                    [scrollable]="true"
+                    scrollHeight="21rem"
+                    formArrayName="listContacts">
+                    <ng-template pTemplate="caption">
+                      <div  style="text-align: center !important;">
+                          <b>CONTACTS</b>
+                      </div>
+                    </ng-template>
+                    <ng-template pTemplate="header">
+                      <tr>
+                        <th style="width: 25rem">TITLE</th>
+                        <th style="width: 25rem">NAME</th>
+                        <th>EMAIL</th>
+                        <th style="width: 25rem">MAIN PHONE</th>
+                        <th style="width: 10rem; text-align: end;">
+                          <button
+                            pButton
+                            pRipple
+                            type="button"
+                            icon="pi pi-plus"
+                            (click)="showModalClientContact('create', i)"
+                            [disabled]="formClient.disabled"
+                            severity="info"
+                            pTooltip="Add Contact"
+                            tooltipPosition="left"
+                            class="p-button-rounded p-button-text">
+                          </button>
+                        </th>
+                      </tr>
+                    </ng-template>
+                    <ng-template pTemplate="body" let-contact let-ii="rowIndex">
+                      <tr [formGroupName]="ii" [ngClass]="{'row-main': contact.value.validMain, 'row-disable': !contact.value.active}">
+                        <td>
+                          @if (contact.value.title !== null) {
+                            {{ contact.value.title}}
+                          }
+                        </td>
+                        <td>
+                          {{ contact.value.name}}
+                        </td>
+                        <td >
+                          @if (contact.value.email !== null) {
+                            {{ contact.value.email}}
+                          }
+                        </td>
+                        <td>
+                          @if (contact.value.mainPhone !== null) {
+                            {{ contact.value.mainPhone}}
+                          }
+                        </td>
+                        <td>
+                          <div class="gap-2" style="text-align: end;">
+                            @if ((permissionsClient().createClient || permissionsClient().updateClient) && contact.value.active && isValidOpen()) {
+                              <button
+                                pButton
+                                pRipple
+                                type="button"
+                                icon="pi pi-pencil"
+                                [disabled]="formClient.disabled"
+                                (click)="showModalClientContact('edit', i, ii)"
+                                pTooltip="Edit Contact"
+                                tooltipPosition="left"
+                                class="p-button-rounded p-button-text"
+                                severity="warning">
+                              </button>
+                              <button
+                                pButton
+                                pRipple
+                                type="button"
+                                icon="pi pi-ban"
+                                [disabled]="formClient.disabled"
+                                (click)="disableClientContact(i, ii)"
+                                class="p-button-rounded p-button-text"
+                                pTooltip="Disable Contact"
+                                tooltipPosition="right"
+                                severity="danger">
+                              </button>
+                            } @else {
+                              <button
+                                pButton
+                                pRipple
+                                type="button"
+                                icon="pi pi-eye"
+                                (click)="showModalClientContact('view', i, ii)"
+                                class="p-button-rounded p-button-text"
+                                pTooltip="View Contact"
+                                tooltipPosition="right"
+                                severity="info">
+                              </button>
+                            }
+                          </div>
+                        </td>
+                      </tr>
+                    </ng-template>
+                    </p-table>
+                  </div>
+                  <div class="col-12 md:col-3">
+                    <div class="formgrid grid">
+                      <div class="field col-6 mt-3">
+                        <p-floatLabel>
+                          <p-dropdown
+                            [inputId]="'accountRepId-' + i"
+                            (onClick)="loadEmployees()"
+                            [options]="getListEmployees(infoDep.value.departmentId)"
+                            optionLabel="fullName"
+                            [showClear]="true"
+                            [filter]="true"
+                            filterBy="name"
+                            formControlName="accountRepId"
+                            optionValue="id" />
+                          <label>
+                            Account Rep
+                          </label>
+                        </p-floatLabel>
+                      </div>
+                      <div class="field col-6 mt-3">
+                        <p-floatLabel>
+                            <p-inputNumber
+                              mode="currency"
+                              [inputId]="'target-' + i"
+                              [minFractionDigits]="2"
+                              currency="USD"
+                              formControlName="target" />
+                            <label>
+                              Target
+                            </label>
+                        </p-floatLabel>
+                      </div>
+                      <div class="field col-12 mt-3">
+                        <p-floatLabel>
+                          <textarea
+                            [rows]="12"
+                            pInputTextarea
+                            style="resize: none"
+                            formControlName="notes">
+                          </textarea>
+                          <label>
+                            Notes
+                          </label>
+                        </p-floatLabel>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </ng-template>
+            </p-tabPanel>
+          }
+        </p-tabView>
+      </p-scrollPanel>
+      <div class="formgrid grid" style="margin-bottom: -2.5rem;">
+        @if (tabItem.type !== 'create') {
+          <div class="col-12 md:col-2 lg:col-2 xl:col-3 mt-2 md:mt-5 lg:mt-5 xl:mt-5">
+            <p-chip>
+              <div class="p-2">
+                <b>Created By: </b>
+                {{client()?.createdBy?.fullName + ', '}}
+                {{client()?.createdAt | date:'MMM dd, yyyy hh:mm a'}}
+              </div>
+            </p-chip>
+          </div>
+          @if (client()?.updatedBy) {
+            <div class="col-12 md:col-2 lg:col-2 xl:col-3 mt-2 md:mt-5 lg:mt-5 xl:mt-5">
+              <p-chip>
+                <div class="p-2">
+                  <b>Updated By: </b>
+                  {{client()?.updatedBy?.fullName + ', '}}
+                  {{client()?.updatedAt | date:'MMM dd, yyyy hh:mm a'}}
+                </div>
+              </p-chip>
+            </div>
+          } @else {
+            <div class="col-offset-0 md:col-2 lg:col-2 xl:col-3"></div>
+          }
+          @if(client()?.changeProspectToClientBy) {
+            <div class="col-12 md:col-2 lg:col-2 xl:col-3 mt-2 md:mt-5 lg:mt-5 xl:mt-5">
+              <p-chip>
+                <div class="p-2">
+                  <b>Change to Client By: </b>
+                  {{client()?.changeProspectToClientBy?.fullName + ', '}}
+                  {{client()?.changeProspectToClientAt | date:'MMM dd, yyyy hh:mm a'}}
+                </div>
+              </p-chip>
+            </div>
+          } @else {
+            <div class="col-offset-0 md:col-2 lg:col-2 xl:col-3"></div>
+          }
+          <div class="col-offset-0 md:col-2 lg:col-2 xl:col-1"></div>
+        }@else {
+          <div class="col-offset-0 md:col-8 lg:col-8 xl:col-10"></div>
+        }
+        <div class="field col-12 md:col-2 lg:col-2 xl:col-1 mt-5">
+
+        </div>
+        <div class="field col-12 md:col-2 lg:col-2 xl:col-1 md:mt-5 lg:mt-5 xl:mt-5">
+          <button pButton
+            label="Save"
+            icon="pi pi-save"
+            severity="success"
+            [disabled]="formClient.disabled || formClient.invalid"
+            type="submit">
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+}@else {
+  @if (loading()) {
+    <div class="field col animate__animated animate__fadeIn">
+      <p-progressBar
+          class="w-20rem animate__animated animate__fadeIn"
+          mode="indeterminate">
+      </p-progressBar>
+    </div>
+  }
+}

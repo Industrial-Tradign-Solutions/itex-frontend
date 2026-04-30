@@ -1,0 +1,29 @@
+<div class="grid">
+	<div class="col-12">
+		<div class="card">
+      <p-tabView>
+        <p-tabPanel header="Cities">
+          <ng-template pTemplate="header">
+            <i class="pi pi-building"></i>
+            <span>Cities</span>
+          </ng-template>
+          <app-cities-tab></app-cities-tab>
+        </p-tabPanel>
+        <p-tabPanel header="States">
+          <ng-template pTemplate="header">
+            <i class="pi pi-map"></i>
+            <span>States</span>
+          </ng-template>
+          <app-states-tab></app-states-tab>
+        </p-tabPanel>
+        <p-tabPanel header="Countries">
+          <ng-template pTemplate="header">
+            <i class="pi pi-map-marker"></i>
+            <span>Countries</span>
+          </ng-template>
+          <app-countries-tab></app-countries-tab>
+        </p-tabPanel>
+      </p-tabView>
+    </div>
+  </div>
+</div>

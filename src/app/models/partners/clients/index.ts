@@ -1,0 +1,12 @@
+export { ClientBasic } from './clientBasic.type';
+export { ClientRequest } from './clientRequest.type';
+export { ClientInfoDepRequest } from './clientInfoDepRequest.type';
+export { ClientContactRequest } from './clientContactRequest.type';
+export { ClientContactPhoneRequest } from './clientContactPhoneReques.type';
+export { ClientContact } from './clientContact.type';
+export { ClientContactPhone } from './clientContactPhone.type';
+export { ClientInfoDep } from './clientInfoDep.type';
+export { ClientDashboardType } from './clientDashboard.type';
+export { ListClients } from './listClients.type';
+export { Client } from './client.type';
+export { ClientFilter } from './clientFilters.type';

@@ -1,0 +1,14 @@
+<nav class="layout-breadcrumb" style="margin-top: 2rem;">
+    <ol>
+        <!--<li>
+            <a [routerLink]="['/']">
+                <i class="pi pi-home"></i>
+            </a>
+        </li>
+        <li class="layout-breadcrumb-chevron"> / </li>-->
+        <ng-template ngFor let-item let-last="last" [ngForOf]="breadcrumbs$ | async">
+            <li><b>{{item.label.toUpperCase()}}</b></li>
+            <li *ngIf="!last" class="layout-breadcrumb-chevron"> - </li>
+        </ng-template>
+    </ol>
+</nav>

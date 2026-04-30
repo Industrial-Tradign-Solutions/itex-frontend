@@ -1,0 +1,190 @@
+<div class="card">
+  <p-fieldset legend="Filters">
+    <div class="p-fluid w-full animate__animated animate__fadeIn">
+      @if (formFilter) {
+        <form [formGroup]="formFilter" (ngSubmit)="search(true)" style="margin-top: -1.5rem; margin-bottom: -1rem;">
+          <div class="formgrid grid">
+            <div class="field col-12 md:col-3 xl:col-2 flex">
+              @if(brandsPermissions().createBrand) {
+                <button pButton
+                  label="New Brand"
+                  icon="pi pi-bookmark-fill"
+                  [disabled]="loading()"
+                  (click)="openModalBrand()"
+                  type="button"
+                ></button>
+              }
+            </div>
+            <div class="field col-12 md:col-3 xl:col-2 flex">
+              @if(brandsPermissions().importExcelBrand) {
+                <button pButton
+                  label="Import Excel"
+                  icon="pi pi-file-excel"
+                  [disabled]="loading()"
+                  (click)="openModalImportBrand()"
+                  severity="success"
+                  type="button"
+                ></button>
+              }
+            </div>
+            <div class="col-offset-0 xl:col-4">
+            </div>
+            <div class="field col-12 md:col-3 xl:col-2" >
+              <p-floatLabel>
+                <input
+                  pInputText
+                  formControlName="name"
+                  type="text"/>
+                  <label>Name</label>
+              </p-floatLabel>
+            </div>
+            <div class="field col-12 md:col-3 xl:col-2 flex">
+              <button
+                pButton
+                icon="pi pi-search"
+                label="Search"
+                type="submit"
+                severity="info"
+                pTooltip="Search"
+                [disabled]="loading()"
+                tooltipPosition="bottom">
+              </button>
+              <button
+                pButton
+                [disabled]="loading()"
+                style="margin-left: 1rem;"
+                outlined="true"
+                icon="pi pi-filter-slash"
+                type="button"
+                [text]="true"
+                [severity]="'danger'"
+                (click)="resetForm(dt)"
+                pTooltip="Clear Filters"
+                tooltipPosition="bottom">
+              </button>
+            </div>
+          </div>
+        </form>
+      }
+    </div>
+  </p-fieldset>
+  <hr class="mb-1 mt-3" />
+  <p-table
+    #dt1
+    [style]="{'margin-bottom': '-1rem'}"
+    styleClass="p-datatable-sm"
+    [value]="page().content"
+    dataKey="id"
+    [rows]="page().page.size"
+    [loading]="loading()"
+    (sortFunction)="customSort($event)"
+    [customSort]="true"
+    responsiveLayout="scroll">
+    <ng-template pTemplate="header" >
+      <tr>
+        <th style="min-width: 20rem" pSortableColumn="name">
+          <div class="flex justify-content-between">
+              NAME
+              <p-sortIcon field="name" />
+          </div>
+        </th>
+        <th style="min-width: 15rem" pSortableColumn="createdAt">
+          <div class="flex justify-content-between">
+              DATE OF CREATION
+              <p-sortIcon field="createdAt" />
+          </div>
+        </th>
+        <th style="min-width: 15rem" pSortableColumn="active">
+          <div class="flex justify-content-between">
+              STATUS
+              <p-sortIcon field="active" />
+          </div>
+        </th>
+        <th style="max-width: 2rem" >
+          <div class="flex justify-content-between">
+
+          </div>
+        </th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-brand>
+      <tr [pSelectableRow]="brand">
+        <td>
+          {{brand.name}}
+        </td>
+        <td>
+          {{brand.createdAt | date:'MMM dd, yyyy hh:mm a'}}
+        </td>
+        <td>
+          <span [class]="'customer-badge status-' + (brand.active ? 'qualified' : 'unqualified')">
+              {{brand.active ? 'Enable': 'Disable'}}
+          </span>
+        </td>
+        <td style="text-align: end;">
+          <button
+            pButton
+            type="button"
+            (click)="viewListSuppliers(brand)"
+            icon="pi pi-eye"
+            class="p-button-rounded p-button-text"
+            pTooltip="View"
+            severity="secondary"
+            tooltipPosition="left">
+          </button>
+          @if(brandsPermissions().disableBrand && brand.active) {
+            <button
+              pButton
+              type="button"
+              (click)="disableBrand(brand)"
+              icon="pi pi-ban"
+              class="p-button-rounded p-button-text"
+              pTooltip="Disable"
+              severity="danger"
+              tooltipPosition="right">
+            </button>
+          }
+          @if (brandsPermissions().enableBrand && !brand.active) {
+            <button
+              pButton
+              type="button"
+              (click)="enableBrand(brand)"
+              icon="pi pi-check-circle"
+              class="p-button-rounded p-button-text"
+              pTooltip="Enable"
+              severity="success"
+              tooltipPosition="right">
+            </button>
+          }
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr >
+        <td style="text-align: center !important;" colspan="8">
+          No brands found
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="loadingbody">
+      <tr>
+        <td style="text-align: center !important;" colspan="8">
+          Loading brands, please wait
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="footergrouped" >
+      @if(page().page.totalPages > 1) {
+        <tr>
+          <td style="text-align: center !important;" colspan="8">
+              <p-paginator #paginator
+                (onPageChange)="changePage($event)"
+                [first]="0"
+                [rows]="page().page.size"
+                [totalRecords]="page().page.totalElements" />
+          </td>
+        </tr>
+      }
+    </ng-template>
+  </p-table>
+
+</div>

@@ -1,0 +1,15 @@
+<p-confirmDialog [style]="{width: '40rem'}"></p-confirmDialog>
+<div class="layout-container animate__animated animate__fadeIn" [ngClass]="containerClass">
+  <app-topbar></app-topbar>
+  <app-sidebar></app-sidebar>
+  <div class="layout-content-wrapper">
+      <div class="layout-content">
+          <div class="layout-content-inner">
+              <p-toast key="main-toast"></p-toast>
+              <!--<app-breadcrumb></app-breadcrumb>-->
+              <router-outlet></router-outlet>
+              <!--<app-footer></app-footer>-->
+          </div>
+      </div>
+  </div>
+</div>

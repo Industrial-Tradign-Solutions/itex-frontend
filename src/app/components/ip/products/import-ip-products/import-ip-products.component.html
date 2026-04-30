@@ -1,0 +1,200 @@
+@if(loading()) {
+  <div class="field col animate__animated animate__fadeIn">
+    <p-progressBar
+        class="w-20rem animate__animated animate__fadeIn"
+        mode="indeterminate">
+    </p-progressBar>
+  </div>
+} @else {
+  <div class="animate__animated animate__fadeIn">
+    @if(showHandsonTable()) {
+      <app-handsontable
+        [headers]="headers"
+        [otherData]="otherData"
+        [scrollHeight]="'50rem'"
+        [requiredList]="['Description is required','MFR Reference is required']"
+        [example]="example"
+        (validateData)="validateData($event)">
+      </app-handsontable>
+    } @else {
+
+      <p-table
+        #dt4
+        styleClass="p-datatable-sm"
+        [value]="data()"
+        [scrollable]="true"
+        scrollHeight="50rem"
+        [loading]="loading()">
+        <ng-template pTemplate="header" >
+          <tr>
+            <th>
+              <div class="flex justify-content-between">
+                #
+              </div>
+            </th>
+            <th>
+              <div class="flex justify-content-between">
+                DESCRIPTION
+              </div>
+            </th>
+            <th>
+              <div class="flex justify-content-between">
+                MFR REFERENCE
+              </div>
+            </th>
+            <th>
+              <div class="flex justify-content-between">
+                CLIENT DESCRIPTION
+              </div>
+            </th>
+            <th>
+              <div class="flex justify-content-between">
+                CLIENT REFERENCE
+              </div>
+            </th>
+            <th>
+              <div class="flex justify-content-between">
+                BRAND
+              </div>
+            </th>
+            <th>
+              <div class="flex justify-content-between">
+                FREIGHT CLASS
+              </div>
+            </th>
+            <th>
+              <div class="flex justify-content-between">
+                NET WEIGHT LBS
+              </div>
+            </th>
+            <th>
+              <div class="flex justify-content-between">
+                NMFC
+              </div>
+            </th>
+            <th>
+              <div class="flex justify-content-between">
+                HTS SCHEDULE B #
+              </div>
+            </th>
+            <th>
+              <div class="flex justify-content-between">
+                ECCN
+              </div>
+            </th>
+            <th>
+              <div class="flex justify-content-between">
+                COO
+              </div>
+            </th>
+            <th>
+              <div class="flex justify-content-between">
+                BATTERY
+              </div>
+            </th>
+            <th>
+              <div class="flex justify-content-between">
+                HAZMAT
+              </div>
+            </th>
+            <th>
+              <div class="flex justify-content-between">
+                DUAL USE
+              </div>
+            </th>
+            <th>
+              <div class="flex justify-content-between">
+                ERRORS
+              </div>
+            </th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-product let-index="rowIndex">
+          <tr [ngClass]="getClass(product)">
+            <td>
+              {{index + 1}}
+            </td>
+            <td>
+              {{product.description ?? ''}}
+            </td>
+            <td>
+              {{product.mfrReference ?? ''}}
+            </td>
+            <td>
+              {{product.clientDescription ?? ''}}
+            </td>
+            <td>
+              {{product.clientReference ?? ''}}
+            </td>
+            <td>
+              {{product?.brand?.name ?? ''}}
+            </td>
+            <td>
+              {{ getFreighClass(product.freightClass) }}
+            </td>
+            <td>
+              {{product.netWeightLbs ?? ''}}
+            </td>
+            <td>
+              {{product.nmfc ?? ''}}
+            </td>
+            <td>
+              {{product.htsScheduleBNumber ?? ''}}
+            </td>
+            <td>
+              {{product.eccn ?? ''}}
+            </td>
+            <td>
+              {{product?.coo?.name ?? ''}}
+            </td>
+            <td>
+              {{product.battery ? 'YES' : 'NO'}}
+            </td>
+            <td>
+              {{product.hazmat ? 'YES' : 'NO'}}
+            </td>
+            <td>
+              {{product.dualUse ? 'YES' : 'NO'}}
+            </td>
+            <td>
+              @for(error of product.importErrors; track error; let i = $index) {
+                <li>{{error}}</li>
+              }
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+      <div class="formgrid grid p-fluid w-full" style="margin-bottom: -2.5rem;">
+        <div class="field col-12 md:col-2 lg:col-2 xl:col-1 md:mt-5 lg:mt-5 xl:mt-5">
+          <button pButton
+            label="Cancel"
+            icon="pi pi-times-circle"
+            (click)="cancelAction()"
+            severity="danger"
+            type="button">
+          </button>
+        </div>
+        <div class="field col-12 md:col-8 lg:col-8 xl:col-10 md:mt-5 lg:mt-5 xl:mt-5">
+          <span [ngClass]="{'row-success' : true}" style="margin-left: 2rem; margin-top: 2rem; font-size: 14px;">
+            It imports with the information entered, there are no errors
+          </span>
+          <span [ngClass]="{'row-warning' : true}" style="margin-left: 2rem; margin-top: 2rem; font-size: 14px;">
+            Imported, but some information is missing
+          </span>
+          <span [ngClass]="{'row-error' : true}" style="margin-left: 2rem; margin-top: 2rem; font-size: 14px;">
+            Not saved
+          </span>
+        </div>
+        <div class="field col-12 md:col-2 lg:col-2 xl:col-1 md:mt-5 lg:mt-5 xl:mt-5">
+          <button pButton
+            label="Save"
+            icon="pi pi-save"
+            (click)="saveAction()"
+            severity="success"
+            type="button">
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+}

@@ -1,0 +1,269 @@
+<p-fieldset legend="Filters">
+  <div class="p-fluid w-full animate__animated animate__fadeIn">
+    @if (formFilter) {
+      <form [formGroup]="formFilter" (ngSubmit)="search(true)" style="margin-top: -1.5rem; margin-bottom: -1rem;">
+        <div class="formgrid grid">
+          <div class="col-12 md:col-6">
+            <div class="formgrid grid">
+              <div class="field col-12 md:col-3 flex">
+                @if(clientPermissions().createClient) {
+                  <button pButton
+                    label="New Client"
+                    icon="pi pi-user-plus"
+                    [disabled]="loading()"
+                    (click)="newClient()"
+                    type="button"
+                  ></button>
+                }
+              </div>
+              <div class="field col-12 md:col-2">
+                <p-floatLabel>
+                  <input
+                    pInputText
+                    formControlName="code"
+                    type="text"/>
+                    <label>Code</label>
+                </p-floatLabel>
+              </div>
+              <div class="field col-12 md:col-4">
+                <p-floatLabel>
+                  <input
+                    pInputText
+                    formControlName="name"
+                    type="text"/>
+                    <label>Client Name</label>
+                </p-floatLabel>
+              </div>
+              <div class="field col-12 md:col-3">
+                <p-floatLabel>
+                  <p-autoComplete
+                    formControlName="cityId"
+                    [suggestions]="filteredCities"
+                    (completeMethod)="searchCity($event)"
+                    (onKeyUp)="searchByCity($event)"
+                    (onFocus)="loadCities()"
+                    optionValue="id"
+                    appendTo="body"
+                    optionLabel="name"/>
+                  <label>City</label>
+                </p-floatLabel>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 md:col-6">
+            <div class="formgrid grid">
+              <div class="field col-12 md:col-3">
+                <p-floatLabel>
+                  <p-autoComplete
+                    formControlName="countryId"
+                    [suggestions]="filteredCountries"
+                    (completeMethod)="searchCountry($event)"
+                    (onKeyUp)="searchByCountry($event)"
+                    (onFocus)="loadCountries()"
+                    optionValue="id"
+                    appendTo="body"
+                    optionLabel="name"/>
+                  <label>Country</label>
+                </p-floatLabel>
+              </div>
+              <div class="field col-12 md:col-3">
+                <p-floatLabel>
+                  <p-dropdown
+                    [options]="listClientStatus()"
+                    optionLabel="value"
+                    formControlName="status"
+                    appendTo="body"
+                    optionValue="key" />
+                  <label>Status</label>
+                </p-floatLabel>
+              </div>
+              <div class="field col-12 md:col-3">
+                <p-floatLabel>
+                  <input
+                    pInputText
+                    formControlName="notes"
+                    type="text"/>
+                    <label>Notes</label>
+                </p-floatLabel>
+              </div>
+              <div class="field col-12 md:col-3 xl:col-3 flex">
+                <button
+                  pButton
+                  icon="pi pi-search"
+                  label="Search"
+                  type="submit"
+                  severity="info"
+                  pTooltip="Search"
+                  [disabled]="loading()"
+                  tooltipPosition="bottom">
+                </button>
+                <button
+                  pButton
+                  [disabled]="loading()"
+                  style="margin-left: 1rem;"
+                  outlined="true"
+                  icon="pi pi-filter-slash"
+                  type="button"
+                  [text]="true"
+                  [severity]="'danger'"
+                  (click)="resetForm(dt)"
+                  pTooltip="Clear Filters"
+                  tooltipPosition="bottom">
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    }
+  </div>
+</p-fieldset>
+<hr class="mb-1 mt-3" />
+<p-table
+  #dt1
+  [style]="{'margin-bottom': '-1rem'}"
+  styleClass="p-datatable-sm"
+  [value]="page().content"
+  dataKey="id"
+  [rows]="page().page.size"
+  [loading]="loading()"
+  (sortFunction)="customSort($event)"
+  [customSort]="true"
+  responsiveLayout="scroll">
+  <ng-template pTemplate="header" >
+    <tr>
+      <th style="min-width: 5rem" pSortableColumn="code">
+        <div class="flex justify-content-between">
+            CODE
+            <p-sortIcon field="code" />
+        </div>
+      </th>
+      <th style="min-width: 13rem" pSortableColumn="name">
+        <div class="flex justify-content-between">
+            NAME
+            <p-sortIcon field="name" />
+        </div>
+      </th>
+      <th style="min-width: 9rem" pSortableColumn="taxId">
+        <div class="flex justify-content-between">
+            TAX ID
+            <p-sortIcon field="taxId" />
+        </div>
+      </th>
+
+      <th style="min-width: 20rem" pSortableColumn="address">
+        <div class="flex justify-content-between">
+            ADDRESS
+            <p-sortIcon field="address" />
+        </div>
+      </th>
+      <th style="min-width: 8rem" pSortableColumn="city.name">
+        <div class="flex justify-content-between">
+            CITY
+            <p-sortIcon field="city.name" />
+        </div>
+      </th>
+      <th style="min-width: 10rem" pSortableColumn="industry.name">
+        <div class="flex justify-content-between">
+            INDUSTRY
+            <p-sortIcon field="industry.name" />
+        </div>
+      </th>
+      <th style="min-width: 5rem" pSortableColumn="status">
+        <div class="flex justify-content-between">
+            STATUS
+            <p-sortIcon field="status" />
+        </div>
+      </th>
+      <th style="min-width: 5rem" >
+        <div class="flex justify-content-between">
+
+        </div>
+      </th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-client>
+    <tr [pSelectableRow]="client">
+      <td>
+        {{client.code}}
+      </td>
+      <td>
+        {{client.name}}
+      </td>
+      <td>
+        {{client.taxId}}
+      </td>
+      <td>
+        {{client.address}}
+      </td>
+      <td>
+        {{client.city}}
+      </td>
+      <td>
+        {{client.industry?.name}}
+        @if(client.industry && !client.industry?.active) {
+          <span>
+            <em style="font-size: 9px; color: #F48FB1;"> DISABLE </em>
+          </span>
+        }
+      </td>
+      <td>
+        <span [class]="'customer-badge status-' + getStatusColor(client.status)">
+            {{client.status}}
+        </span>
+      </td>
+      <td style="text-align: left;">
+        @if(clientPermissions().updateClient) {
+          <button
+            pButton
+            type="button"
+            icon="pi pi-pencil"
+            class="p-button-rounded p-button-text"
+            pTooltip="Edit"
+            severity="warning"
+            (click)="openCLient({item: client, type: 'edit', pristine: true})"
+            tooltipPosition="left">
+          </button>
+        } @else {
+          <button
+            pButton
+            type="button"
+            icon="pi pi-eye"
+            class="p-button-rounded p-button-text"
+            pTooltip="View"
+            (click)="openCLient({item: client, type: 'view', pristine: true})"
+            severity="info"
+            tooltipPosition="left">
+          </button>
+        }
+      </td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="emptymessage">
+    <tr >
+      <td style="text-align: center !important;" colspan="8">
+        No clients found
+      </td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="loadingbody">
+    <tr>
+      <td style="text-align: center !important;" colspan="8">
+        Loading clients, please wait
+      </td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="footergrouped" >
+    @if(page().page.totalPages > 1) {
+      <tr>
+        <td style="text-align: center !important;" colspan="8">
+            <p-paginator #paginator
+              (onPageChange)="changePage($event)"
+              [first]="0"
+              [rows]="page().page.size"
+              [totalRecords]="page().page.totalElements" />
+        </td>
+      </tr>
+    }
+  </ng-template>
+</p-table>

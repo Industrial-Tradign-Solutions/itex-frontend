@@ -1,0 +1,267 @@
+<p-fieldset legend="Filters">
+  <div class="p-fluid w-full animate__animated animate__fadeIn">
+    @if (formFilter) {
+      <form [formGroup]="formFilter" (ngSubmit)="search(true)" style="margin-top: -1.5rem; margin-bottom: -1rem;">
+        <div class="formgrid grid">
+          <div class="col-12 md:col-4">
+            <div class="formgrid grid">
+              <div class="field col-12 md:col-4 flex">
+                @if(permissions().createIpProduct) {
+                  <button pButton
+                    label="New Product"
+                    icon="pi pi-box"
+                    [disabled]="loading()"
+                    (click)="newProduct()"
+                    type="button"
+                  ></button>
+                }
+              </div>
+              <div class="field col-12 md:col-4">
+                <p-floatLabel>
+                  <input
+                    pInputText
+                    formControlName="description"
+                    type="text"/>
+                    <label>Description</label>
+                </p-floatLabel>
+              </div>
+              <div class="field col-12 md:col-4">
+                <p-floatLabel>
+                  <p-autoComplete
+                    formControlName="brandId"
+                    [suggestions]="filteredBrands"
+                    (completeMethod)="searchBrand($event)"
+                    (onKeyUp)="searchByBrand($event)"
+                    optionValue="id"
+                    appendTo="body"
+                    optionLabel="name"/>
+                  <label>Brand</label>
+                </p-floatLabel>
+              </div>
+
+            </div>
+          </div>
+          <div class="col-12 md:col-4">
+            <div class="formgrid grid">
+              <div class="field col-12 md:col-4">
+                <p-floatLabel>
+                  <input
+                    pInputText
+                    formControlName="mfrReference"
+                    maxlength="100"
+                    type="text"/>
+                    <label>MFR Reference</label>
+                </p-floatLabel>
+              </div>
+              <div class="field col-12 md:col-4">
+                <p-floatLabel>
+                  <input
+                    pInputText
+                    formControlName="notesKeywords"
+                    maxlength="100"
+                    type="text"/>
+                    <label>Notes / Keywords</label>
+                </p-floatLabel>
+              </div>
+              <div class="field col-12 md:col-4">
+                <p-floatLabel>
+                  <p-inputNumber
+                    formControlName="nmfc"
+                    mode="decimal"
+                    inputId="nmfc"
+                    [useGrouping]="false" />
+                      <label>NMFC</label>
+                </p-floatLabel>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 md:col-4">
+            <div class="formgrid grid">
+              <div class="field col-12 md:col-4">
+                <p-floatLabel>
+                  <p-dropdown
+                    [options]="listIpProductFreightClass()"
+                    optionLabel="value"
+                    formControlName="freightClass"
+                    appendTo="body"
+                    optionValue="key" />
+                  <label>Freight Class</label>
+                </p-floatLabel>
+              </div>
+              <div class="field col-12 md:col-4">
+                <p-floatLabel>
+                  <p-dropdown
+                    [options]="listIpProductStatus()"
+                    optionLabel="value"
+                    formControlName="status"
+                    appendTo="body"
+                    optionValue="key" />
+                  <label>Status</label>
+                </p-floatLabel>
+              </div>
+              <div class="field col-12 md:col-4 xl:col-4 flex">
+                <button
+                  pButton
+                  icon="pi pi-search"
+                  label="Search"
+                  type="submit"
+                  severity="info"
+                  pTooltip="Search"
+                  [disabled]="loading()"
+                  tooltipPosition="bottom">
+                </button>
+                <button
+                  pButton
+                  [disabled]="loading()"
+                  style="margin-left: 1rem;"
+                  outlined="true"
+                  icon="pi pi-filter-slash"
+                  type="button"
+                  [text]="true"
+                  [severity]="'danger'"
+                  (click)="resetForm(dt)"
+                  pTooltip="Clear Filters"
+                  tooltipPosition="bottom">
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    }
+  </div>
+</p-fieldset>
+<hr class="mb-1 mt-3" />
+<p-table
+  #dt1
+  [style]="{'margin-bottom': '-1rem'}"
+  styleClass="p-datatable-sm"
+  [value]="page().content"
+  dataKey="id"
+  [rows]="page().page.size"
+  [loading]="loading()"
+  (sortFunction)="customSort($event)"
+  [customSort]="true"
+  responsiveLayout="scroll">
+    <ng-template pTemplate="header" >
+    <tr>
+      <th style="min-width: 13rem" pSortableColumn="description">
+        <div class="flex justify-content-between">
+            DESCRIPTION
+            <p-sortIcon field="description" />
+        </div>
+      </th>
+      <th style="min-width: 9rem" pSortableColumn="brand.name">
+        <div class="flex justify-content-between">
+            BRAND
+            <p-sortIcon field="brand.name" />
+        </div>
+      </th>
+      <th style="min-width: 8rem" pSortableColumn="nmfc">
+        <div class="flex justify-content-between">
+            NMFC
+            <p-sortIcon field="nmfc" />
+        </div>
+      </th>
+      <th style="min-width: 8rem" pSortableColumn="mfrReference">
+        <div class="flex justify-content-between">
+            MFR REFERENCE
+            <p-sortIcon field="mfrReference" />
+        </div>
+      </th>
+      <th style="min-width: 8rem" pSortableColumn="freightClass">
+        <div class="flex justify-content-between">
+            FREIGHT CLASS
+            <p-sortIcon field="freightClass" />
+        </div>
+      </th>
+      <th style="min-width: 5rem" pSortableColumn="status">
+        <div class="flex justify-content-between">
+            STATUS
+            <p-sortIcon field="status" />
+        </div>
+      </th>
+      <th style="min-width: 5rem" >
+        <div class="flex justify-content-between">
+
+        </div>
+      </th>
+    </tr>
+  </ng-template>
+    <ng-template pTemplate="body" let-product>
+    <tr [pSelectableRow]="product">
+      <td>
+        {{product.description}}
+      </td>
+      <td>
+        {{product.brand?.name}}
+      </td>
+      <td>
+        {{product.nmfc}}
+      </td>
+      <td>
+        {{product.mfrReference}}
+      </td>
+      <td>
+        {{getFreightClass(product.freightClass)}}
+      </td>
+      <td>
+        <span [class]="'customer-badge status-' + getStatusColor(product.status)">
+            {{product.status}}
+        </span>
+      </td>
+      <td style="text-align: end;">
+        @if(permissions().updateIpProduct) {
+          <button
+            pButton
+            type="button"
+            icon="pi pi-pencil"
+            class="p-button-rounded p-button-text"
+            pTooltip="Edit"
+            severity="warning"
+            (click)="openProduct(product, 'edit')"
+            tooltipPosition="left">
+          </button>
+        } @else {
+          <button
+            pButton
+            type="button"
+            icon="pi pi-eye"
+            class="p-button-rounded p-button-text"
+            pTooltip="View"
+            (click)="openProduct(product, 'view')"
+            severity="info"
+            tooltipPosition="left">
+          </button>
+        }
+      </td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="emptymessage">
+    <tr >
+      <td style="text-align: center !important;" colspan="8">
+        No products found
+      </td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="loadingbody">
+    <tr>
+      <td style="text-align: center !important;" colspan="8">
+        Loading products, please wait
+      </td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="footergrouped" >
+    @if(page().page.totalPages > 1) {
+      <tr>
+        <td style="text-align: center !important;" colspan="8">
+            <p-paginator #paginator
+              (onPageChange)="changePage($event)"
+              [first]="0"
+              [rows]="page().page.size"
+              [totalRecords]="page().page.totalElements" />
+        </td>
+      </tr>
+    }
+  </ng-template>
+</p-table>

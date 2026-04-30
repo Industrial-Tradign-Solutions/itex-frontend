@@ -1,0 +1,135 @@
+<div class="p-fluid">
+  @if (loading()) {
+    <div class="field col animate__animated animate__fadeIn">
+      <p-progressBar
+          class="w-20rem animate__animated animate__fadeIn"
+          mode="indeterminate">
+      </p-progressBar>
+    </div>
+  }@else {
+    @if(brandResp().length === 0) {
+      <p-fileUpload
+        [disabled]="loading()"
+        accept=".xls,.xlsx"
+        [customUpload]="true"
+        mode="advanced"
+        [auto]="true"
+        (onRemove)="removeFile()"
+        (onSelect)="selectFile($event)" />
+    } @else {
+      <p-table
+        #dt1
+        [value]="brandResp()"
+        styleClass="p-datatable-sm"
+        dataKey="id"
+        [rows]="10"
+        [loading]="loading()"
+        [paginator]="brandResp().length > 10"
+        [globalFilterFields]="['name']"
+        responsiveLayout="scroll">
+        <ng-template pTemplate="header" >
+            <tr>
+              <th style="min-width: 8rem" pSortableColumn="name">
+                  <div class="flex justify-content-between align-items-center">
+                      BRAND
+                      <p-sortIcon field="name"></p-sortIcon>
+                  </div>
+              </th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-brand>
+            <tr>
+              <td>
+                  {{brand.name}}
+                  @if(!brand.id) {
+                    <p-badge [value]="'NEW'" severity="success" />
+                  }
+              </td>
+            </tr>
+        </ng-template>
+      </p-table>
+      <br>
+      <label>
+        <b>Import Brands: </b>
+        <em>
+            {{brandResp().length }}
+        </em>
+      </label>
+
+      <div class="formgrid grid" style="margin-top: 1rem;">
+        <div class="field col-12 md:col-12">
+          <label>
+            Supplier
+          </label>
+          <p-autoComplete
+            [(ngModel)]="supplierId"
+            optionValue="id"
+            [showClear]="true"
+            appendTo="body"
+            [suggestions]="filteredSuppliers"
+            (completeMethod)="searchSupplier($event)"
+            optionLabel="name"/>
+          </div>
+      </div>
+    }
+  }
+</div>
+@if(error() !== null) {
+  <br>
+  <label class="error">
+    <em>
+        {{error()}}
+    </em>
+  </label>
+}
+@if (!loading()) {
+  <div class="formgrid grid" style="margin-top: 2rem;">
+    <div class="col-12 md:col-4">
+      <div class="mt-3 flex justify-content-start column-gap-4">
+        <p-button
+            icon="pi pi-times-circle"
+            styleClass="p-button-sm p-button-danger"
+            label="Cancel"
+            (onClick)="closeModal()">
+        </p-button>
+      </div>
+    </div>
+    <div class="col-12 md:col-8">
+      <div class="mt-3 flex justify-content-end column-gap-4">
+        @if(brandResp().length === 0) {
+          <button
+            pButton
+            type="button"
+            (click)="importBrand()"
+            label="Upload"
+            icon="pi pi-upload"
+            severity="secondary"
+            [disabled]="excelFile() === null"
+            class="p-button-sm">
+          </button>
+        } @else {
+          <button
+            pButton
+            type="button"
+            (click)="changeFile()"
+            label="Change File"
+            icon="pi pi-sync"
+            severity="warning"
+            [disabled]="excelFile() === null"
+            class="p-button-sm">
+          </button>
+          <button
+            pButton
+            type="button"
+            (click)="saveBrands()"
+            label="Save"
+            icon="pi pi-save"
+            severity="success"
+            [disabled]="excelFile() === null"
+            class="p-button-sm">
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+}

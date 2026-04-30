@@ -1,0 +1,60 @@
+@if (formAdd) {
+  <form [formGroup]="formAdd" (ngSubmit)="onSubmit()">
+    <div class="p-fluid">
+      <div class="formgrid grid">
+          <div class="field col-12 md:col-6">
+            <label>
+              Quantity
+              <span class="required">*</span>
+            </label>
+            <p-inputNumber
+              mode="decimal"
+              [useGrouping]="false"
+              [max]="2147483647"
+              formControlName="quantity" />
+          </div>
+          <div class="field col-12 md:col-6">
+            <label>
+              Price
+              <span class="required">*</span>
+            </label>
+            <p-inputNumber
+              mode="decimal"
+              [useGrouping]="false"
+              [max]="2147483647"
+              formControlName="price" />
+          </div>
+          <div class="field col-12 md:col-6">
+            <label>
+              WH #
+              <span class="required">*</span>
+            </label>
+            <input pInputText type="text" formControlName="whNumber"/>
+          </div>
+          <div class="field col-12 md:col-6">
+            <label>
+              Location
+              <span class="required">*</span>
+            </label>
+            <input pInputText type="text" formControlName="location"/>
+          </div>
+      </div>
+    </div>
+    <div class="mt-3 flex justify-content-end column-gap-4">
+      <p-button
+          icon="pi pi-times-circle"
+          styleClass="p-button-sm p-button-danger"
+          label="Cancel"
+          (onClick)="closeModal()"
+      ></p-button>
+      <button
+          pButton
+          type="submit"
+          label="Save"
+          icon="pi pi-save"
+          [disabled]="formAdd.invalid"
+          class="p-button-sm p-button-success">
+      </button>
+    </div>
+  </form>
+}

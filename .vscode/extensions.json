@@ -1,0 +1,20 @@
+{
+    "recommendations": [
+        "mikael.angular-beastcode",
+        "jakethashi.vscode-angular2-emmet",
+        "angular.ng-template",
+        "cyrilletuzi.angular-schematics",
+        "johnpapa.angular2",
+        "natewallace.angular2-inline",
+        "formulahendry.auto-close-tag",
+        "steoates.autoimport",
+        "formulahendry.auto-rename-tag",
+        "aaron-bond.better-comments",
+        "usernamehw.errorlens",
+        "dbaeumer.vscode-eslint",
+        "ecmel.vscode-html-css",
+        "xabikos.javascriptsnippets",
+        "johnpapa.vscode-peacock",
+        "pmneo.tsimporter"
+    ]
+}

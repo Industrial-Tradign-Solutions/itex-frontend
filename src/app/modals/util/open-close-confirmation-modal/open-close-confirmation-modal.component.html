@@ -1,0 +1,29 @@
+<div>
+  <span>The following {{type()}} are blocked by you:</span>
+  <ul>
+    @for(item of list(); track item) {
+      <li>{{item.name}}</li>
+    }
+  </ul>
+  <span>
+    <b>Do you want to open or close them?</b>
+  </span>
+</div>
+<div class="mt-3 flex justify-content-end column-gap-4">
+  <button
+    pButton
+    icon="pi pi-times"
+    class="p-button-sm"
+    severity="danger"
+    (click)="closeAll()"
+    label="Close All">
+  </button>
+  <button
+    pButton
+    label="Open All"
+    icon="pi pi-check"
+    severity="success"
+    (click)="openAll()"
+    class="p-button-sm">
+  </button>
+</div>

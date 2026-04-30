@@ -1,0 +1,113 @@
+<p-table
+  [value]="historyItems"
+  [loading]="loading"
+  styleClass="p-datatable-sm"
+  [scrollable]="true"
+  scrollHeight="50rem">
+  <ng-template pTemplate="header">
+    <tr>
+      <th style="width: 12rem; text-align: center;">USER</th>
+      <th style="width: 12rem; text-align: center;">ACTION</th>
+      <th style="width: 12rem; text-align: center;">DATE</th>
+      <th style="text-align: center;">CHANGES</th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-item let-ii="rowIndex">
+    <tr>
+      <td style="text-align: center;">
+        {{ item.employee }}
+      </td>
+      <td style="text-align: center;">
+        <span [class]="'customer-badge status-' + getStatusColor(item.action)">
+          {{ getActionDescription(item.action) }}
+        </span>
+      </td>
+      <td style="text-align: center;">
+        {{ item.createdAt | date:'MMM dd, yyyy hh:mm a' }}
+      </td>
+      <td>
+        @if (item.action === 'CREATE' || item.action === 'IMPORT_PRODUCT') {
+          <li>
+              <b>Brand: </b> <i class="new">{{ item.data?.brand?.name }}</i>
+          </li>
+          <li>
+              <b>Description: </b> <i class="new">{{ item.data?.description }}</i>
+          </li>
+          <li>
+            <b>Client Description: </b> <i class="new">{{ item.data?.clientDescription }}</i>
+          </li>
+          <li>
+              <b>MFR Reference: </b> <i class="new">{{ item.data?.mfrReference }}</i>
+          </li>
+          <li>
+              <b>Client Reference: </b> <i class="new">{{ item.data?.clientReference }}</i>
+          </li>
+          <li>
+              <b>Net Weight (lbs): </b> <i class="new">{{ item.data?.netWeightLbs }}</i>
+          </li>
+          <li>
+              <b>NMFC: </b> <i class="new">{{ item.data?.nmfc }}</i>
+          </li>
+          <li>
+              <b>Freight Class: </b> <i class="new">{{ item.data?.freightClass }}</i>
+          </li>
+          <li>
+              <b>Notes: </b> <i class="new">{{ item.data?.notes }}</i>
+          </li>
+          <li>
+              <b>Keywords: </b> <i class="new">{{ item.data?.keywords }}</i>
+          </li>
+          <li>
+              <b>HTS #: </b> <i class="new">{{ item.data?.htsScheduleBNumber }}</i>
+          </li>
+          <li>
+              <b>ECCN: </b> <i class="new">{{ item.data?.eccn }}</i>
+          </li>
+          <li>
+              <b>COO: </b> <i class="new">{{ item.data?.coo?.name }}</i>
+          </li>
+          <li>
+              <b>Batery: </b> <i class="new">{{ item.data?.battery }}</i>
+          </li>
+          <li>
+              <b>Hazmat: </b> <i class="new">{{ item.data?.hazmat }}</i>
+          </li>
+          <li>
+            <b>Dual Use: </b> <i class="new">{{ item.data?.dualUse }}</i>
+          </li>
+        } @else if (item.action === 'UPDATE' || item.action === 'REPLACE') {
+          @for (data of item.data; track $index) {
+            @if (data.key !== 'id') {
+              <li style="font-size: 13px;">
+                <b>{{getData(data.key)}}:</b>
+                <ul style="font-size: 11px;">
+                  <b>Old: </b>
+                  <span class="old">{{data.old}}</span>
+                </ul>
+                <ul style="font-size: 11px;">
+                  <b>New: </b>
+                  <span class="new">{{data.new}}</span>
+                </ul>
+              </li>
+            }
+          }
+        } @else if (item.action === 'ENABLE') {
+          <li class="new">
+            The product has been enabled.
+          </li>
+        } @else if (item.action === 'DISABLE') {
+          <li class="old">
+            The product has been disabled.
+          </li>
+        } @else if (item.action === 'ADD_SURPLUS' || item.action === 'REMOVE_SURPLUS') {
+          <li>
+              <b>Old Surplus: </b> <i class="old">{{ item.data.old }}</i>
+          </li>
+          <li>
+              <b>New Surplus: </b> <i class="new">{{ item.data.new }}</i>
+          </li>
+        }
+      </td>
+    </tr>
+  </ng-template>
+</p-table>

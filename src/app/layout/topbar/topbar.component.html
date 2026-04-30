@@ -1,0 +1,48 @@
+<div class="layout-topbar">
+    <a class="app-logo" routerLink="/">
+        <img alt="app logo" src="assets/logo.avif">
+        <span class="app-name">ITEX</span>
+    </a>
+
+    <button #menubutton class="topbar-menubutton p-link" type="button" (click)="onMenuButtonClick()">
+        <span></span>
+    </button>
+
+    <ul class="topbar-menu">
+      <app-breadcrumb></app-breadcrumb>
+    </ul>
+
+    <div class="topbar-search" >
+        <button class="topbar-searchbutton p-link" type="button" (click)="darkModeAction()">
+            <i *ngIf="darkMode" class="pi pi-sun"></i>
+            <i *ngIf="!darkMode" class="pi pi-moon"></i>
+        </button>
+    </div>
+
+    <div class="topbar-profile">
+        <button class="topbar-profile-button p-link" type="button" pStyleClass="@next" enterFromClass="hidden" enterActiveClass="scalein" leaveToClass="hidden" leaveActiveClass="fadeout" >
+            @if(profilePhoto) {
+              <img [src]="profilePhoto" class="avatar" style="border-radius:50%; object-fit:cover; width:43px; height:43px;"/>
+            }@else {
+              <img alt="avatar" src="assets/avatar.avif">
+            }
+            <span class="profile-details" *ngIf="userData">
+                <span class="profile-name">{{userData.fullName}}</span>
+                <span class="profile-job">{{userData.role}}</span>
+            </span>
+            <i class="pi pi-angle-down"></i>
+        </button>
+        <ul class="list-none p-3 m-0 border-round shadow-2 hidden absolute surface-overlay origin-top w-full sm:w-12rem mt-2 right-0 top-auto">
+            <li>
+                <a pRipple (click)="openModalProfile()" class="flex p-2 border-round align-items-center hover:surface-hover transition-colors transition-duration-150 cursor-pointer">
+                    <i class="pi pi-user mr-3"></i>
+                    <span>Profile</span>
+                </a>
+                <a (click)="logoutAction()" pRipple class="flex p-2 border-round align-items-center hover:surface-hover transition-colors transition-duration-150 cursor-pointer">
+                    <i class="pi pi-power-off mr-3"></i>
+                    <span>Sign Out</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>

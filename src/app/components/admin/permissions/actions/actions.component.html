@@ -1,0 +1,55 @@
+
+<div class="grid">
+	<div class="col-12">
+    <p-toolbar>
+      <div class="p-toolbar-group-start">
+                  <p-dropdown
+                      #roleList
+                      (onClick)="loadRoles()"
+                      appendTo="body"
+                      placeholder="Select a Role"
+                      [options]="listActiveRoles"
+                      optionLabel="name"
+                      optionValue="id"
+                      [(ngModel)]="selectedRoleId"
+                      [disabled]="loading"
+                      (onChange)="selectRole($event)" >
+                  </p-dropdown>
+      </div>
+              <div class="p-toolbar-group-center">
+                  <p-progressBar
+                      *ngIf="loading"
+                      class="w-25rem animate__animated animate__fadeIn"
+                      mode="indeterminate">
+                  </p-progressBar>
+              </div>
+              <div class="p-toolbar-group-end">
+                  <p-button label="Save" icon="pi pi-save" class="mr-2" [disabled]="this.selectedRoleId === null || selectedRoleId === '' || loading"  (onClick)="saveAction()"></p-button>
+              </div>
+          </p-toolbar>
+          <div class="mar-top">
+              <p-pickList [source]="listUnassignedActions" [target]="listAssignedActions" sourceHeader="UNASSIGNED ACTIONS" targetHeader="ASSIGNED ACTIONS" [dragdrop]="true" [responsive]="true" [sourceStyle]="{ height: '38rem' }"
+              [targetStyle]="{ height: '38rem' }" filterBy="name" sourceFilterPlaceholder="Search" targetFilterPlaceholder="Search" breakpoint="1400px" [disabled]="selectedRoleId === '' || loading">
+                  <ng-template let-action pTemplate="item">
+                      <div class="flex flex-wrap p-2 align-items-center gap-3">
+                          <i *ngIf="action.menu" [class]="'pi ' +  action.menu.icon"></i>
+                          <i *ngIf="!action.menu" class="pi pi-desktop"></i>
+                          <div class="flex-1 flex flex-column gap-2">
+                              <span class="font-bold">{{ action.name }}</span>
+                              <span *ngIf="action.menu"><em>{{ action.menu.name }}</em></span>
+                              <div class="flex align-products-center gap-2">
+                                  <span >{{ action.description }}</span>
+                              </div>
+                          </div>
+                      </div>
+                  </ng-template>
+              </p-pickList>
+          </div>
+    </div>
+</div>
+
+
+
+
+
+

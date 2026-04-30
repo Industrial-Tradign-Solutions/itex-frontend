@@ -1,0 +1,11 @@
+export { SupplierBasic } from './supplierBasic.type';
+export { SupplierRequest } from './supplierRequest.type';
+export { SupplierInfoDepRequest } from './supplierInfoDepRequest.type';
+export { SupplierContactRequest } from './supplierContactRequest.type';
+export { SupplierContactPhoneRequest } from './supplierContactPhoneReques.type';
+export { SupplierContact } from './supplierContact.type';
+export { SupplierContactPhone } from './supplierContactPhone.type';
+export { SupplierInfoDep } from './supplierInfoDep.type';
+export { ListSuppliers } from './listSuppliers.type';
+export { Supplier } from './supplier.type';
+export { SupplierFilter } from './supplierFilters.type';

@@ -1,0 +1,145 @@
+<div class="grid">
+	<div class="col-12" style="margin-bottom: -1rem;">
+        <p-toolbar>
+            <div class="md:ml-2 m-auto">
+              @if(rolePermissions().createRole) {
+                <p-button label="New Role" icon="pi pi-plus" (onClick)="openModalRole('create')" [disabled]="loading()"></p-button>
+              }
+            </div>
+            <div class="flex justify-content-center flex-wrap align-items-center">
+              <span class="p-input-icon-left mb-2">
+                  <i class="pi pi-search"></i>
+                  <input pInputText type="text" (input)="onGlobalFilter(dt1, $event)" placeholder="Search" class="w-full" [disabled]="loading()"/>
+              </span>
+              <span class="p-input-icon-left mb-2 mr-3">
+                <button
+                  style="margin-left: 1rem;"
+                  pButton
+                  class="p-button-info mb-2"
+                  icon="pi pi-refresh"
+                  pTooltip="Refresh"
+                  tooltipPosition="bottom"
+                  [disabled]="loading()"
+                  (click)="loadListRoles()">
+                </button>
+              </span>
+          </div>
+        </p-toolbar>
+        <hr class="mb-1 mt-3" />
+        <p-table
+            #dt1
+            [value]="listRoles()"
+            styleClass="p-datatable-sm"
+            dataKey="id"
+            [rows]="10"
+            [loading]="loading()"
+            [paginator]="true"
+            [globalFilterFields]="['name']"
+            responsiveLayout="scroll">
+            <ng-template pTemplate="header" >
+                <tr>
+                    <th style="min-width: 11rem" pSortableColumn="name">
+                        <div class="flex justify-content-between align-items-center">
+                            NAME
+                            <p-sortIcon field="name"></p-sortIcon>
+                        </div>
+                    </th>
+                    <th style="min-width: 20rem" pSortableColumn="description">
+                        <div class="flex justify-content-between align-items-center">
+                            DESCRIPTION
+                            <p-sortIcon field="description"></p-sortIcon>
+                        </div>
+                    </th>
+                    <th style="min-width: 12rem" pSortableColumn="createdAt">
+                        <div class="flex justify-content-between align-items-center">
+                            DATE OF CREATION
+                            <p-sortIcon field="createdAt"></p-sortIcon>
+                        </div>
+                    </th>
+                    <th style="min-width: 8rem" pSortableColumn="active">
+                        <div class="flex justify-content-between align-items-center">
+                            STATUS
+                            <p-sortIcon field="active"></p-sortIcon>
+                        </div>
+                    </th>
+                    @if (rolePermissions().updateRole || rolePermissions().disableRole || rolePermissions().enableRole) {
+                      <th style="min-width: 8rem" pSortableColumn="actions">
+                        <div class="flex justify-content-between align-items-center">
+
+                        </div>
+                      </th>
+                    }
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-role>
+                <tr [pSelectableRow]="role">
+                    <td>
+                        {{role.name}}
+                    </td>
+                    <td>
+                        {{role.description}}
+                    </td>
+                    <td>
+                        {{role.createdAt | date:'MMM dd, yyyy hh:mm a'}}
+                    </td>
+                    <td>
+                        <span [class]="'customer-badge status-' + (role.active ? 'qualified' : 'unqualified')">
+                            {{role.active ? 'Enable': 'Disable'}}
+                        </span>
+                    </td>
+                    @if (rolePermissions().updateRole || rolePermissions().disableRole || rolePermissions().enableRole) {
+                      <td>
+                        @if (rolePermissions().updateRole && role.active) {
+                          <button
+                            pButton
+                            type="button"
+                            (click)="openModalRole('edit', role)"
+                            icon="pi pi-pencil"
+                            class="p-button-rounded p-button-text"
+                            pTooltip="Edit"
+                            severity="warning"
+                            tooltipPosition="left">
+                          </button>
+                        }
+                        @if(rolePermissions().disableRole && role.active) {
+                          <button
+                            pButton
+                            type="button"
+                            (click)="disableRole(role)"
+                            icon="pi pi-ban"
+                            class="p-button-rounded p-button-text"
+                            pTooltip="Disable"
+                            severity="danger"
+                            [disabled]="role.id === userInfo().roleId"
+                            tooltipPosition="right">
+                          </button>
+                        }
+                        @if (rolePermissions().enableRole && !role.active) {
+                          <button
+                            pButton
+                            type="button"
+                            (click)="enableRole(role)"
+                            icon="pi pi-check-circle"
+                            class="p-button-rounded p-button-text"
+                            pTooltip="Enable"
+                            severity="success"
+                            tooltipPosition="right">
+                          </button>
+                        }
+                      </td>
+                    }
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+                <tr>
+                    <td colspan="8">No Roles found</td>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="loadingbody">
+                <tr>
+                    <td colspan="8">Loading roles, please wait</td>
+                </tr>
+            </ng-template>
+        </p-table>
+    </div>
+</div>

@@ -1,0 +1,43 @@
+@if(!loading()) {
+  <div class="card animate__animated animate__fadeIn">
+    <p-tabView [(activeIndex)]="activeTab" [scrollable]="true" [controlClose]="true" (onClose)="closeTab($event)">
+      <p-tabPanel header="Suppliers">
+        <ng-template pTemplate="header">
+          <i class="pi pi-truck"></i>
+          <span>Suppliers</span>
+        </ng-template>
+        <ng-template pTemplate="content">
+          <app-list-suppliers
+            (opened)="openTab($event)"
+            [permissions]="supplierPermissions">
+          </app-list-suppliers>
+        </ng-template>
+      </p-tabPanel>
+      @for(supplierTab of tabs(); track supplierTab) {
+        <p-tabPanel [header]="supplierTab.item.name" [closable]="true">
+          <ng-template pTemplate="header">
+            <span>{{ supplierTab.item.name }}</span>
+          </ng-template>
+          <ng-template pTemplate="content">
+            <app-form-suppliers
+              [index]="$index"
+              [tabItem]="supplierTab"
+              [permissions]="supplierPermissions"
+              (onClose)="closeTab($event)">
+            </app-form-suppliers>
+          </ng-template>
+        </p-tabPanel>
+      }
+    </p-tabView>
+  </div>
+} @else {
+  <div style="margin-top: 3rem;">
+    <p-skeleton width="100%" styleClass="mb-2"/>
+    <p-skeleton width="100%" styleClass="mb-2"/>
+    <p-skeleton width="100%" styleClass="mb-2"/>
+    <p-skeleton width="100%" styleClass="mb-2"/>
+    <p-skeleton width="100%" styleClass="mb-2"/>
+  </div>
+  <br>
+  <p-skeleton width="100%" height="40rem" />
+}

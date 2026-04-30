@@ -1,0 +1,235 @@
+
+<div class="grid">
+	<div class="col-12">
+		<div class="card">
+			<p-toolbar>
+				<div class="md:ml-2 m-auto">
+          @if(userPermissions().createUser) {
+            <p-button
+              label="New User"
+              icon="pi pi-user-plus"
+              (onClick)="openModalUser('create')"
+              [disabled]="loading()">
+            </p-button>
+          }
+
+				</div>
+				<div class="flex justify-content-center flex-wrap align-items-center">
+          @if(userPermissions().closeAllSessions) {
+            <button
+              style="margin-right: 1rem;"
+              pButton
+              label="CLOSE ALL SESSION"
+              class="p-button-danger mb-2"
+              icon="pi pi-times"
+              pTooltip="Refresh"
+              tooltipPosition="bottom"
+              [disabled]="loading()"
+              (click)="closeAllSessions()">
+            </button>
+          }
+					<span class="p-input-icon-left mb-2">
+						<i class="pi pi-search"></i>
+						<input pInputText type="text" (input)="onGlobalFilter(dt1, $event)" placeholder="Search" class="w-full"/>
+					</span>
+          <span class="p-input-icon-left mb-2 mr-3">
+            <button
+              style="margin-left: 1rem;"
+              pButton
+              class="p-button-info mb-2"
+              icon="pi pi-refresh"
+              pTooltip="Refresh"
+              tooltipPosition="bottom"
+              [disabled]="loading()"
+              (click)="loadListUsers()">
+            </button>
+          </span>
+				</div>
+			</p-toolbar>
+			<hr class="mb-1 mt-3" />
+			<p-table
+        #dt1
+        [value]="listUsers()"
+        styleClass="p-datatable-sm"
+        dataKey="id"
+        [rows]="10"
+        [loading]="loading()"
+        [paginator]="true"
+        [globalFilterFields]="['user','name','lastName','email']"
+        responsiveLayout="scroll">
+				<ng-template pTemplate="header" >
+					<tr>
+            <th style="min-width: 6rem" pSortableColumn="user">
+							<div class="flex justify-content-between align-items-center">
+								USERNAME
+                <p-sortIcon field="user"></p-sortIcon>
+							</div>
+						</th>
+						<th style="min-width: 11rem" pSortableColumn="name">
+							<div class="flex justify-content-between align-items-center">
+								NAME
+                <p-sortIcon field="name"></p-sortIcon>
+							</div>
+						</th>
+            <th style="min-width: 11rem" pSortableColumn="lastName">
+							<div class="flex justify-content-between align-items-center">
+								LAST NAME
+                <p-sortIcon field="lastName"></p-sortIcon>
+							</div>
+						</th>
+            <th style="min-width: 14rem" pSortableColumn="email">
+							<div class="flex justify-content-between align-items-center">
+								E-MAIL
+                <p-sortIcon field="email"></p-sortIcon>
+							</div>
+						</th>
+            <th style="min-width: 12rem" pSortableColumn="departments">
+							<div class="flex justify-content-between align-items-center">
+								DEPARTMENTS
+                <p-sortIcon field="departments"></p-sortIcon>
+							</div>
+						</th>
+            <th style="min-width: 10rem" pSortableColumn="role.name">
+							<div class="flex justify-content-between align-items-center">
+								ROLE
+                <p-sortIcon field="role.name"></p-sortIcon>
+							</div>
+						</th>
+            <th style="min-width: 12rem" pSortableColumn="createdAt">
+              <div class="flex justify-content-between align-items-center">
+                  DATE OF CREATION
+                  <p-sortIcon field="createdAt"></p-sortIcon>
+              </div>
+            </th>
+            <th style="min-width: 8rem" pSortableColumn="active">
+							<div class="flex justify-content-between align-items-center">
+								STATUS
+                <p-sortIcon field="active"></p-sortIcon>
+							</div>
+						</th>
+            <th style="min-width: 8rem" pSortableColumn="actions">
+              <div class="flex justify-content-between align-items-center">
+
+              </div>
+            </th>
+					</tr>
+				</ng-template>
+
+				<ng-template pTemplate="body" let-user>
+					<tr [pSelectableRow]="user">
+            <td>
+							{{user.user}}
+						</td>
+						<td>
+							{{user.name}}
+						</td>
+                        <td>
+							{{user.lastName}}
+						</td>
+                        <td>
+							{{user.email}}
+						</td>
+						<td>
+              @for(department of user.departments; track department;) {
+                {{department.name}}
+                <span *ngIf="!department.active">
+                  <em style="font-size: 9px; color: #F48FB1;"> DISABLE </em>
+                </span>
+                @if($index !== user.departments.length - 1) {
+                  {{', '}}
+                }
+              }
+						</td>
+            <td>
+							{{user.role.name}}
+							<span *ngIf="!user.role.active">
+								<em style="font-size: 9px; color: #F48FB1;"> DISABLE </em>
+							</span>
+						</td>
+            <td>
+              {{user.createdAt | date:'MMM dd, yyyy hh:mm a'}}
+            </td>
+            <td>
+              <span [class]="'customer-badge status-' + (user.active && user.role.active  ? 'qualified' : 'unqualified')">
+                  {{user.active && user.role.active  ? 'Enable': 'Disable'}}
+              </span>
+						</td>
+            <td>
+              @if (userPermissions().updateUser && user.active ) {
+                <button
+                  pButton
+                  type="button"
+                  (click)="openModalUser('edit', user)"
+                  icon="pi pi-pencil"
+                  class="p-button-rounded p-button-text"
+                  severity="warning"
+                  pTooltip="Edit"
+                  tooltipPosition="left">
+                </button>
+              } @else {
+                <button
+                  pButton
+                  type="button"
+                  (click)="openModalUser('view', user)"
+                  icon="pi pi-eye"
+                  class="p-button-rounded p-button-text"
+                  pTooltip="View"
+                  severity="info"
+                  tooltipPosition="left">
+                </button>
+              }
+              @if (userPermissions().resetUserPassword && user.active ) {
+                <button
+                  pButton
+                  type="button"
+                  (click)="resetUserPassword(user)"
+                  icon="pi pi-replay"
+                  class="p-button-rounded p-button-text"
+                  pTooltip="Reset Password"
+                  severity="help"
+                  [disabled]="!user.passChanged"
+                  tooltipPosition="bottom">
+                </button>
+              }
+              @if(userPermissions().disableUser && user.active ) {
+                <button
+                  pButton
+                  type="button"
+                  (click)="disableUser(user)"
+                  icon="pi pi-ban"
+                  class="p-button-rounded p-button-text"
+                  pTooltip="Disable"
+                  severity="danger"
+                  [disabled]="user.id === userInfo().id"
+                  tooltipPosition="right">
+                </button>
+              }
+              @if ((userPermissions().enableUser && !user.active) && (user.role.active)) {
+                <button
+                  pButton
+                  type="button"
+                  (click)="enableUser(user)"
+                  icon="pi pi-check-circle"
+                  class="p-button-rounded p-button-text"
+                  pTooltip="Enable"
+                  severity="success"
+                  tooltipPosition="right">
+                </button>
+              }
+            </td>
+					</tr>
+				</ng-template>
+				<ng-template pTemplate="emptymessage">
+					<tr>
+						<td colspan="8">No users found</td>
+					</tr>
+				</ng-template>
+				<ng-template pTemplate="loadingbody">
+					<tr>
+						<td colspan="8">Loading users, please wait</td>
+					</tr>
+				</ng-template>
+    		</p-table>
+		</div>
+	</div>
+</div>

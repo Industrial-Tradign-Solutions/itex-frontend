@@ -1,0 +1,46 @@
+<form class="animate__animated animate__fadeIn" [formGroup]="loginForm" (ngSubmit)="onSubit()">
+  <div class="bg surface-ground h-screen w-screen flex align-items-center justify-content-center" [ngClass]="{'p-input-filled': filledInput}">
+      <div class="surface-card py-7 px-5 sm:px-7 shadow-2 flex flex-column w-11 sm:w-30rem" style="border-radius:14px">
+          <div style="text-align: center;">
+              <img src="assets/its_logo.avif" >
+          </div>
+
+          <span class="p-input-icon-left mb-4">
+              <i class="pi pi-user"></i>
+              <input
+                  type="text"
+                  formControlName="username"
+                  pInputText
+                  placeholder="Username"
+                  class="w-full">
+          </span>
+
+          <span class="p-input-icon-left mb-4">
+              <i class="pi pi-key"></i>
+              <input
+                  type="password"
+                  formControlName="password"
+                  pInputText
+                  placeholder="Password"
+                  class="w-full">
+          </span>
+          <p-progressBar
+              *ngIf="loading"
+              class="animate__animated animate__fadeIn"
+              mode="indeterminate">
+          </p-progressBar>
+          <button
+              class="animate__animated animate__fadeIn"
+              *ngIf="!loading"
+              type="submit"
+              pButton
+              pRipple
+              label="Sign In"
+              class="mb-4"
+              [disabled]="loginForm.invalid">
+          </button>
+          <p-message *ngIf="error !== '' && !loading" severity="error" [text]="error">
+          </p-message>
+      </div>
+  </div>
+</form>

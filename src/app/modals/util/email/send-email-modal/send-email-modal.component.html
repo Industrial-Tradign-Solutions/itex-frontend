@@ -1,0 +1,127 @@
+@if(formEmail && !loading()) {
+  <div class="animate__animated animate__fadeIn" >
+    <form [formGroup]="formEmail" (ngSubmit)="onSubmit()">
+      <div class="p-fluid">
+        <div class="formgrid grid">
+
+          <div class="field col-12 md:col-12">
+            <label>
+              To
+              <span class="required">*</span>
+            </label>
+            <input
+              pInputText
+              formControlName="to"
+              aria-describedby="to-help"
+              type="text"/>
+            <small id="to-help">
+                Emails should be separated with <b>;</b>
+            </small>
+          </div>
+          <div class="field col-12 md:col-6">
+            <label>
+              CC
+            </label>
+            <input
+              pInputText
+              formControlName="cc"
+              aria-describedby="to-help"
+              type="text"/>
+            <small id="to-help">
+                Emails should be separated with <b>;</b>
+            </small>
+          </div>
+          <div class="field col-12 md:col-6">
+            <label>
+              CCO
+            </label>
+            <input
+              pInputText
+              formControlName="cco"
+              aria-describedby="to-help"
+              type="text"/>
+            <small id="to-help">
+                Emails should be separated with <b>;</b>
+            </small>
+          </div>
+          <div class="field col-12 md:col-12">
+            <label>
+              Subject
+              <span class="required">*</span>
+            </label>
+            <input
+              pInputText
+              formControlName="subject"
+              type="text"/>
+          </div>
+          <div class="field col-12 md:col-11">
+            <label>
+              Attachments
+            </label>
+          </div>
+          <div class="field col-12 md:col-11" style="margin-top: -1rem;">
+            <div class="flex align-items-center gap-2 flex-wrap">
+              @for(file of atachments; track file; let i = $index) {
+                <p-chip
+                  class="m-1 chip"
+                  [label]="file.fileName"
+                  removable="true"
+                  (onRemove)="atachments.splice(i,1)">
+                </p-chip>
+              }
+            </div>
+          </div>
+          <div class="field col-12 md:col-1" style="margin-left: -1rem; margin-top: -1rem;">
+            <button
+              pButton
+              type="button"
+              icon="pi pi-paperclip"
+              severity="primary"
+              (click)="openFileDialog()"
+              class="p-button-sm">
+            </button>
+            <input
+              type="file"
+              #fileInput
+              (change)="onFilesSelected($event)"
+              [attr.accept]="acceptedTypes"
+              style="display: none"
+              multiple
+            />
+          </div>
+          <div class="field col-12 md:col-12">
+            <label>
+              Body
+              <span class="required">*</span>
+            </label>
+            <p-editor formControlName="body" [style]="{ height: '280px' }" [modules]="editorModules"/>
+          </div>
+        </div>
+      </div>
+      <div class="mt-3 flex justify-content-end column-gap-4">
+        <p-button
+            icon="pi pi-times-circle"
+            styleClass="p-button-sm p-button-danger"
+            label="Cancel"
+            (onClick)="closeModal()">
+        </p-button>
+        <button
+            pButton
+            type="submit"
+            label="Send"
+            icon="pi pi-send"
+            [disabled]="formEmail.invalid"
+            class="p-button-sm p-button-success">
+        </button>
+      </div>
+    </form>
+  </div>
+}
+@if (loading()) {
+  <div class="field col animate__animated animate__fadeIn">
+    <p-progressBar
+        class="w-20rem animate__animated animate__fadeIn"
+        mode="indeterminate">
+    </p-progressBar>
+  </div>
+}

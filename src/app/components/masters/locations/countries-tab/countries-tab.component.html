@@ -1,0 +1,136 @@
+<div class="grid">
+	<div class="col-12" style="margin-bottom: -1rem;">
+    <p-toolbar>
+      <div class="md:ml-2 m-auto">
+        @if (countryPermissions().createCountry) {
+          <p-button
+            label="New Country"
+            icon="pi pi-map-marker"
+            [disabled]="loading()"
+            (onClick)="openModalCountry('create')">
+          </p-button>
+        }
+      </div>
+      <div class="flex justify-content-center flex-wrap align-items-center">
+        <span class="p-input-icon-left mb-2">
+          <i class="pi pi-search"></i>
+          <input
+            pInputText
+            type="text"
+            (input)="onGlobalFilter(dt1, $event)"
+            placeholder="Search"
+            [disabled]="loading()"
+            class="w-full"/>
+        </span>
+        <span class="p-input-icon-left mb-2 mr-3">
+          <button
+            style="margin-left: 1rem;"
+            pButton
+            class="p-button-info mb-2"
+            icon="pi pi-refresh"
+            pTooltip="Refresh"
+            tooltipPosition="bottom"
+            [disabled]="loading()"
+            (click)="loadListCountries()">
+          </button>
+        </span>
+      </div>
+    </p-toolbar>
+    <hr class="mb-1 mt-3" />
+    <p-table
+      #dt1
+      [value]="listCountries()"
+      styleClass="p-datatable-sm"
+      dataKey="id"
+      [rows]="10"
+      [loading]="loading()"
+      [paginator]="true"
+      [globalFilterFields]="['name','nameShort']"
+      responsiveLayout="scroll">
+      <ng-template pTemplate="header" >
+        <tr>
+          <th style="min-width: 11rem" pSortableColumn="nameShort">
+            <div class="flex justify-content-between align-items-center">
+              SHORT NAME
+              <p-sortIcon field="nameShort"></p-sortIcon>
+            </div>
+          </th>
+          <th style="min-width: 11rem" pSortableColumn="name">
+            <div class="flex justify-content-between align-items-center">
+              NAME
+              <p-sortIcon field="name"></p-sortIcon>
+            </div>
+          </th>
+          <th style="min-width: 12rem" pSortableColumn="latitude">
+            <div class="flex justify-content-between align-items-center">
+              LATITUDE
+              <p-sortIcon field="latitude"></p-sortIcon>
+            </div>
+          </th>
+          <th style="min-width: 14rem" pSortableColumn="longitude">
+            <div class="flex justify-content-between align-items-center">
+              LONGITUDE
+              <p-sortIcon field="longitude"></p-sortIcon>
+            </div>
+          </th>
+          <th style="min-width: 12rem" pSortableColumn="createdAt">
+            <div class="flex justify-content-between align-items-center">
+                DATE OF CREATION
+                <p-sortIcon field="createdAt"></p-sortIcon>
+            </div>
+          </th>
+          @if(countryPermissions().updateCountry) {
+            <th style="min-width: 8rem" pSortableColumn="actions">
+              <div class="flex justify-content-between align-items-center">
+
+              </div>
+            </th>
+          }
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-country>
+        <tr [pSelectableRow]="country">
+          <td>
+            {{country.nameShort}}
+          </td>
+          <td>
+            {{country.name}}
+          </td>
+          <td>
+            {{country.latitude}}
+          </td>
+          <td>
+            {{country.longitude}}
+          </td>
+          <td>
+            {{country.createdAt | date:'MMM dd, yyyy hh:mm a'}}
+          </td>
+          @if(countryPermissions().updateCountry) {
+            <td>
+              <button
+                pButton
+                type="button"
+                (click)="openModalCountry('edit', country)"
+                icon="pi pi-pencil"
+                class="p-button-rounded p-button-text"
+                pTooltip="Edit"
+                severity="warning"
+                tooltipPosition="left">
+              </button>
+            </td>
+          }
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8">No countries found</td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="loadingbody">
+        <tr>
+          <td colspan="8">Loading countries, please wait</td>
+        </tr>
+      </ng-template>
+    </p-table>
+	</div>
+</div>

@@ -1,0 +1,38 @@
+@if (formSub) {
+  <form [formGroup]="formSub" (ngSubmit)="onSubmit()">
+    <div class="p-fluid">
+      <div class="formgrid grid">
+          <div class="field col-12 md:col-12">
+            <label>
+              Product
+              <span class="required">*</span>
+            </label>
+            <p-autoComplete
+              formControlName="idPorduct"
+              [suggestions]="filteredProducts"
+              (completeMethod)="searchProduct($event)"
+              optionValue="id"
+              appendTo="body"
+              [showClear]="true"
+              optionLabel="name"/>
+          </div>
+      </div>
+    </div>
+    <div class="mt-3 flex justify-content-end column-gap-4">
+      <p-button
+          icon="pi pi-times-circle"
+          styleClass="p-button-sm p-button-danger"
+          label="Cancel"
+          (onClick)="closeModal()"
+      ></p-button>
+      <button
+          pButton
+          type="submit"
+          label="Save"
+          icon="pi pi-save"
+          [disabled]="formSub.invalid"
+          class="p-button-sm p-button-success">
+      </button>
+    </div>
+  </form>
+}

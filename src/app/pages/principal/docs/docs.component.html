@@ -1,0 +1,24 @@
+<p-card subheader="The documentation module of our software is designed to provide users with a comprehensive and accessible guide to all the system's functionalities. Within this module, links to explanatory videos for each of the system's modules have been uploaded. These videos offer a detailed view of how to use each function, allowing users to understand and make the most of the software's capabilities." header="Documentation">
+  <p-accordion [activeIndex]="0" [multiple]="true">
+    @for (item of listMenus(); track item) {
+      <p-accordionTab [header]="item.label">
+        <div class="grid">
+          @for (itemMenu of item.items; track itemMenu) {
+            <div class="field col-12 md:col-3">
+              <p-card [header]="itemMenu.label" [subheader]="itemMenu.description" >
+                <ng-template pTemplate="footer">
+                  <div class="flex gap-3 mt-1">
+                      <p-button label="View Docs" class="w-full" styleClass="w-full" icon="pi pi-link" [disabled]="!itemMenu.docsUrl" (onClick)="openDocs(itemMenu.docsUrl)"/>
+                  </div>
+                </ng-template>
+              </p-card>
+            </div>
+          }
+        </div>
+      </p-accordionTab>
+    }
+  </p-accordion>
+</p-card>
+
+
+

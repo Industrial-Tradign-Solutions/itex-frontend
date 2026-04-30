@@ -1,0 +1,360 @@
+@if(formTab && showForm) {
+  <div [class]="'p-fluid w-full animate__animated animate__' + animation" >
+    <form [formGroup]="formTab" (ngSubmit)="onSubmit()">
+      <p-scrollPanel [style]="{ width: '100%', height: '30rem' }">
+        <!--
+        <p-scrollPanel [style]="{ width: '100%', height: '57rem' }">
+          Se debe poner del mismo tamaño para cuando se carguen las tablas
+        -->
+        <div class="formgrid grid mt-1">
+          <div class="field col-12 md:col-3 lg:col-3 xl:col-3 mt-3" >
+            <p-floatLabel>
+              <input
+                pInputText
+                formControlName="description"
+                maxlength="1000"
+                type="text"/>
+              <label>
+                Description
+                <span class="required">*</span>
+              </label>
+            </p-floatLabel>
+          </div>
+          <div class="field col-12 md:col-3 lg:col-3 xl:col-3 mt-3" >
+            <p-floatLabel>
+              <input
+                pInputText
+                formControlName="clientDescription"
+                maxlength="1000"
+                type="text"/>
+              <label>
+                Client Description
+              </label>
+            </p-floatLabel>
+          </div>
+          <div class="field col-12 md:col-2 lg:col-2 xl:col-2 mt-3" >
+            <p-floatLabel>
+              <p-autoComplete
+                formControlName="brandId"
+                [suggestions]="filteredBrands"
+                (completeMethod)="searchBrand($event)"
+                optionValue="id"
+                [showClear]="true"
+                optionLabel="name"/>
+              <label>
+                Brand
+              </label>
+            </p-floatLabel>
+          </div>
+          <div class="field col-12 md:col-2 lg:col-2 xl:col-2 mt-3" >
+            <p-floatLabel>
+              <p-dropdown
+                [options]="listIpProductFreightClass()"
+                optionLabel="value"
+                formControlName="freightClass"
+                optionValue="key" />
+              <label>
+                Freight Class
+              </label>
+            </p-floatLabel>
+          </div>
+          <div class="field col-12 md:col-2 lg:col-2 xl:col-2 mt-3" >
+            <p-floatLabel>
+              <p-dropdown
+                [options]="listIpProductStatus()"
+                optionLabel="value"
+                (onChange)="changeStatus($event)"
+                formControlName="status"
+                optionValue="key" />
+              <label>
+                Status
+              </label>
+            </p-floatLabel>
+          </div>
+          <div class="field col-12 md:col-6 lg:col-6 xl:col-6 mt-3" >
+            <div class="grid">
+              <div class="field col-12 md:col-3 lg:col-3 xl:col-3 mt-3" >
+                <p-floatLabel>
+                  <input
+                    pInputText
+                    formControlName="mfrReference"
+                    maxlength="100"
+                    type="text"/>
+                  <label>
+                    MFR Reference
+                  </label>
+                </p-floatLabel>
+              </div>
+              <div class="field col-12 md:col-3 lg:col-3 xl:col-3 mt-3" >
+                <p-floatLabel>
+                  <input
+                    pInputText
+                    formControlName="clientReference"
+                    maxlength="100"
+                    type="text"/>
+                  <label>
+                    Client Reference
+                  </label>
+                </p-floatLabel>
+              </div>
+              <div class="field col-12 md:col-3 lg:col-3 xl:col-3 mt-3" >
+                <p-floatLabel>
+                  <p-inputNumber
+                    mode="decimal"
+                    [useGrouping]="false"
+                    suffix=" lbs"
+                    [max]="999999999999"
+                    formControlName="netWeightLbs" />
+                  <label>
+                    Net Weight Lbs
+                  </label>
+                </p-floatLabel>
+              </div>
+              <div class="field col-12 md:col-3 lg:col-3 xl:col-3 mt-3" >
+                <p-floatLabel>
+                  <p-inputNumber
+                    mode="decimal"
+                    [max]="2147483647"
+                    [useGrouping]="false"
+                    formControlName="nmfc" />
+                  <label>
+                    NMFC
+                  </label>
+                </p-floatLabel>
+              </div>
+            </div>
+          </div>
+          <div class="field col-12 md:col-2 lg:col-2 xl:col-2 mt-3" >
+            <p-floatLabel>
+              <p-inputNumber
+                mode="decimal"
+                [useGrouping]="false"
+                [max]="2147483647"
+                formControlName="htsScheduleBNumber" />
+              <label>
+                HTS #
+              </label>
+            </p-floatLabel>
+          </div>
+          <div class="field col-12 md:col-2 lg:col-2 xl:col-2 mt-3" >
+            <p-floatLabel>
+              <input
+                pInputText
+                formControlName="eccn"
+                maxlength="100"
+                type="text"/>
+              <label>
+                ECCN
+              </label>
+            </p-floatLabel>
+          </div>
+          <div class="field col-12 md:col-2 lg:col-2 xl:col-2 mt-3" >
+            <p-floatLabel>
+              <p-autoComplete
+                formControlName="cooId"
+                [suggestions]="filteredCoo"
+                (completeMethod)="searchCoo($event)"
+                optionValue="id"
+                [showClear]="true"
+                optionLabel="name"/>
+              <label>
+                COO
+              </label>
+            </p-floatLabel>
+          </div>
+          <div class="field col-12 md:col-2 lg:col-2 xl:col-2 mt-3">
+            <div class="formgrid grid">
+              <div class="field col-12 md:col-6" >
+                <p-checkbox
+                  formControlName="battery"
+                  [binary]="true"
+                  inputId="binary" />
+                <label class="checks">
+                  Battery
+                </label>
+              </div>
+              <div class="field col-12 md:col-6" >
+                <p-checkbox
+                  formControlName="hazmat"
+                  [binary]="true"
+                  inputId="binary" />
+                <label class="checks">
+                  Hazmat
+                </label>
+              </div>
+              <div class="field col-12 md:col-6" >
+                <p-checkbox
+                  formControlName="dualUse"
+                  [binary]="true"
+                  inputId="binary" />
+                <label class="checks">
+                  Dual Use
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="field col-12 md:col-4 lg:col-4 xl:col-4 mt-3 surplus" >
+            <p-fieldset legend="Surplus" >
+              <div class="grid">
+                <div class="field col-12 md:col-3 lg:col-3 xl:col-3 mt-3" >
+                  <p-floatLabel>
+                    <input
+                      pInputText
+                      formControlName="totalSurplus"
+                      type="text"/>
+                      <label>
+                        Total
+                      </label>
+                  </p-floatLabel>
+                </div>
+                <div class="field col-12 md:col-3 lg:col-3 xl:col-3 mt-3" >
+                  <p-floatLabel>
+                    <input
+                      pInputText
+                      formControlName="price"
+                      type="text"/>
+                      <label>
+                        Price
+                      </label>
+                  </p-floatLabel>
+                </div>
+                <div class="field col-12 md:col-3 lg:col-3 xl:col-3 mt-3" >
+                  <p-floatLabel>
+                    <input
+                      pInputText
+                      formControlName="location"
+                      type="text"/>
+                      <label>
+                        Location
+                      </label>
+                  </p-floatLabel>
+                </div>
+                <div class="field col-12 md:col-3 lg:col-3 xl:col-3 mt-3" >
+                  <p-floatLabel>
+                    <input
+                      pInputText
+                      formControlName="whNumber"
+                      type="text"/>
+                      <label>
+                        WH #
+                      </label>
+                  </p-floatLabel>
+                </div>
+                <div class="field col-12 md:col-6 mt-3" ></div>
+                <div class="field col-12 md:col-3 lg:col-3 xl:col-3 mt-3" >
+                  <button pButton
+                    label="Out"
+                    icon="pi pi-minus"
+                    severity="danger"
+                    size="small"
+                    (click)="openModalOutSurplus(item()!)"
+                    [disabled]="tabItem.type !== 'edit' || (item()!.totalSurplus !== undefined && item()!.totalSurplus <= 0)"
+                    type="button">
+                  </button>
+                </div>
+                <div class="field col-12 md:col-3 lg:col-3 xl:col-3 mt-3" >
+                  <button pButton
+                    label="Add"
+                    icon="pi pi-plus"
+                    severity="success"
+                    size="small"
+                    (click)="openModalAddSurplus(item()!)"
+                    [disabled]="tabItem.type !== 'edit'"
+                    type="button">
+                  </button>
+                </div>
+              </div>
+            </p-fieldset>
+          </div>
+          <div class="field col-12 md:col-3 lg:col-3 xl:col-3 mt-3" >
+            <p-floatLabel>
+              <textarea
+                [rows]="10"
+                pInputTextarea
+                style="resize: none"
+                formControlName="notes">
+              </textarea>
+              <label>
+                Notes
+              </label>
+            </p-floatLabel>
+          </div>
+          <div class="field col-12 md:col-3 lg:col-3 xl:col-3 mt-3" >
+            <p-floatLabel>
+              <textarea
+                [rows]="10"
+                pInputTextarea
+                style="resize: none"
+                formControlName="keywords">
+              </textarea>
+              <label>
+                Keywords
+              </label>
+            </p-floatLabel>
+          </div>
+        </div>
+      </p-scrollPanel>
+      <div class="formgrid grid" style="margin-bottom: -2.5rem;">
+        <div class="field col-12 md:col-2 lg:col-2 xl:col-1 md:mt-5 lg:mt-5 xl:mt-5">
+          @if (permissions().viewHistoryIpProduct && tabItem.type !== 'create') {
+            <button pButton
+              label="View History"
+              icon="pi pi-book"
+              severity="help"
+              (click)="openHisotyr(item()!)"
+              type="button">
+            </button>
+          }
+        </div>
+        @if (tabItem.type === 'view') {
+          @if (tabItem.item.status === 'SUBSTITUTED') {
+            <div class="field col-12 md:col-8 lg:col-8 xl:col-10 md:mt-5 lg:mt-5 xl:mt-5">
+              <h3 style="text-align: end;">This product has been replaced</h3>
+            </div>
+            <div class="field col-12 md:col-2 lg:col-2 xl:col-1 md:mt-5 lg:mt-5 xl:mt-5">
+              <button pButton
+                label="Open Product"
+                icon="pi pi-box"
+                severity="info"
+                (click)="openProduct(item()!)"
+                type="button">
+              </button>
+            </div>
+          }
+        } @else {
+          <div class="field col-12 md:col-6 lg:col-6 xl:col-9 md:mt-5 lg:mt-5 xl:mt-5"></div>
+          <div class="field col-12 md:col-2 lg:col-2 xl:col-1 md:mt-5 lg:mt-5 xl:mt-5">
+            @if (tabItem.type === 'edit') {
+              <button pButton
+                label="Create QR"
+                icon="pi pi-plus"
+                severity="contrast"
+                [disabled]="formTab.disabled"
+                (click)="createQR(item()!)"
+                type="button">
+              </button>
+            }
+          </div>
+          <div class="field col-12 md:col-2 lg:col-2 xl:col-1 md:mt-5 lg:mt-5 xl:mt-5">
+            <button pButton
+              label="Save"
+              icon="pi pi-save"
+              severity="success"
+              [disabled]="formTab.disabled || formTab.invalid"
+              type="submit">
+            </button>
+          </div>
+        }
+      </div>
+    </form>
+  </div>
+}@else {
+  @if (loading()) {
+    <div class="field col animate__animated animate__fadeIn">
+      <p-progressBar
+          class="w-20rem animate__animated animate__fadeIn"
+          mode="indeterminate">
+      </p-progressBar>
+    </div>
+  }
+}

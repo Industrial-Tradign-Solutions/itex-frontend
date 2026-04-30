@@ -1,0 +1,167 @@
+<div class="grid">
+	<div class="col-12">
+      <div class="card">
+        <p-toolbar>
+          <div class="md:ml-2 m-auto">
+            @if(departmentPermissions().createDepartment) {
+              <p-button label="New Department" icon="pi pi-building" (onClick)="openModalDepartment('create')" [disabled]="loading()"></p-button>
+            }
+          </div>
+          <div class="flex justify-content-center flex-wrap align-items-center">
+              <span class="p-input-icon-left mb-2">
+                  <i class="pi pi-search"></i>
+                  <input pInputText type="text" (input)="onGlobalFilter(dt1, $event)" placeholder="Search" class="w-full" [disabled]="loading()"/>
+              </span>
+              <span class="p-input-icon-left mb-2 mr-3">
+                <button
+                  style="margin-left: 1rem;"
+                  pButton
+                  class="p-button-info mb-2"
+                  icon="pi pi-refresh"
+                  pTooltip="Refresh"
+                  tooltipPosition="bottom"
+                  [disabled]="loading()"
+                  (click)="loadListDepartments()">
+                </button>
+              </span>
+          </div>
+      </p-toolbar>
+      <hr class="mb-1 mt-3" />
+      <p-table
+          #dt1
+          [value]="listDepartments()"
+          styleClass="p-datatable-sm"
+          dataKey="id"
+          [rows]="10"
+          [loading]="loading()"
+          [paginator]="true"
+          [globalFilterFields]="['name']"
+          responsiveLayout="scroll">
+          <ng-template pTemplate="header" >
+              <tr>
+                <th style="min-width: 11rem" pSortableColumn="name">
+                    <div class="flex justify-content-between align-items-center">
+                        NAME
+                        <p-sortIcon field="name"></p-sortIcon>
+                    </div>
+                </th>
+                <th style="min-width: 20rem" pSortableColumn="description">
+                    <div class="flex justify-content-between align-items-center">
+                        DESCRIPTION
+                        <p-sortIcon field="description"></p-sortIcon>
+                    </div>
+                </th>
+                <th style="min-width: 12rem" pSortableColumn="createdAt">
+                    <div class="flex justify-content-between align-items-center">
+                        DATE OF CREATION
+                        <p-sortIcon field="createdAt"></p-sortIcon>
+                    </div>
+                </th>
+                <th style="min-width: 8rem" pSortableColumn="clientInfo">
+                  <div class="flex justify-content-between align-items-center">
+                      SHOW CLIENT INFO
+                      <p-sortIcon field="clientInfo"></p-sortIcon>
+                  </div>
+                </th>
+                <th style="min-width: 8rem" pSortableColumn="supplierInfo">
+                  <div class="flex justify-content-between align-items-center">
+                      SHOW SUPPLIER INFO
+                      <p-sortIcon field="supplierInfo"></p-sortIcon>
+                  </div>
+                </th>
+                <th style="min-width: 8rem" pSortableColumn="active">
+                    <div class="flex justify-content-between align-items-center">
+                        STATUS
+                        <p-sortIcon field="active"></p-sortIcon>
+                    </div>
+                </th>
+                @if (departmentPermissions().updateDepartment || departmentPermissions().disableDepartment || departmentPermissions().enableDepartment) {
+                  <th style="min-width: 8rem" pSortableColumn="actions">
+                    <div class="flex justify-content-between align-items-center">
+                    </div>
+                  </th>
+                }
+              </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-department>
+              <tr>
+                <td>
+                    {{department.name}}
+                </td>
+                <td>
+                    {{department.description}}
+                </td>
+                <td>
+                    {{department.createdAt | date:'MMM dd, yyyy hh:mm a'}}
+                </td>
+                <td>
+                  <span [class]="'customer-badge status-' + (department.clientInfo ? 'qualified' : 'unqualified')">
+                      {{department.clientInfo ? 'Yes': 'No'}}
+                  </span>
+                </td>
+                <td>
+                  <span [class]="'customer-badge status-' + (department.supplierInfo ? 'qualified' : 'unqualified')">
+                      {{department.supplierInfo ? 'Yes': 'No'}}
+                  </span>
+                </td>
+                <td>
+                    <span [class]="'customer-badge status-' + (department.active ? 'qualified' : 'unqualified')">
+                        {{department.active ? 'Enable': 'Disable'}}
+                    </span>
+                </td>
+                @if (departmentPermissions().updateDepartment || departmentPermissions().disableDepartment || departmentPermissions().enableDepartment) {
+                  <td>
+                    @if (departmentPermissions().updateDepartment && department.active) {
+                      <button
+                        pButton
+                        type="button"
+                        (click)="openModalDepartment('edit', department)"
+                        icon="pi pi-pencil"
+                        class="p-button-rounded p-button-text"
+                        pTooltip="Edit"
+                        severity="warning"
+                        tooltipPosition="left">
+                      </button>
+                    }
+                    @if(departmentPermissions().disableDepartment && department.active) {
+                      <button
+                        pButton
+                        type="button"
+                        (click)="disableDepartment(department)"
+                        icon="pi pi-ban"
+                        class="p-button-rounded p-button-text"
+                        pTooltip="Disable"
+                        severity="danger"
+                        tooltipPosition="right">
+                      </button>
+                    }
+                    @if (departmentPermissions().enableDepartment && !department.active) {
+                      <button
+                        pButton
+                        type="button"
+                        (click)="enableDepartment(department)"
+                        icon="pi pi-check-circle"
+                        class="p-button-rounded p-button-text"
+                        pTooltip="Enable"
+                        severity="success"
+                        tooltipPosition="right">
+                      </button>
+                    }
+                  </td>
+                }
+              </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+              <tr>
+                  <td colspan="8">No Departments found</td>
+              </tr>
+          </ng-template>
+          <ng-template pTemplate="loadingbody">
+              <tr>
+                  <td colspan="8">Loading Departments, please wait</td>
+              </tr>
+          </ng-template>
+      </p-table>
+      </div>
+    </div>
+</div>

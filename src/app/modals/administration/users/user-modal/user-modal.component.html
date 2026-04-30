@@ -1,0 +1,138 @@
+@if (formUser) {
+  <form [formGroup]="formUser" (ngSubmit)="onSubmit()">
+    <div class="p-fluid">
+        <div class="formgrid grid">
+          <div class="field col-12 md:col-12">
+            <label>
+                Username
+                <span class="required">*</span>
+            </label>
+            <input pInputText type="text" formControlName="user"/>
+          </div>
+            <div class="field col-12 md:col-6">
+                <label>
+                    Name
+                    <span class="required">*</span>
+                </label>
+                <input pInputText type="text" formControlName="name"/>
+            </div>
+            <div class="field col-12 md:col-6">
+                <label>
+                    Last Name
+                    <span class="required">*</span>
+                </label>
+                <input pInputText type="text" formControlName="lastName"/>
+            </div>
+            <div class="field col-12 md:col-6">
+              <label>
+                  Title
+                  <span class="required">*</span>
+              </label>
+              <input pInputText type="text" formControlName="title"/>
+            </div>
+            <div class="field col-12 md:col-6">
+                <label>
+                    Extension
+                    <span class="required">*</span>
+                </label>
+                <input pInputText type="text" formControlName="extension" maxlength="4"/>
+            </div>
+            <div class="field col-12 md:col-6">
+                <label>
+                    Email
+                    <span class="required">*</span>
+                </label>
+                <input pInputText type="email" formControlName="email"/>
+            </div>
+            <div class="field col-12 md:col-6">
+                <label>
+                    Email Password
+                </label>
+                <input pInputText type="password" formControlName="emailPassword"/>
+            </div>
+            <div class="field col-12 md:col-6">
+                <label htmlFor="state">
+                    Role
+                    <span class="required">*</span>
+                </label>
+                <p-dropdown
+                    (onClick)="loadRoles()"
+                    appendTo="body"
+                    placeholder="Role"
+                    [options]="listRoles()"
+                    optionLabel="name"
+                    [filter]="true"
+                    filterBy="name"
+                    optionValue="id"
+                    formControlName="roleId">
+                </p-dropdown>
+            </div>
+            <div class="field col-12 md:col-6">
+                <label htmlFor="state">
+                    Department
+                    <span class="required">*</span>
+                </label>
+                <p-multiSelect
+                  (onClick)="loadDepartments()"
+                  appendTo="body"
+                  placeholder="Department"
+                  [options]="listDepartments()"
+                  [filter]="true"
+                  filterBy="name"
+                  optionLabel="name"
+                  optionValue="id"
+                  formControlName="departmentsIds"/>
+            </div>
+        </div>
+        @if (type() === 'create') {
+          <p class="message">
+            <em>
+                <b style="font-size: 12px;">Note: </b> When creating a user the system will send an email with the access credentials
+            </em>
+          </p>
+        }
+    </div>
+    @if (loading() && type() !== 'view') {
+      <div class="field col animate__animated animate__fadeIn">
+        <p-progressBar
+            class="w-20rem animate__animated animate__fadeIn"
+            mode="indeterminate">
+        </p-progressBar>
+      </div>
+    }
+    @if(error() !== null) {
+      <label class="error">
+        <em>
+            {{error()}}
+        </em>
+      </label>
+    }
+    @if (!loading()) {
+      <div class="mt-3 flex justify-content-end column-gap-4">
+        @if(type() !== 'view') {
+          <p-button
+            icon="pi pi-times-circle"
+            styleClass="p-button-sm p-button-danger"
+            label="Cancel"
+            (onClick)="closeModal()">
+          </p-button>
+          <button
+            pButton
+            type="submit"
+            label="Save"
+            icon="pi pi-save"
+            [disabled]="this.formUser.invalid"
+            class="p-button-sm p-button-success">
+          </button>
+        }
+      </div>
+    }
+  </form>
+} @else {
+  <div class="field col animate__animated animate__fadeIn">
+      <p-progressBar
+          class="w-20rem animate__animated animate__fadeIn"
+          mode="indeterminate">
+      </p-progressBar>
+  </div>
+}
