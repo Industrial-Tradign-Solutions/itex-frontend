@@ -1,31 +1,32 @@
 @if(!loading()) {
   <div class="card animate__animated animate__fadeIn">
     <p-tabView [(activeIndex)]="activeTab" [scrollable]="true" [controlClose]="true" (onClose)="closeTab($event)">
-      <p-tabPanel header="Quote Requests">
+      <p-tabPanel header="Quotations">
         <ng-template pTemplate="header">
-          <i class="pi pi-file-o"></i>
-          <span>Quote Requests</span>
+          <i class="pi pi-briefcase"></i>
+          <span>Quotations</span>
         </ng-template>
         <ng-template pTemplate="content">
-          <app-list-ip-quote-request
+          <app-list-ip-quotation
             (opened)="openTab($event)"
-            [permissions]="ipQuoteRequestPermissions">
-          </app-list-ip-quote-request>
+            [permissions]="ipQuotationPermissions">
+          </app-list-ip-quotation>
         </ng-template>
       </p-tabPanel>
-      @for(quoteRequestTab of tabs(); track quoteRequestTab) {
-        <p-tabPanel [header]="quoteRequestTab.item.name" [closable]="true">
+      @for(quotationTab of tabs(); track quotationTab) {
+        <p-tabPanel [header]="quotationTab.item.name" [closable]="true">
           <ng-template pTemplate="header">
-            <span>{{ quoteRequestTab.item.name }}</span>
+            <span>{{ quotationTab.item.name }}</span>
           </ng-template>
           <ng-template pTemplate="content">
-            <app-form-ip-quote-request
+            <app-form-ip-quotation
               [index]="$index"
-              [tabItem]="quoteRequestTab"
-              [permissions]="ipQuoteRequestPermissions"
+              [tabItem]="quotationTab"
+              [permissions]="ipQuotationPermissions"
               (opened)="openTab($event)"
               (onClose)="closeTab($event)">
-            </app-form-ip-quote-request>
+            </app-form-ip-quotation>
+
           </ng-template>
         </p-tabPanel>
       }

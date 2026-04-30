@@ -1,0 +1,334 @@
+<p-fieldset legend="Filters">
+  <div class="p-fluid w-full animate__animated animate__fadeIn">
+    @if (formFilter) {
+      <form [formGroup]="formFilter" (ngSubmit)="search(true)" style="margin-top: -1.5rem; margin-bottom: -1rem;">
+        <div class="formgrid grid">
+          <div class="col-12 md:col-5">
+            <div class="formgrid grid">
+              <div class="field col-12 md:col-3 flex">
+                @if(permissions().createIpQuotation) {
+                  <button pButton
+                    label="New Quotation"
+                    icon="pi pi-briefcase"
+                    [disabled]="loading()"
+                    (click)="newQuotation()"
+                    type="button"
+                  ></button>
+                }
+              </div>
+              <div class="field col-12 md:col-4">
+                <p-floatLabel>
+                  <input
+                    pInputText
+                    formControlName="number"
+                    type="text"/>
+                    <label>Quotation #</label>
+                </p-floatLabel>
+              </div>
+              <div class="field col-12 md:col-5">
+                <p-floatLabel>
+                  <p-autoComplete
+                    formControlName="clientId"
+                    [suggestions]="filteredClients"
+                    (completeMethod)="searchClient($event)"
+                    (onKeyUp)="searchByClient($event)"
+                    optionValue="id"
+                    appendTo="body"
+                    [showClear]="true"
+                    optionLabel="showName"/>
+                  <label>
+                    Client
+                  </label>
+                </p-floatLabel>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 md:col-7">
+            <div class="formgrid grid">
+              <div class="field col-12 md:col-3">
+                <p-floatLabel>
+                  <p-dropdown
+                    [options]="listEmployees()"
+                    optionLabel="fullName"
+                    [filter]="true"
+                    appendTo="body"
+                    filterBy="name"
+                    [showClear]="true"
+                    formControlName="salesRepId"
+                    optionValue="id" />
+                  <label>
+                    Sales Rep
+                  </label>
+                </p-floatLabel>
+              </div>
+              <div class="field col-12 md:col-2" >
+                <p-floatLabel>
+                  <p-dropdown
+                    [options]="listIpQuotationStatus()"
+                    optionLabel="value"
+                    appendTo="body"
+                    [showClear]="true"
+                    formControlName="status"
+                    optionValue="key" />
+                  <label>
+                    Status
+                  </label>
+                </p-floatLabel>
+              </div>
+              <div class="field col-12 md:col-4">
+                <p-floatLabel >
+                <input
+                  pInputText
+                  formControlName="id"
+                  type="hidden"/>
+                  <label>
+                    <b>Date</b>
+                  </label>
+                </p-floatLabel>
+                <div style="margin-top: 0.5rem;">
+                  <p-radioButton
+                    (onClick)="changeDateRank()"
+                    inputId="ALL"
+                    value="ALL"
+                    formControlName="date" />
+                  <label class="ml-1 mr-1">
+                    ALL
+                  </label>
+                  <p-radioButton
+                    (onClick)="changeDateRank()"
+                    inputId="YEAR"
+                    value="YEAR"
+                    formControlName="date" />
+                  <label class="ml-1 mr-1">
+                    YEAR
+                  </label>
+                  <p-radioButton
+                    (onClick)="changeDateRank()"
+                    inputId="MONTH"
+                    value="MONTH"
+                    formControlName="date" />
+                  <label class="ml-1 mr-1">
+                    MONTH
+                  </label>
+                  <p-radioButton
+                    (onClick)="changeDateRank()"
+                    inputId="DAY"
+                    value="DAY"
+                    formControlName="date" />
+                  <label class="ml-1 mr-1">
+                    TODAY
+                  </label>
+                </div>
+              </div>
+              <div class="field col-12 md:col-3 xl:col-3 flex">
+                <button
+                  pButton
+                  icon="pi pi-search"
+                  label="Search"
+                  type="submit"
+                  severity="info"
+                  pTooltip="Search"
+                  [disabled]="loading()"
+                  tooltipPosition="bottom">
+                </button>
+                <button
+                  pButton
+                  [disabled]="loading()"
+                  style="margin-left: 0.5rem;"
+                  outlined="true"
+                  [icon]="'pi pi-' + (showFilters ? 'filter-fill' : 'filter')"
+                  type="button"
+                  [text]="true"
+                  severity="help"
+                  (click)="showFilters = !showFilters"
+                  pTooltip="Show Filters"
+                  tooltipPosition="bottom">
+                </button>
+                <button
+                  pButton
+                  [disabled]="loading()"
+                  style="margin-left: 0.5rem;"
+                  outlined="true"
+                  icon="pi pi-filter-slash"
+                  type="button"
+                  [text]="true"
+                  [severity]="'danger'"
+                  (click)="resetForm(dt)"
+                  pTooltip="Clear Filters"
+                  tooltipPosition="bottom">
+                </button>
+              </div>
+            </div>
+          </div>
+          @if (showFilters) {
+            <div class="field col-12 md:col-3 mt-3">
+              <p-floatLabel>
+                <input
+                  pInputText
+                  formControlName="remarks"
+                  type="text"/>
+                  <label>Remarks</label>
+              </p-floatLabel>
+            </div>
+            <div class="field col-12 md:col-3">
+              <div class="formgrid grid">
+                <div class="field col-12 md:col-6 mt-3">
+                  <p-floatLabel>
+                    <p-calendar
+                      [showClear]="true"
+                      appendTo="body"
+                      formControlName="initDate"/>
+                    <label>From</label>
+                  </p-floatLabel>
+                </div>
+                <div class="field col-12 md:col-6 mt-3">
+                  <p-floatLabel>
+                    <p-calendar
+                      appendTo="body"
+                      [showClear]="true"
+                      formControlName="endDate"/>
+                    <label>To</label>
+                  </p-floatLabel>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </form>
+    }
+  </div>
+</p-fieldset>
+<hr class="mb-1 mt-3" />
+<p-table
+  #dt1
+  [style]="{'margin-bottom': '-1rem'}"
+  styleClass="p-datatable-sm"
+  [value]="page().content"
+  dataKey="id"
+  [rows]="page().page.size"
+  [loading]="loading()"
+  (sortFunction)="customSort($event)"
+  [customSort]="true"
+  responsiveLayout="scroll">
+    <ng-template pTemplate="header" >
+    <tr>
+      <th style="min-width: 13rem" pSortableColumn="number">
+        <div class="flex justify-content-between">
+            #
+            <p-sortIcon field="number" />
+        </div>
+      </th>
+      <th style="min-width: 9rem" pSortableColumn="client.name">
+        <div class="flex justify-content-between">
+            CLIENT
+            <p-sortIcon field="client.name" />
+        </div>
+      </th>
+      <th style="min-width: 9rem" pSortableColumn="salesRep.name">
+        <div class="flex justify-content-between">
+            SALES REP
+            <p-sortIcon field="salesRep.fullName" />
+        </div>
+      </th>
+      <th style="min-width: 8rem" pSortableColumn="applicationAt">
+        <div class="flex justify-content-between">
+            DATE OF APPLICATION
+            <p-sortIcon field="applicationAt" />
+        </div>
+      </th>
+      <th style="min-width: 8rem" pSortableColumn="createdAt">
+        <div class="flex justify-content-between">
+            DATE OF CREATION
+            <p-sortIcon field="createdAt" />
+        </div>
+      </th>
+      <th style="min-width: 5rem" pSortableColumn="status">
+        <div class="flex justify-content-between">
+            STATUS
+            <p-sortIcon field="status" />
+        </div>
+      </th>
+      <th style="min-width: 5rem" >
+        <div class="flex justify-content-between">
+
+        </div>
+      </th>
+    </tr>
+  </ng-template>
+    <ng-template pTemplate="body" let-quotation>
+    <tr [pSelectableRow]="quotation">
+      <td>
+        {{quotation.number}}
+      </td>
+      <td>
+        {{quotation.client?.name}}
+      </td>
+      <td>
+        {{quotation.salesRep?.fullName}}
+      </td>
+      <td>
+        {{quotation.applicationAt | date:'MMM dd, yyyy hh:mm a'}}
+      </td>
+      <td>
+        {{quotation.createdAt | date:'MMM dd, yyyy hh:mm a'}}
+      </td>
+      <td>
+        <span [class]="'customer-badge status-' + getStatusColor(quotation.status)">
+            {{quotation.status}}
+        </span>
+      </td>
+      <td style="text-align: end;">
+        @if(permissions().updateIpQuotation) {
+          <button
+            pButton
+            type="button"
+            icon="pi pi-pencil"
+            class="p-button-rounded p-button-text"
+            pTooltip="Edit"
+            severity="warning"
+            (click)="openQuotation(quotation, 'edit')"
+            tooltipPosition="left">
+          </button>
+        } @else {
+          <button
+            pButton
+            type="button"
+            icon="pi pi-eye"
+            class="p-button-rounded p-button-text"
+            pTooltip="View"
+            (click)="openQuotation(quotation, 'view')"
+            severity="info"
+            tooltipPosition="left">
+          </button>
+        }
+      </td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="emptymessage">
+    <tr >
+      <td style="text-align: center !important;" colspan="8">
+        No quotations found
+      </td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="loadingbody">
+    <tr>
+      <td style="text-align: center !important;" colspan="8">
+        Loading quotations, please wait
+      </td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="footergrouped" >
+    @if(page().page.totalPages > 1) {
+      <tr>
+        <td style="text-align: center !important;" colspan="8">
+            <p-paginator #paginator
+              (onPageChange)="changePage($event)"
+              [first]="0"
+              [rows]="page().page.size"
+              [totalRecords]="page().page.totalElements" />
+        </td>
+      </tr>
+    }
+  </ng-template>
+</p-table>

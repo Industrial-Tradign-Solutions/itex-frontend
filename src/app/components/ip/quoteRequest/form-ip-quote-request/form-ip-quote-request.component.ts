@@ -86,6 +86,10 @@ export class FormIpQuoteRequestComponent extends CommonPageTab<ListIpQuoteReques
     });
   }
 
+  openQuotation( quotation: {id: string, number: string}) {
+    this.navigateSV.openModuleNewTabAndOpenItem('Quotations', quotation.id);
+  }
+
   cloneQr() {
     if (this.tabItem.type === 'create') return;
     this.utilSV.confirm({

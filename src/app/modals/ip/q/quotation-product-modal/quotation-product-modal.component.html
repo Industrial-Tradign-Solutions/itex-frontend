@@ -1,0 +1,77 @@
+@if(formProduct && !loading()) {
+  <div class="animate__animated animate__fadeIn" >
+  <form *ngIf="!loading()" [formGroup]="formProduct" (ngSubmit)="onSubmit()">
+    <div class="grid p-fluid">
+
+      <div class="col-12 md:col-6">
+        <label for="quotationsQuoteRequestId">Quote Request <span class="text-red-500">*</span></label>
+        <p-dropdown
+          formControlName="quotationsQuoteRequestId"
+          [options]="listQuoteRequests()"
+          optionValue="qqrId"
+          optionLabel="number"
+          placeholder="Select Quote Request"
+          [disabled]="type() === 'edit'"
+          (onChange)="onQrChange($event.value)">
+        </p-dropdown>
+      </div>
+
+      <div class="col-12 md:col-6">
+        <label for="quoteRequestProductId">QR Product</label>
+        <p-dropdown
+          formControlName="quoteRequestProductId"
+          [options]="qrProducts()"
+          optionValue="id"
+          [disabled]="type() === 'edit'"
+          placeholder="Select QR Product (optional)">
+          <ng-template let-product pTemplate="selectedItem">
+            <span>{{product?.ipProduct?.description}} - {{product?.ipProduct?.mfrReference}}</span>
+          </ng-template>
+          <ng-template let-product pTemplate="item">
+            <div>{{product.ipProduct?.description}} - {{product.ipProduct?.mfrReference}}</div>
+          </ng-template>
+        </p-dropdown>
+      </div>
+
+      <div class="col-12 md:col-6">
+        <label for="profitMargin">Profit Margin <span class="text-red-500">*</span></label>
+        <p-inputNumber
+          formControlName="profitMargin"
+          mode="decimal"
+          [minFractionDigits]="2"
+          [maxFractionDigits]="4"
+          [min]="0"
+          [max]="1"
+          placeholder="e.g. 0.25 = 25%">
+        </p-inputNumber>
+      </div>
+
+      <div class="col-12 md:col-6">
+        <label for="condition">Condition <span class="text-red-500">*</span></label>
+        <p-dropdown
+          formControlName="condition"
+          [options]="listCondition()"
+          optionValue="value"
+          optionLabel="label"
+          placeholder="Select Condition">
+        </p-dropdown>
+      </div>
+
+    </div>
+
+    <div class="flex justify-content-end mt-4">
+      <p-button label="Cancel" icon="pi pi-times" styleClass="p-button-text" (onClick)="closeModal()"></p-button>
+      <p-button label="Save" icon="pi pi-check" type="submit" [disabled]="formProduct.invalid"></p-button>
+    </div>
+  </form>
+  </div>
+}
+@if (loading()) {
+  <div class="field col animate__animated animate__fadeIn">
+    <p-progressBar
+        class="w-20rem animate__animated animate__fadeIn"
+        mode="indeterminate">
+    </p-progressBar>
+  </div>
+}
+
