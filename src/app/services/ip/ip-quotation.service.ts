@@ -6,8 +6,9 @@ import { BaseAutoCompleteService } from '@services/base-auto-complete-service.se
 import { AuthService } from '@services/security';
 import { catchError, concatMap, Observable, of, Subject, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { CreateIpQuotationRequest, IpQuotation, IpQuotationFilter, ListIpQuotation } from '@interfaces/ip/quotation';
+import { CreateIpQuotationRequest, IpQuotation, IpQuotationFilter, ListIpQuotation, IpQuotationOtherCharge, IpQuotationOtherChargeRequest, IpQuotationAddQrRequest } from '@interfaces/ip/quotation';
 import { Page } from '@interfaces/page.model';
+import { IpQuoteRequestAvailableForQ } from '@interfaces/ip/quoteRequest';
 
 const URL_SERVICES = environment.api_url + 'ip/q';
 
@@ -183,6 +184,79 @@ export class IpQuotationService extends  BaseAutoCompleteService<any>{
   removeQuoteRequestFromQuotation(qId: string, qqrId: string): Observable<MessageResponse<string>> {
     const url = `${ URL_SERVICES }/${qId}/quote-request/${qqrId}`;
     return this.http.delete<MessageResponse<string>>( url, {headers: this.authSV.headers()} )
+      .pipe(
+        catchError( err => throwError( () => err.error.errorMessage ))
+      );
+  }
+
+  cloneQuotation(id: string): Observable<MessageResponse<IpQuotation>> {
+    const url = `${ URL_SERVICES }/clone/${id}`;
+    return this.http.patch<MessageResponse<IpQuotation>>( url, null, {headers: this.authSV.headers()} )
+      .pipe(
+        catchError( err => throwError( () => err.error.errorMessage ))
+      );
+  }
+
+  getAvailableQuoteRequestsForQuotation(qId: string, clientId: string, viewCompletedQR: boolean, currency: string): Observable<IpQuoteRequestAvailableForQ[]> {
+    const url = `${ URL_SERVICES }/${qId}/quote-request/available/${clientId}?view-completed-qr=${viewCompletedQR}&currency=${currency}`;
+    return this.http.get<IpQuoteRequestAvailableForQ[]>( url, {headers: this.authSV.headers()} )
+      .pipe(
+        catchError( err => throwError( () => err.error.errorMessage ))
+      );
+  }
+
+  addQuoteRequestsToQuotation(qId: string, request: IpQuotationAddQrRequest): Observable<MessageResponse<IpQuotation>> {
+    const url = `${ URL_SERVICES }/${qId}/quote-request`;
+    return this.http.post<MessageResponse<IpQuotation>>( url, request, {headers: this.authSV.headers()} )
+      .pipe(
+        catchError( err => throwError( () => err.error ))
+      );
+  }
+
+  createQuotationOtherCharge(qId: string, data: IpQuotationOtherChargeRequest): Observable<MessageResponse<IpQuotationOtherCharge>> {
+    const url = `${ URL_SERVICES }/${qId}/other_charges`;
+    return this.http.post<MessageResponse<IpQuotationOtherCharge>>( url, data, {headers: this.authSV.headers()} )
+      .pipe(
+        catchError( err => throwError( () => err.error.errorMessage ))
+      );
+  }
+
+  updateQuotationOtherCharge(qId: string, ocId: string, data: IpQuotationOtherChargeRequest): Observable<MessageResponse<IpQuotationOtherCharge>> {
+    const url = `${ URL_SERVICES }/${qId}/other_charges/${ocId}`;
+    return this.http.put<MessageResponse<IpQuotationOtherCharge>>( url, data, {headers: this.authSV.headers()} )
+      .pipe(
+        catchError( err => throwError( () => err.error.errorMessage ))
+      );
+  }
+
+  getQuotationOtherCharge(qId: string, ocId: string): Observable<IpQuotationOtherCharge> {
+    const url = `${ URL_SERVICES }/${qId}/other_charges/${ocId}`;
+    return this.http.get<IpQuotationOtherCharge>( url, {headers: this.authSV.headers()} )
+      .pipe(
+        catchError( err => throwError( () => err.error.errorMessage ))
+      );
+  }
+
+  removeQuotationOtherCharge(qId: string, ocId: string): Observable<MessageResponse<string>> {
+    const url = `${ URL_SERVICES }/${qId}/other_charges/${ocId}`;
+    return this.http.delete<MessageResponse<string>>( url, {headers: this.authSV.headers()} )
+      .pipe(
+        catchError( err => throwError( () => err.error.errorMessage ))
+      );
+  }
+
+  // TODO: Implement when API endpoint is provided
+  // getAllOtherChargesForModal(qId: string): Observable<any> {
+  //   const url = `${ URL_SERVICES }/${qId}/other_charges/all`;
+  //   return this.http.get<any>( url, {headers: this.authSV.headers()} )
+  //     .pipe(
+  //       catchError( err => throwError( () => err.error.errorMessage ))
+  //     );
+  // }
+
+  printQuotation(qId: string): Observable<Blob> {
+    const url = `${ URL_SERVICES }/print/${qId}`;
+    return this.http.get( url, {headers: this.authSV.headersBlob(), responseType: 'blob'} )
       .pipe(
         catchError( err => throwError( () => err.error.errorMessage ))
       );
