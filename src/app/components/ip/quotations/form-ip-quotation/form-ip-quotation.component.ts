@@ -22,6 +22,8 @@ import { MessageResponse } from '@interfaces/message-response';
 import { FormArray } from '@angular/forms';
 import { CustomCurrencyPipe } from '@pipes/custom-currency.pipe';
 import { QuotationProductModalComponent } from '@modals/ip/q/quotation-product-modal/quotation-product-modal.component';
+import { ListOtherChargesModalComponent } from '@modals/ip/q/list-other-charges-modal/list-other-charges-modal.component';
+import { AddQuoteRequestsModalComponent } from '@modals/ip/q/add-quote-requests-modal/add-quote-requests-modal.component';
 
 const MESSAGES = Messages.pages.ip.quotation;
 const TITLES = TitlesMessages;
@@ -82,6 +84,19 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
     if (qr.id) {
       this.navigateSV.openModuleNewTabAndOpenItem('Quote_Requests', qr.id);
     }
+  }
+
+  openQuotation(quotation: {id?: string, number?: string}) {
+    if (quotation.id) {
+      this.navigateSV.openModuleNewTabAndOpenItem('Quotations', quotation.id);
+    }
+  }
+
+  openPurchaseOrder(po: {id?: string, number?: string}) {
+    // TODO: Implementar navegación cuando el módulo de Purchase Orders esté disponible
+    // if (po.id) {
+    //   this.navigateSV.openModuleNewTabAndOpenItem('Purchase_Orders', po.id);
+    // }
   }
 
   changeStatus(event: DropdownChangeEvent) {
@@ -514,7 +529,102 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
     });
   }
 
-  printQR() {}
-  printAndSendQR(){}
-  openModalListOtherCharges(){}
+  cloneQ() {
+    const qNumber = this.tabItem.item.name;
+    this.utilSV.confirm({
+      message: MESSAGES.clone(qNumber),
+      header: TITLES.confirmation,
+      accept: () => {
+        this._loading.set(true);
+        this.showForm = false;
+        this.quotetationSV.cloneQuotation(this.tabItem.item.id)
+        .pipe(
+          finalize(() => {
+            setTimeout(() => {
+              this._loading.set(false);
+              this.enableForm();
+            }, TIMEOUT);
+          })
+        )
+        .subscribe({
+          next: (resp) => {
+            this.utilSV.setMessage(resp.title, resp.message, 'success');
+            this.opened.emit({
+              item: {
+                id: resp.data.id,
+                name: resp.data.number,
+                status: resp.data.status
+              },
+              type: 'edit',
+              pristine: true
+            });
+          },
+          error: (err) => {
+            this.utilSV.setMessage(TITLES.error, err, 'error');
+          }
+        });
+      }
+    });
+  }
+
+  openModalAddQuoteRequests() {
+    if (this.tabItem.type !== 'edit') return;
+    if (!this.item()) return;
+    
+    const modal = this.dialogSV.open(AddQuoteRequestsModalComponent, {
+      header: 'ADD QUOTE REQUESTS TO QUOTATION',
+      width: '70rem',
+      closable: false,
+      closeOnEscape: false,
+      data: {
+        qId: this.item()!.id,
+        clientId: this.item()!.client.id,
+        currency: this.item()!.currency,
+        viewCompletedQr: false
+      }
+    });
+    modal.onClose.subscribe({
+      next: (resp: { valid: boolean; quotation?: IpQuotation }) => {
+        if (resp && resp.valid) {
+          this.tabItem.pristine = false;
+          this.onSubmit();
+        }
+      }
+    });
+  }
+
+  openModalListOtherCharges() {
+    if (!this.item()) return;
+    
+    const modal = this.dialogSV.open(ListOtherChargesModalComponent, {
+      header: 'OTHER CHARGES',
+      width: '70rem',
+      closable: false,
+      closeOnEscape: false,
+      data: {
+        qId: this.item()!.id,
+        type: this.tabItem.type === 'edit' ? 'edit' : 'view',
+        currency: this.item()!.currency,
+        otherCharges: this.item()!.otherCharges || []
+      }
+    });
+    modal.onClose.subscribe({
+      next: (resp: { valid: boolean }) => {
+        if (resp && resp.valid) {
+          this.tabItem.pristine = false;
+          this.onSubmit();
+        }
+      }
+    });
+  }
+
+  printQR() {
+    // TODO FASE 8: Implement print functionality with Jasper templates
+    this.utilSV.setMessage(TITLES.info, 'Print functionality coming in FASE 8', 'info');
+  }
+
+  printAndSendQR() {
+    // TODO FASE 8: Implement print and send functionality
+    this.utilSV.setMessage(TITLES.info, 'Print & Send functionality coming in FASE 8', 'info');
+  }
 }
