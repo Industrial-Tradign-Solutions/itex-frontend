@@ -73,27 +73,53 @@ export class NewQuotationModalComponent implements OnInit {
   createQuotation() {
     if (this.client === '') return;
     this._loading.set(true);
+    
     const data: CreateIpQuotationRequest = {
       clientId: this.client,
-      listQrId: this.selectedQR.map(qr => qr.id),
-      currency: this.currency
+      currency: this.currency,
+      paymentTerms: 'NET_30',
+      incoterms: 'FOB',
+      observations: ''
     };
+    
     this.ipQuotationSV.createQuotation(data)
     .pipe(
       finalize(() => this.disableLogin())
     )
     .subscribe({
       next: resp => {
-        this.utilSV.setMessage(resp.title, resp.message, 'success');
-        setTimeout(() => {
-          this.ref.close({
-            valid: true,
-            data: resp.data
+        const quotationId = resp.data.item.id;
+        
+        // If there are selected QRs, add them to the quotation
+        if (this.selectedQR.length > 0) {
+          const quoteRequestIds = this.selectedQR.map(qr => qr.id);
+          this.ipQuotationSV.addQuoteRequestsToQuotation(quotationId, { quoteRequestIds })
+          .subscribe({
+            next: () => {
+              this.utilSV.setMessage(resp.title, resp.message, 'success');
+              setTimeout(() => {
+                this.ref.close({
+                  valid: true,
+                  data: resp.data
+                });
+              }, TIMEOUT);
+            },
+            error: err => {
+              this.utilSV.setMessage('Error!', err, 'error');
+            }
           });
-        }, TIMEOUT);
+        } else {
+          this.utilSV.setMessage(resp.title, resp.message, 'success');
+          setTimeout(() => {
+            this.ref.close({
+              valid: true,
+              data: resp.data
+            });
+          }, TIMEOUT);
+        }
       },
       error: err => {
-        this.utilSV.setMessage('Error!', err.errorMessage, 'error');
+        this.utilSV.setMessage('Error!', err, 'error');
       }
     });
   }
