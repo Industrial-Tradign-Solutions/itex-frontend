@@ -3,6 +3,7 @@ export const TitlesMessages = {
   warning: 'Warning',
   error: 'Error!',
   success: '',
+  info: 'Information',
   save_changes: 'Save Changes',
   notification: 'Notification',
   session_ended: 'Session ended',
