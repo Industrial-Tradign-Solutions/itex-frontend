@@ -2,7 +2,7 @@ export type IpQuotationProductRequest = {
   quotationsQuoteRequestId: string;
   quoteRequestProductId?: string;
   profitMargin: number;
-  condition: 'NEW' | 'USED';
+  condition: 'NEW' | 'USED' | 'REFURBISHED';
 }
 
 export function mapToIpQuotationProductRequest(form: any): IpQuotationProductRequest {

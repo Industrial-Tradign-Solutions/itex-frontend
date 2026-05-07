@@ -6,3 +6,4 @@ export { IpQuoteRequestRequest, mapToIpQrRequest } from './ipQuoteRequestRequest
 export { IpQuoteRequestFilter } from './ipQuoteRequestFilter.type';
 export { ListIpQuoteRequest } from './listIpQr.type';
 export { IpQuoteRequest } from './ipQuoteRequest.type';
+export { IpQuoteRequestAvailableForQ } from './ipQuoteRequestAvailableForQ.type';

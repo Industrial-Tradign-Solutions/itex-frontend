@@ -5,3 +5,6 @@ export { ListIpQuotation } from './listIpQ.type';
 export { IpQuotationRequest, mapToIpQuotationRequest } from './ipQuotationRequest.type';
 export * from './ipQuotationProduct.type';
 export * from './IpQuotationProductRequest.type';
+export { IpQuotationOtherCharge } from './IpQuotationOtherCharge.type';
+export { IpQuotationOtherChargeRequest, mapToIpQOtherChargeRequest } from './IpQuotationOtherChargeRequest.type';
+export { IpQuotationAddQrRequest } from './IpQuotationAddQrRequest.type';
