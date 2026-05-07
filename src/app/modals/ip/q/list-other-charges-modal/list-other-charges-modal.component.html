@@ -1,0 +1,97 @@
+@if(!loading()) {
+  <p-table
+  #dt4
+  styleClass="p-datatable-sm"
+  [value]="quotationOtherCharges()"
+  [scrollable]="true"
+  scrollHeight="50rem"
+  dataKey="id"
+  [loading]="loading()">
+    <ng-template pTemplate="header" >
+      <tr>
+        <th>
+          <div class="flex justify-content-between">
+            DESCRIPTION
+          </div>
+        </th>
+        <th>
+          <div class="flex justify-content-between">
+            VALUE
+          </div>
+        </th>
+        @if (canEdit()) {
+          <th style="min-width: 2rem; text-align: end;">
+            <button
+              pButton
+              type="button"
+              icon="pi pi-plus"
+              class="p-button-rounded p-button-text"
+              pTooltip="Edit"
+              severity="info"
+              (click)="openModalOtherCharges('create')"
+              tooltipPosition="left">
+            </button>
+          </th>
+        }
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-otherCharge let-index="rowIndex">
+      <tr>
+        <td>
+          {{otherCharge.description}}
+        </td>
+        <td>
+          {{ otherCharge.value | customCurrency:currency():'1.2-5' }}
+        </td>
+        @if (canEdit()) {
+          <td style="text-align: end;">
+            <button
+              pButton
+              type="button"
+              icon="pi pi-pencil"
+              class="p-button-rounded p-button-text"
+              pTooltip="Edit"
+              severity="warning"
+              (click)="openModalOtherCharges('edit', otherCharge, index)"
+              tooltipPosition="left">
+            </button>
+            <button
+              pButton
+              type="button"
+              icon="pi pi-trash"
+              class="p-button-rounded p-button-text"
+              pTooltip="Remove"
+              severity="danger"
+              (click)="deleteOtherCharge(otherCharge, index)"
+              tooltipPosition="right">
+            </button>
+          </td>
+        }
+      </tr>
+    </ng-template>
+  </p-table>
+} @else {
+  <div class="field col animate__animated animate__fadeIn">
+    <p-progressBar
+        class="w-20rem animate__animated animate__fadeIn"
+        mode="indeterminate">
+    </p-progressBar>
+  </div>
+}
+<div class="animate__animated animate__fadeIn" >
+  <div class="p-fluid">
+    <div class="formgrid grid">
+    </div>
+  </div>
+  <div class="mt-3 flex justify-content-end column-gap-4">
+    <button
+        pButton
+        type="button"
+        label="Close"
+        icon="pi pi-times-circle"
+        severity="danger"
+        (click)="closeModal()"
+        class="p-button-sm">
+    </button>
+  </div>
+</div>

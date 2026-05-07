@@ -1,0 +1,59 @@
+@if(formOtherCharge && !loading()) {
+  <div class="animate__animated animate__fadeIn" >
+    <form [formGroup]="formOtherCharge" (ngSubmit)="onSubmit()">
+      <div class="p-fluid">
+        <div class="formgrid grid">
+          <div class="field col-12 md:col-6">
+            <label>
+              Description
+              <span class="required">*</span>
+            </label>
+            <input
+              pInputText
+              formControlName="description"
+              type="text"/>
+          </div>
+          <div class="field col-12 md:col-6">
+            <label>
+              Value
+              <span class="required">*</span>
+            </label>
+            <p-inputNumber
+              [inputStyle]="{ 'text-align': 'right' }"
+              mode="currency"
+              [currency]="currency()"
+              currencyDisplay="code"
+              [minFractionDigits]="5"
+              [maxFractionDigits]="5"
+              [max]="999999999999"
+              formControlName="value" />
+          </div>
+        </div>
+      </div>
+      <div class="mt-3 flex justify-content-end column-gap-4">
+        <p-button
+            icon="pi pi-times-circle"
+            styleClass="p-button-sm p-button-danger"
+            label="Cancel"
+            (onClick)="closeModal()">
+        </p-button>
+        <button
+            pButton
+            type="submit"
+            label="Save"
+            icon="pi pi-save"
+            [disabled]="formOtherCharge.invalid"
+            class="p-button-sm p-button-success">
+        </button>
+      </div>
+    </form>
+  </div>
+}
+@if (loading()) {
+  <div class="field col animate__animated animate__fadeIn">
+    <p-progressBar
+        class="w-20rem animate__animated animate__fadeIn"
+        mode="indeterminate">
+    </p-progressBar>
+  </div>
+}
