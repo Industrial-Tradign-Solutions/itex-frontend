@@ -582,6 +582,15 @@ export class FormIpQuoteRequestComponent extends CommonPageTab<ListIpQuoteReques
     this.searchSupplier({ query: '', originalEvent: new Event('') });
     this.searchClient({ query: '', originalEvent: new Event('') });
 
+    if (item?.listQuotations && item.listQuotations.length > 0) {
+      controls['clientId'].disable();
+      controls['currency'].disable();
+    }
+
+    if (item?.status === 'ANSWERED') {
+      controls['supplierId'].disable();
+    }
+
     // 🔹 Si es solo vista, deshabilitar todo
     if (type === 'view') {
       this.formTab.disable();
