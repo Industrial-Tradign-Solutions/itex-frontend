@@ -20,7 +20,7 @@
     </div>
 
     <div class="topbar-profile">
-        <button class="topbar-profile-button p-link" type="button" pStyleClass="@next" enterFromClass="hidden" enterActiveClass="scalein" leaveToClass="hidden" leaveActiveClass="fadeout" >
+        <button class="topbar-profile-button p-link" type="button" pStyleClass="@next" hideOnOutsideClick="true" enterFromClass="hidden" enterActiveClass="scalein" leaveToClass="hidden" leaveActiveClass="fadeout" >
             @if(profilePhoto) {
               <img [src]="profilePhoto" class="avatar" style="border-radius:50%; object-fit:cover; width:43px; height:43px;"/>
             }@else {
