@@ -15,7 +15,7 @@ import { Table } from 'primeng/table';
 import { ClientBasic } from '@interfaces/partners/clients';
 import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { environment } from '../../../../../environments/environment';
-import { NewQuotationModalComponent } from '@modals/ip/quotation/new-quotation-modal/new-quotation-modal.component';
+import { NewQuotationModalComponent } from '@modals/ip/q/new-quotation-modal/new-quotation-modal.component';
 import { DialogService } from 'primeng/dynamicdialog';
 
 const TIMEOUT = environment.timeout;
@@ -68,7 +68,7 @@ export class ListIpQuotationComponent extends CommonListTab<ListIpQuotation, IpQ
     //TODO: Eliminar funcion
     setTimeout(() => {
       this.openQuotation({
-        id: 'fd58bd0e-950a-4b66-bd73-55999b3b6110',
+        id: 'a5f56b1f-a9b2-4c77-92bb-75c5f324b526',
         name: 'SMC260501Q'
       }, 'edit');
     }, TIMEOUT);
