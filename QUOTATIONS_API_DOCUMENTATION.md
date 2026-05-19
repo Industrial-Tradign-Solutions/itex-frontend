@@ -2,8 +2,8 @@
 
 **Base URL:** `/itex/api/ip/q`
 
-**Version:** 2.0  👈 UPDATED
-**Date:** May 4, 2026 (Updated)
+**Version:** 2.3
+**Date:** May 18, 2026 (Actual Endpoints)
 
 ---
 
@@ -13,11 +13,13 @@
 2. [Controller Structure](#controller-structure)
 3. [Enums & Constants](#enums--constants)
 4. [Main Quotation Endpoints](#main-quotation-endpoints)
-5. [Product Management Endpoints](#product-management-endpoints)
-6. [Quote Request Management](#quote-request-management)
-7. [Other Charges Management](#other-charges-management) 👈 NEW
-8. [History & Tracking](#history--tracking)
-9. [Error Handling](#error-handling)
+5. [Quote Request Management](#quote-request-management) 👈 UPDATED
+6. [Product Management Endpoints](#product-management-endpoints)
+7. [Other Charges Management](#other-charges-management)
+8. [QR Other Charges from Quotation](#qr-other-charges-from-quotation) 👈 UPDATED
+9. [Integrity Validation](#integrity-validation)
+10. [History & Tracking](#history--tracking)
+11. [Error Handling](#error-handling)
 
 ---
 
@@ -63,15 +65,21 @@ Handles product management:
 - ✅ Get product details
 - ✅ Remove product from quotation
 
-### 3. **IpQuotationQuoteRequestController**
-**Base URL:** `/itex/api/ip/q/{id_quotation}/quote-request`
+### 3. **IpQuoteRequestController** (consulta)
+**Base URL:** `/itex/api/ip/qr`
 
-Handles Quote Request linking:
-- ✅ List available QRs for client
-- ✅ Add QRs to quotation
-- ✅ Remove QR from quotation
+Handles Quote Request consultation:
+- ✅ List available QRs for client (available-for-quotation)
 
-### 4. **IpQuotationOtherChargeController** 👈 NEW
+### 4. **IpQuotationController** (Quote Request Management) 👈 UPDATED
+**Base URL:** `/itex/api/ip/q`
+
+Handles Quote Request linking within Quotation:
+- ✅ Add QRs to quotation (`POST /ip/q/{id}/quote-requests`)
+- ✅ Remove QR from quotation (`DELETE /ip/q/{id}/quote-requests/{id_qqr}`)
+- ✅ Get Other Charges from QRs (`GET /ip/q/{id}/quote-requests/other-charges`)
+
+### 5. **IpQuotationOtherChargeController** 👈 NEW
 **Base URL:** `/itex/api/ip/q/{id_quotation}/other_charges`
 
 Handles Other Charges (freight, handling, insurance, etc.):
@@ -94,15 +102,15 @@ Handles Other Charges (freight, handling, insurance, etc.):
 {
   "CREATED": "Quotation created, can be edited",
   "SENT": "Quotation sent to client",
-  "ACCEPTED": "Quotation accepted by client",
-  "CLOSED": "Quotation closed (completed)",
+  "ANSWERED": "Client has answered the quotation",
+  "COMPLETE": "Quotation completed/closed",
   "REJECTED": "Quotation rejected"
 }
 ```
 
 **Status Flow:**
 ```
-CREATED → SENT → ACCEPTED → CLOSED
+CREATED → SENT → ANSWERED → COMPLETE
     ↓        ↓         ↓
        REJECTED
 ```
@@ -112,8 +120,7 @@ CREATED → SENT → ACCEPTED → CLOSED
 ```json
 {
   "NEW": "New product condition",
-  "USED": "Used product condition",
-  "REFURBISHED": "Refurbished product condition"
+  "USED": "Used product condition"
 }
 ```
 
@@ -158,18 +165,18 @@ Creates a new quotation with optional initial Quote Requests.
 {
   "clientId": "uuid",
   "currency": "USD",
-  "paymentTerms": "NET_30",
-  "incoterms": "FOB",
-  "observations": "Quotation for industrial equipment"  // Optional
+  "listQrId": ["uuid-qr1", "uuid-qr2"]  // Optional - initial QR to link
 }
 ```
 
 **Validation:**
 - `clientId` (UUID): Required - Client identifier
 - `currency` (Enum): Required - USD, EUR, GBP, CAD, MXN
-- `paymentTerms` (Enum): Required - NET_30, NET_45, NET_60, NET_90, IMMEDIATE
-- `incoterms` (Enum): Required - FOB, CIF, EXW, DDP, CFR, CIP
-- `observations` (String): Optional - Additional notes
+- `listQrId` (List\<UUID\>): Optional - Quote Request IDs to link on creation
+
+**Notes:**
+- `paymentTerms` and `incoterms` are NOT set on create - they come from the linked Quote Requests or must be set via Update endpoint
+- `observations` field is not available - use `remarks` (client-visible) or `internalRemarks` (internal) after creation
 
 **Response:** `200 OK`
 ```json
@@ -228,9 +235,11 @@ Updates an existing quotation's details.
 **Request Body:**
 ```json
 {
+  "clientId": "uuid",                  // Required (but shouldn't change after creation)
+  "currency": "USD",                   // Required (but shouldn't change after creation)
   "clientContactId": "uuid",           // Optional
   "clientQrNumber": "CLIENT-REF-123",  // Optional
-  "salesRepId": "uuid",                // Optional
+  "salesRepId": "uuid",                // Required
   "remarks": "Client-visible notes",   // Optional
   "internalRemarks": "Internal only",  // Optional
   "leadTime": 30,                      // Optional
@@ -321,16 +330,19 @@ Lists all quotations with pagination and filtering.
 
 ---
 
-### 4. Get Quotation by ID
+### 4. Open/Lock Quotation (Returns Full Details)
 
-**GET** `/ip/q/{id_quotation}` (implied from list endpoint)
+**PATCH** `/ip/q/open-lock/{id_quotation}?type=EDIT`
 
-Retrieve full details of a specific quotation.
+Opens and locks a quotation for editing while returning full quotation details.
 
 **Permission:** Module access `IP_QUOTATIONS`
 
 **URL Parameters:**
 - `id_quotation` (UUID): Quotation ID
+
+**Query Parameters:**
+- `type` (OpenAndLockType): Required - `EDIT` or `VIEW`
 
 **Response:** `200 OK`
 ```json
@@ -396,9 +408,18 @@ Retrieve full details of a specific quotation.
         }
       }
     }
-  ]
-}
+  ],
+  "otherCharges": [],
+  "totalOtherCharges": 0.00,
+  "clonedByQuotation": null
+},
+"isOpenByUsername": true
 ```
+
+**Note:** This endpoint is used to both retrieve full quotation details AND lock it for editing. Use `type=VIEW` if you only want to see details without locking.
+
+**Errors:**
+- `423` - Already locked by another user
 
 ---
 
@@ -414,13 +435,13 @@ Changes the status of a quotation.
 - `id_quotation` (UUID): Quotation ID
 
 **Query Parameters:**
-- `status` (IpQuotationStatus): New status (CREATED, SENT, ACCEPTED, CLOSED)
+- `status` (IpQuotationStatus): New status (CREATED, SENT, ANSWERED, COMPLETE)
 
 **Allowed transitions:**
 - `CREATED` → `SENT`, `REJECTED`
-- `SENT` → `ACCEPTED`, `CLOSED`, `REJECTED`
-- `ACCEPTED` → `CLOSED`, `REJECTED`
-- `CLOSED` → (no transitions - final state)
+- `SENT` → `ANSWERED`, `COMPLETE`, `REJECTED`
+- `ANSWERED` → `COMPLETE`, `REJECTED`
+- `COMPLETE` → (no transitions - final state)
 - `REJECTED` → (no transitions - final state)
 
 **Response:** `200 OK`
@@ -507,6 +528,8 @@ Creates a copy of an existing quotation with all products and QRs.
 - **All Other Charges are cloned** (freight, handling, insurance, etc.)
 - Original quotation remains unchanged
 - History records CLONE action in original and CREATE in new quotation
+- **Cloned relationship is registered** in `t_ip_quotations_cloned` table 👈 NEW
+- The cloned quotation will show `clonedByQuotation` field when retrieved 👈 NEW
 
 ---
 
@@ -763,22 +786,23 @@ Removes a product from a quotation.
 
 ---
 
-## 🔗 Quote Request Management
+## 🔗 Quote Request Management 👈 UPDATED
 
-**Base URL:** `/itex/api/ip/q/{id_quotation}/quote-request`
+**Base URLs:**
+- `/itex/api/ip/qr` - Para consultar QR disponibles para crear Quotation
+- `/itex/api/ip/q/{id_quotation}/quote-requests` - Para gestionar QR dentro de una Quotation
 
 **Important:** All QR add/remove operations automatically register history (ADD_QR, REMOVE_QR). You only need to call the endpoints - history is handled by the system.
 
-### 1. List Available Quote Requests
+### 1. List Available Quote Requests (NEW Location)
 
-**GET** `/ip/q/{id_quotation}/quote-request/available/{id_client}`
+**GET** `/ip/qr/available-for-quotation/{id_client}`
 
 Returns a list of Quote Requests available to be linked to a quotation for a specific client.
 
 **Permission:** `CREATE_IP_QUOTATIONS` (4003001)
 
 **URL Parameters:**
-- `id_quotation` (UUID): Quotation ID (used for routing)
 - `id_client` (UUID): Client ID to filter Quote Requests
 
 **Query Parameters:**
@@ -811,7 +835,7 @@ Returns a list of Quote Requests available to be linked to a quotation for a spe
 
 ### 2. Add Quote Requests to Quotation
 
-**POST** `/ip/q/{id_quotation}/quote-request`
+**POST** `/ip/q/{id_quotation}/quote-requests`
 
 Links existing Quote Requests to a quotation.
 
@@ -858,7 +882,7 @@ Links existing Quote Requests to a quotation.
 
 ### 3. Remove Quote Request from Quotation
 
-**DELETE** `/ip/q/{id_quotation}/quote-request/{id_qqr}`
+**DELETE** `/ip/q/{id_quotation}/quote-requests/{id_qqr}`
 
 Unlinks a Quote Request from a quotation.
 
@@ -1062,6 +1086,91 @@ When retrieving a quotation, the `otherCharges` array is included:
 ```
 
 **Calculation:** `totalOtherCharges` is calculated by summing all `value` fields in `otherCharges` array. Returns `0.00` if array is empty or null.
+
+---
+
+## 📊 QR Other Charges from Quotation 👈 UPDATED
+
+**Base URL:** `/itex/api/ip/q/{id_quotation}/quote-requests`
+
+### Get Other Charges from Quote Requests
+
+**GET** `/ip/q/{id_quotation}/quote-requests/other-charges`
+
+Retrieves all Other Charges from all Quote Requests associated with a quotation. Returns a flat list (not grouped by QR).
+
+**Permission:** Module access `IP_QUOTATIONS`
+
+**URL Parameters:**
+- `id_quotation` (UUID): Quotation ID
+
+**Response:** `200 OK`
+```json
+[
+  { "description": "Freight", "value": 150.00, "qrNumber": "QR-2026-001" },
+  { "description": "Handling", "value": 25.00, "qrNumber": "QR-2026-001" },
+  { "description": "Insurance", "value": 50.00, "qrNumber": "QR-2026-002" }
+]
+```
+
+**Response Fields:**
+- `description` (String): Charge description
+- `value` (BigDecimal): Charge amount
+- `qrNumber` (String): Quote Request number (origin of the charge)
+
+**Note:** Returns empty array if quotation has no Quote Requests or QR has no Other Charges.
+
+---
+
+## 🔒 Integrity Validation 👈 NEW
+
+**Base URL:** `/itex/api/ip/q`
+
+### Validate Quotation Integrity
+
+**GET** `/ip/q/validate-integrity/{id_quotation}`
+
+Validates that all Quote Requests associated with a quotation have the same client and currency as the quotation.
+
+**Permission:** Module access `IP_QUOTATIONS`
+
+**URL Parameters:**
+- `id_quotation` (UUID): Quotation ID
+
+**Validation Rules:**
+- All QRs associated with the quotation must have the same client
+- All QRs associated with the quotation must have the same currency
+
+**Response (Valid):** `200 OK`
+```json
+{
+  "title": "Valid",
+  "message": "ip.q.integrity.valid",
+  "data": []
+}
+```
+
+**Response (Invalid):** `200 OK`
+```json
+{
+  "title": "Invalid",
+  "message": "ip.q.integrity.invalid",
+  "data": [
+    "QR QR-001 tiene problemas de integridad, pertenece a otro cliente (ClientX), por favor elimínela",
+    "QR QR-002 tiene problemas de integridad, tiene una moneda diferente (EUR), por favor elimínela"
+  ]
+}
+```
+
+**Automatic Validation:**
+This validation is also performed automatically in the following scenarios:
+- **PUT /ip/q/{id_quotation}** (Update Quotation): Validates before saving
+- **PATCH /ip/q/change-status/{id_quotation}** (Change Status): Validates before changing status
+  - Exception: Changing to REJECTED status does NOT validate integrity
+- **Future:** PDF Generation will validate before generating
+
+**Errors (when automatic validation fails):**
+- `400` - QuotationIntegrityException with list of validation errors
 
 ---
 
@@ -1286,6 +1395,14 @@ Retrieves complete history of all changes made to a quotation.
 }
 ```
 
+#### QuotationIntegrityException (NEW)
+```json
+{
+  "title": "Error",
+  "message": "QR QR-001 tiene problemas de integridad, pertenece a otro cliente (ClientX), por favor elimínela; QR QR-002 tiene problemas de integridad, tiene una moneda diferente (EUR), por favor elimínela"
+}
+```
+
 ---
 
 ## 🔄 Automatic Processes
@@ -1315,6 +1432,8 @@ CREATED → SENT → ANSWERED → COMPLETE
     ↓        ↓         ↓
        REJECTED
 ```
+
+**Actual Statuses:** CREATED, SENT, ANSWERED, COMPLETE, REJECTED
 
 ### 2. Lock Management
 - Always call `/open-lock/{id}` before editing

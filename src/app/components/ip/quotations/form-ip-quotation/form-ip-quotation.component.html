@@ -2,8 +2,7 @@
   <div [class]="'p-fluid w-full animate__animated animate__' + animation" >
     <form [formGroup]="formTab" (ngSubmit)="onSubmit()">
       <div class="formgrid grid mt-1">
-        
-        <!-- Column 1: Client Fields -->
+
         <div class="field col-12 md:col-2 lg:col-2 xl:col-2" >
           <div class="formgrid grid">
             <div class="field col-12 md:col-12 mt-3" >
@@ -64,8 +63,7 @@
             </div>
           </div>
         </div>
-        
-        <!-- Column 2: Quotation Fields -->
+
         <div class="field col-12 md:col-3 lg:col-3 xl:col-3" >
           <div class="formgrid grid">
             <div class="field col-12 md:col-6 mt-3" >
@@ -96,7 +94,7 @@
                 </label>
               </p-floatLabel>
             </div>
-            <div class="field col-12 md:col-6 mt-3" >
+            <div class="field col-12 md:col-3 mt-3" >
               <p-floatLabel>
                 <p-inputNumber
                   mode="decimal"
@@ -107,7 +105,7 @@
                 </label>
               </p-floatLabel>
             </div>
-            <div class="field col-12 md:col-6 mt-3" >
+            <div class="field col-12 md:col-3 mt-3" >
               <p-floatLabel>
                 <p-dropdown
                   [options]="listLeadTimeType()"
@@ -115,11 +113,11 @@
                   formControlName="leadTimeType"
                   optionValue="key" />
                 <label>
-                  Lead Time Type
+                 Type
                 </label>
               </p-floatLabel>
             </div>
-            <div class="field col-12 md:col-6 mt-3" >
+            <div class="field col-12 md:col-3 mt-3" >
               <p-floatLabel>
                 <p-inputNumber
                   mode="decimal"
@@ -130,7 +128,7 @@
                 </label>
               </p-floatLabel>
             </div>
-            <div class="field col-12 md:col-6 mt-3" >
+            <div class="field col-12 md:col-3 mt-3" >
               <p-floatLabel>
                 <p-dropdown
                   [options]="listLeadTimeType()"
@@ -138,7 +136,7 @@
                   formControlName="validityType"
                   optionValue="key" />
                 <label>
-                  Validity Type
+                  Type
                 </label>
               </p-floatLabel>
             </div>
@@ -180,8 +178,7 @@
                 </label>
               </p-floatLabel>
             </div>
-            <div class="field col-12 md:col-6 mt-3" ></div>
-            <div class="field col-12 mt-3" >
+            <div class="field col-12 md:col-6 mt-3" >
               @if (tabItem.type !== 'view') {
                 <button pButton
                   label="Save"
@@ -195,7 +192,6 @@
           </div>
         </div>
 
-        <!-- Column 3: Remarks and Quote Requests List -->
         <div class="field col-12 md:col-7 lg:col-7 xl:col-7" >
           <div class="formgrid grid">
             <div [class]="'field col-12 md:col-5 mt-1'" >

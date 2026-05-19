@@ -53,7 +53,7 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
   listIncoterms = computed<StaticListItem[]>(() => this.staticListSV.getListIncoterms());
   listLeadTimeType = computed<StaticListItem[]>(() => this.staticListSV.getListLeadTimeType());
   listPaymenTerms = computed<StaticListItem[]>(() => this.staticListSV.getListPaymentTerms());
-  
+
   private _listEmployees = signal<BasicUser[]>([]);
   listEmployees = computed<BasicUser[]>(() => this._listEmployees());
   private _listClientContact = signal<ClientContact[]>([]);
@@ -86,10 +86,12 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
     }
   }
 
-  openQuotation(quotation: {id?: string, number?: string}) {
-    if (quotation.id) {
-      this.navigateSV.openModuleNewTabAndOpenItem('Quotations', quotation.id);
-    }
+  openQuotation(quotation: ListIpQuotation) {
+    this.opened.emit({
+      type: this.permissions().updateIpQuotation ? 'edit' : 'view',
+      item: quotation,
+      pristine: true
+    });
   }
 
   openPurchaseOrder(po: {id?: string, number?: string}) {
@@ -373,7 +375,7 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
       paymentTerms: event.value.paymentTerms
     });
     this.assignListClientContact(event.value.infoByDepartment);
-    
+
     if (!this.permissions().editPaymentTermsIpQuotation) {
       this.formTab.controls['paymentTerms'].disable();
     }
@@ -570,7 +572,7 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
   openModalAddQuoteRequests() {
     if (this.tabItem.type !== 'edit') return;
     if (!this.item()) return;
-    
+
     const modal = this.dialogSV.open(AddQuoteRequestsModalComponent, {
       header: 'ADD QUOTE REQUESTS TO QUOTATION',
       width: '70rem',
@@ -595,7 +597,7 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
 
   openModalListOtherCharges() {
     if (!this.item()) return;
-    
+
     const modal = this.dialogSV.open(ListOtherChargesModalComponent, {
       header: 'OTHER CHARGES',
       width: '70rem',

@@ -11,6 +11,7 @@ import { Page } from '@interfaces/page.model';
 import { IpQuoteRequestAvailableForQ } from '@interfaces/ip/quoteRequest';
 
 const URL_SERVICES = environment.api_url + 'ip/q';
+const URL_QR_SERVICES = environment.api_url + 'ip/qr';
 
 @Injectable({
   providedIn: 'root'
@@ -182,7 +183,7 @@ export class IpQuotationService extends  BaseAutoCompleteService<any>{
   }
 
   removeQuoteRequestFromQuotation(qId: string, qqrId: string): Observable<MessageResponse<string>> {
-    const url = `${ URL_SERVICES }/${qId}/quote-request/${qqrId}`;
+    const url = `${ URL_SERVICES }/${qId}/quote-requests/${qqrId}`;
     return this.http.delete<MessageResponse<string>>( url, {headers: this.authSV.headers()} )
       .pipe(
         catchError( err => throwError( () => err.error.errorMessage ))
@@ -197,8 +198,8 @@ export class IpQuotationService extends  BaseAutoCompleteService<any>{
       );
   }
 
-  getAvailableQuoteRequestsForQuotation(qId: string, clientId: string, viewCompletedQR: boolean, currency: string): Observable<IpQuoteRequestAvailableForQ[]> {
-    const url = `${ URL_SERVICES }/${qId}/quote-request/available/${clientId}?view-completed-qr=${viewCompletedQR}&currency=${currency}`;
+  getAvailableQuoteRequestsForQuotation(clientId: string, viewCompletedQR: boolean, currency: string): Observable<IpQuoteRequestAvailableForQ[]> {
+    const url = `${ URL_QR_SERVICES }/available-for-quotation/${clientId}?view-completed-qr=${viewCompletedQR}&currency=${currency}`;
     return this.http.get<IpQuoteRequestAvailableForQ[]>( url, {headers: this.authSV.headers()} )
       .pipe(
         catchError( err => throwError( () => err.error.errorMessage ))
@@ -206,7 +207,7 @@ export class IpQuotationService extends  BaseAutoCompleteService<any>{
   }
 
   addQuoteRequestsToQuotation(qId: string, request: IpQuotationAddQrRequest): Observable<MessageResponse<IpQuotation>> {
-    const url = `${ URL_SERVICES }/${qId}/quote-request`;
+    const url = `${ URL_SERVICES }/${qId}/quote-requests`;
     return this.http.post<MessageResponse<IpQuotation>>( url, request, {headers: this.authSV.headers()} )
       .pipe(
         catchError( err => throwError( () => err.error ))
