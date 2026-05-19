@@ -1,7 +1,7 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { IpQuotation } from '@interfaces/ip/quotation';
-import { IpQuoteRequestAvailableForQ } from '@interfaces/ip/quoteRequest';
-import { IpQuotationService } from '@services/ip';
+import { IpQuoteRequestAvailableForQ, ListIpQuoteRequest } from '@interfaces/ip/quoteRequest';
+import { IpQuotationService, IpQuoteRequestService } from '@services/ip';
 import { UtilService } from '@services/util';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { environment } from '../../../../../environments/environment';
@@ -23,6 +23,7 @@ export class AddQuoteRequestsModalComponent implements OnInit {
   private ref         = inject(DynamicDialogRef);
   private utilSV      = inject(UtilService);
   private qSV         = inject(IpQuotationService);
+  private quoteRequestSV  = inject(IpQuoteRequestService);
   //! -----------------------------------------------
 
   //* Señales
@@ -34,8 +35,8 @@ export class AddQuoteRequestsModalComponent implements OnInit {
   viewCompletedQr = computed<boolean>(() => this.config.data.viewCompletedQr ?? false);
   //*------------------------------------------------
 
-  private _listAvailableQRs = signal<IpQuoteRequestAvailableForQ[]>([]);
-  listAvailableQRs = computed<IpQuoteRequestAvailableForQ[]>(() => this._listAvailableQRs());
+  private _listAvailableQRs = signal<ListIpQuoteRequest[]>([]);
+  listAvailableQRs = computed<ListIpQuoteRequest[]>(() => this._listAvailableQRs());
 
   private _selectedQRs = signal<IpQuoteRequestAvailableForQ[]>([]);
   selectedQRs = computed<IpQuoteRequestAvailableForQ[]>(() => this._selectedQRs());
@@ -73,8 +74,7 @@ export class AddQuoteRequestsModalComponent implements OnInit {
   }
 
   private loadAvailableQRs(): void {
-    this.qSV.getAvailableQuoteRequestsForQuotation(
-      this.qId(),
+    this.quoteRequestSV.getListQuoteRequestByClientAvailableToQuotation(
       this.clientId(),
       this.viewCompletedQr(),
       this.currency()
