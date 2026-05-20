@@ -65,14 +65,6 @@ export class ListIpQuotationComponent extends CommonListTab<ListIpQuotation, IpQ
     setTimeout(() => {
       this.search(true);
     }, 100);
-    //TODO: Eliminar funcion
-    setTimeout(() => {
-      this.openQuotation({
-        id: '99e50a7e-a935-46ad-8104-c544ed4b2d06',
-        name: 'SMC260501Q'
-      }, 'edit');
-    }, TIMEOUT);
-    //TODO: Fin Eliminar
   }
 
   customSort(event: SortEvent) {

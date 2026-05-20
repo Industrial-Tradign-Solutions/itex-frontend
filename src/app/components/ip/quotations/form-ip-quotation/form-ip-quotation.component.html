@@ -2,7 +2,6 @@
   <div [class]="'p-fluid w-full animate__animated animate__' + animation" >
     <form [formGroup]="formTab" (ngSubmit)="onSubmit()">
       <div class="formgrid grid mt-1">
-
         <div class="field col-12 md:col-2 lg:col-2 xl:col-2" >
           <div class="formgrid grid">
             <div class="field col-12 md:col-12 mt-3" >
@@ -63,7 +62,6 @@
             </div>
           </div>
         </div>
-
         <div class="field col-12 md:col-3 lg:col-3 xl:col-3" >
           <div class="formgrid grid">
             <div class="field col-12 md:col-6 mt-3" >
@@ -179,6 +177,20 @@
               </p-floatLabel>
             </div>
             <div class="field col-12 md:col-6 mt-3" >
+              <p-floatLabel>
+                <p-inputNumber
+                  mode="decimal"
+                  [useGrouping]="false"
+                  suffix=" lbs"
+                  [max]="999999999999"
+                  formControlName="grossWeightLbs" />
+                <label>
+                  Gross Weight
+                </label>
+              </p-floatLabel>
+            </div>
+            <div class="field col-12 md:col-9 mt-3" ></div>
+            <div class="field col-12 md:col-3 mt-3" >
               @if (tabItem.type !== 'view') {
                 <button pButton
                   label="Save"
@@ -191,11 +203,8 @@
             </div>
           </div>
         </div>
-
-        <div class="field col-12 md:col-7 lg:col-7 xl:col-7" >
-          <div class="formgrid grid">
-            <div [class]="'field col-12 md:col-5 mt-1'" >
-              <p-tabView>
+        <div class="field col-12 md:col-2 lg:col-2 xl:col-2" >
+          <p-tabView>
                 <p-tabPanel header="Remarks">
                   <textarea
                     [rows]="9"
@@ -214,174 +223,183 @@
                     formControlName="internalRemarks">
                   </textarea>
                 </p-tabPanel>
-              </p-tabView>
+          </p-tabView>
+        </div>
+        <div class="field col-12 md:col-5 lg:col-5 xl:col-5" >
+          <div class="formgrid grid">
+            <!-- QUOTE REQUESTS -->
+            <div class="field col-12 md:col-4 mt-1" >
+              <p-scrollPanel [style]="{ width: '100%', height: '19.05rem' }">
+                <p-table
+                  #dtQrList
+                  styleClass="p-datatable-sm"
+                  [value]="item()?.listQuoteRequests ?? []"
+                  dataKey="id"
+                  [loading]="loading()">
+                  <ng-template pTemplate="caption">
+                    <div style="text-align: center !important;">
+                        <b>QUOTE REQUESTS</b>
+                    </div>
+                  </ng-template>
+                  <ng-template pTemplate="header" >
+                    <tr>
+                      <th>
+                        <div class="flex justify-content-between">
+                          #
+                        </div>
+                      </th>
+                      <th>
+                        <div class="flex justify-content-between">
+                        </div>
+                      </th>
+                    </tr>
+                  </ng-template>
+                  <ng-template pTemplate="body" let-qr>
+                    <tr [pSelectableRow]="qr">
+                      <td>
+                        {{qr.number}}
+                      </td>
+                      <td style="text-align: end;">
+                        <button
+                          pButton
+                          type="button"
+                          icon="pi pi-eye"
+                          class="p-button-rounded p-button-text"
+                          pTooltip="View"
+                          severity="info"
+                          (click)="openQuoteRequest(qr)"
+                          tooltipPosition="left">
+                        </button>
+                        @if (tabItem.type === 'edit' && permissions().updateIpQuotation) {
+                          <button
+                            pButton
+                            type="button"
+                            icon="pi pi-trash"
+                            class="p-button-rounded p-button-text p-button-danger"
+                            pTooltip="Remove QR from Quotation"
+                            severity="danger"
+                            (click)="removeQuoteRequest(qr)"
+                            tooltipPosition="left">
+                          </button>
+                        }
+                      </td>
+                    </tr>
+                  </ng-template>
+                </p-table>
+              </p-scrollPanel>
             </div>
-            <div class="field col-12 md:col-7 mt-1" >
-              <div class="formgrid grid">
-                <!-- QUOTE REQUESTS -->
-                <div class="field col-12 md:col-4 mt-1" >
-                  <p-scrollPanel [style]="{ width: '100%', height: '20rem' }">
-                    <p-table
-                      #dtQrList
-                      styleClass="p-datatable-sm"
-                      [value]="item()?.listQuoteRequests ?? []"
-                      dataKey="id"
-                      [loading]="loading()">
-                      <ng-template pTemplate="caption">
-                        <div style="text-align: center !important;">
-                            <b>QUOTE REQUESTS</b>
+            <!-- CLONED QUOTATIONS -->
+            <div class="field col-12 md:col-4 mt-1" >
+              <p-scrollPanel [style]="{ width: '100%', height: '19.05rem' }">
+                <p-table
+                  #dtClonedQ
+                  styleClass="p-datatable-sm"
+                  [value]="item()?.clonedQuotations ?? []"
+                  dataKey="id"
+                  [loading]="loading()">
+                  <ng-template pTemplate="caption">
+                    <div style="text-align: center !important;">
+                        <b>CLONED QUOTATIONS</b>
+                    </div>
+                  </ng-template>
+                  <ng-template pTemplate="header" >
+                    <tr>
+                      <th>
+                        <div class="flex justify-content-between">
+                          #
                         </div>
-                      </ng-template>
-                      <ng-template pTemplate="header" >
-                        <tr>
-                          <th>
-                            <div class="flex justify-content-between">
-                              #
-                            </div>
-                          </th>
-                          <th>
-                            <div class="flex justify-content-between">
-                            </div>
-                          </th>
-                        </tr>
-                      </ng-template>
-                      <ng-template pTemplate="body" let-qr>
-                        <tr [pSelectableRow]="qr">
-                          <td>
-                            {{qr.number}}
-                          </td>
-                          <td style="text-align: end;">
-                            <button
-                              pButton
-                              type="button"
-                              icon="pi pi-eye"
-                              class="p-button-rounded p-button-text"
-                              pTooltip="View"
-                              severity="info"
-                              (click)="openQuoteRequest(qr)"
-                              tooltipPosition="left">
-                            </button>
-                            @if (tabItem.type === 'edit' && permissions().updateIpQuotation) {
-                              <button
-                                pButton
-                                type="button"
-                                icon="pi pi-trash"
-                                class="p-button-rounded p-button-text p-button-danger"
-                                pTooltip="Remove QR from Quotation"
-                                severity="danger"
-                                (click)="removeQuoteRequest(qr)"
-                                tooltipPosition="left">
-                              </button>
-                            }
-                          </td>
-                        </tr>
-                      </ng-template>
-                    </p-table>
-                  </p-scrollPanel>
-                </div>
-                <!-- CLONED QUOTATIONS -->
-                <div class="field col-12 md:col-4 mt-1" >
-                  <p-scrollPanel [style]="{ width: '100%', height: '20rem' }">
-                    <p-table
-                      #dtClonedQ
-                      styleClass="p-datatable-sm"
-                      [value]="item()?.clonedQuotations ?? []"
-                      dataKey="id"
-                      [loading]="loading()">
-                      <ng-template pTemplate="caption">
-                        <div style="text-align: center !important;">
-                            <b>CLONED QUOTATIONS</b>
+                      </th>
+                      <th>
+                        <div class="flex justify-content-between">
                         </div>
-                      </ng-template>
-                      <ng-template pTemplate="header" >
-                        <tr>
-                          <th>
-                            <div class="flex justify-content-between">
-                              #
-                            </div>
-                          </th>
-                          <th>
-                            <div class="flex justify-content-between">
-                            </div>
-                          </th>
-                        </tr>
-                      </ng-template>
-                      <ng-template pTemplate="body" let-clonedQ>
-                        <tr [pSelectableRow]="clonedQ">
-                          <td>
-                            {{clonedQ.number}}
-                          </td>
-                          <td style="text-align: end;">
-                            <button
-                              pButton
-                              type="button"
-                              icon="pi pi-eye"
-                              class="p-button-rounded p-button-text"
-                              pTooltip="View"
-                              severity="info"
-                              (click)="openQuotation(clonedQ)"
-                              tooltipPosition="left">
-                            </button>
-                          </td>
-                        </tr>
-                      </ng-template>
-                    </p-table>
-                  </p-scrollPanel>
-                </div>
-                <!-- PURCHASE ORDERS -->
-                <div class="field col-12 md:col-4 mt-1" >
-                  <p-scrollPanel [style]="{ width: '100%', height: '20rem' }">
-                    <p-table
-                      #dtPO
-                      styleClass="p-datatable-sm"
-                      [value]="item()?.listPurchaseOrders ?? []"
-                      dataKey="id"
-                      [loading]="loading()">
-                      <ng-template pTemplate="caption">
-                        <div style="text-align: center !important;">
-                            <b>PURCHASE ORDERS</b>
+                      </th>
+                    </tr>
+                  </ng-template>
+                  <ng-template pTemplate="body" let-clonedQ>
+                    <tr [pSelectableRow]="clonedQ">
+                      <td>
+                        {{clonedQ.number}}
+                      </td>
+                      <td style="text-align: end;">
+                        <button
+                          pButton
+                          type="button"
+                          icon="pi pi-eye"
+                          class="p-button-rounded p-button-text"
+                          pTooltip="View"
+                          severity="info"
+                          (click)="openQuotation(clonedQ)"
+                          tooltipPosition="left">
+                        </button>
+                      </td>
+                    </tr>
+                  </ng-template>
+                </p-table>
+              </p-scrollPanel>
+            </div>
+            <!-- PURCHASE ORDERS -->
+            <div class="field col-12 md:col-4 mt-1" >
+              <p-scrollPanel [style]="{ width: '100%', height: '19.05rem' }">
+                <p-table
+                  #dtPO
+                  styleClass="p-datatable-sm"
+                  [value]="item()?.listPurchaseOrders ?? []"
+                  dataKey="id"
+                  [loading]="loading()">
+                  <ng-template pTemplate="caption">
+                    <div style="text-align: center !important;">
+                        <b>PURCHASE ORDERS</b>
+                    </div>
+                  </ng-template>
+                  <ng-template pTemplate="header" >
+                    <tr>
+                      <th>
+                        <div class="flex justify-content-between">
+                          #
                         </div>
-                      </ng-template>
-                      <ng-template pTemplate="header" >
-                        <tr>
-                          <th>
-                            <div class="flex justify-content-between">
-                              #
-                            </div>
-                          </th>
-                          <th>
-                            <div class="flex justify-content-between">
-                            </div>
-                          </th>
-                        </tr>
-                      </ng-template>
-                      <ng-template pTemplate="body" let-po>
-                        <tr [pSelectableRow]="po">
-                          <td>
-                            {{po.number}}
-                          </td>
-                          <td style="text-align: end;">
-                            <button
-                              pButton
-                              type="button"
-                              icon="pi pi-eye"
-                              class="p-button-rounded p-button-text"
-                              pTooltip="View"
-                              severity="info"
-                              (click)="openPurchaseOrder(po)"
-                              tooltipPosition="left">
-                            </button>
-                          </td>
-                        </tr>
-                      </ng-template>
-                    </p-table>
-                  </p-scrollPanel>
-                </div>
-              </div>
+                      </th>
+                      <th>
+                        <div class="flex justify-content-between">
+                        </div>
+                      </th>
+                    </tr>
+                  </ng-template>
+                  <ng-template pTemplate="body" let-po>
+                    <tr [pSelectableRow]="po">
+                      <td>
+                        {{po.number}}
+                      </td>
+                      <td style="text-align: end;">
+                        <button
+                          pButton
+                          type="button"
+                          icon="pi pi-eye"
+                          class="p-button-rounded p-button-text"
+                          pTooltip="View"
+                          severity="info"
+                          (click)="openPurchaseOrder(po)"
+                          tooltipPosition="left">
+                        </button>
+                      </td>
+                    </tr>
+                  </ng-template>
+                </p-table>
+              </p-scrollPanel>
+            </div>
+            <div class="field col-12 md:col-1 mt-1"></div>
+            <div class="field col-12 md:col-2 mt-1">
+              <button pButton
+                label="Add QR"
+                icon="pi pi-plus"
+                severity="success"
+                [outlined]="true"
+                (click)="openModalAddQuoteRequests()"
+                [disabled]="!(tabItem.type === 'edit' && item()?.status === 'CREATED')"
+                type="button">
+              </button>
             </div>
           </div>
         </div>
-
       </div>
       <div class="col-12 md:col-12 mt-1">
         <div class="formgrid grid">
@@ -573,36 +591,12 @@
             <div class="formgrid grid">
               <div class="field col-12 md:col-6 mt-1">
                 <button pButton
-                  label="Add QR"
-                  icon="pi pi-plus-circle"
-                  severity="success"
-                  [outlined]="true"
-                  (click)="openModalAddQuoteRequests()"
-                  [disabled]="!(tabItem.type === 'edit' && item()?.status === 'CREATED')"
-                  type="button">
-                </button>
-              </div>
-              <div class="field col-12 md:col-6 mt-1">
-                <button pButton
                   label="Print"
                   icon="pi pi-print"
                   severity="help"
                   [outlined]="true"
                   (click)="printQR()"
                   [disabled]="tabItem.type === 'create' || item()?.products?.length === 0 || !tabItem.pristine"
-                  type="button">
-                </button>
-              </div>
-            </div>
-            <div class="formgrid grid">
-              <div class="field col-12 md:col-6 mt-1">
-                <button pButton
-                  label="Other Charges"
-                  icon="pi pi-money-bill"
-                  severity="warning"
-                  [outlined]="true"
-                  (click)="openModalListOtherCharges()"
-                  [disabled]="tabItem.type === 'create'"
                   type="button">
                 </button>
               </div>
