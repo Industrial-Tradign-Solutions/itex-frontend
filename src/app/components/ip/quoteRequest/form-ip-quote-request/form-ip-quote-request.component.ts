@@ -341,13 +341,9 @@ export class FormIpQuoteRequestComponent extends CommonPageTab<ListIpQuoteReques
   }
 
   protected override getRequest() {
-    const formValue = this.formTab.value;
-
-    const supplierId = formValue.supplierId || this.item()?.supplier?.id;
-
-    const data = { ...formValue, supplierId };
-    return mapToIpQrRequest(data);
+    return mapToIpQrRequest(this.formTab.getRawValue());
   }
+
   protected override buildFormAction(): void {
     this.formTab = this.formBuilder.group({
       currency: [
