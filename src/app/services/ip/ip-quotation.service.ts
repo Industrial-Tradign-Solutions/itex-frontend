@@ -101,7 +101,6 @@ export class IpQuotationService extends  BaseAutoCompleteService<any>{
   }
 
   updateQuotation(id: string, request: IpQuotationRequest): Observable<MessageResponse<IpQuotation>> {
-    console.log(request);
     const url  = `${ URL_SERVICES }/${id}`;
     return this.http.put<MessageResponse<IpQuotation>>( url, request, {headers: this.authSV.headers()} )
       .pipe(

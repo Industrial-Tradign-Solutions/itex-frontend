@@ -327,6 +327,7 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
       'grossWeightLbs',
       'subTotal',
       'otherCharges',
+      'freightCharges',
       'total'
     ].forEach(field => controls[field].disable());
 
@@ -376,6 +377,7 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
   changeClient(event: AutoCompleteSelectEvent) {
     this.formTab.controls['clientContactId'].enable();
     this.formTab.controls['paymentTerms'].enable();
+
     this.formTab.patchValue({
       clientContactId: null,
       clientAddress: event.value.address,
