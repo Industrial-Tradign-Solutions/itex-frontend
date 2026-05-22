@@ -20,7 +20,6 @@ import { DialogService } from 'primeng/dynamicdialog';
 import { finalize, Observable } from 'rxjs';
 import { MessageResponse } from '@interfaces/message-response';
 import { FormArray } from '@angular/forms';
-import { CustomCurrencyPipe } from '@pipes/custom-currency.pipe';
 import { QuotationProductModalComponent } from '@modals/ip/q/quotation-product-modal/quotation-product-modal.component';
 import { ListOtherChargesModalComponent } from '@modals/ip/q/list-other-charges-modal/list-other-charges-modal.component';
 import { AddQuoteRequestsModalComponent } from '@modals/ip/q/add-quote-requests-modal/add-quote-requests-modal.component';
@@ -198,7 +197,7 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
   }
 
   protected override getRequest() {
-    return mapToIpQuotationRequest(this.formTab.value);
+    return mapToIpQuotationRequest(this.formTab.getRawValue());
   }
 
   protected override buildFormAction(): void {
@@ -324,12 +323,23 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
 
     // 🔹 Deshabilitar campos de solo lectura
     [
-      'clientAddress'
+      'clientAddress',
+      'grossWeightLbs',
+      'subTotal',
+      'otherCharges',
+      'total'
     ].forEach(field => controls[field].disable());
+
+
 
     // 🔹 Mostrar formulario y cargar datos
     this.showForm = true;
     this.searchClient({ query: '', originalEvent: new Event('') });
+
+    if (item?.listQuoteRequests && item.listQuoteRequests.length > 0) {
+      controls['clientId'].disable();
+      controls['currency'].disable();
+    }
 
     // 🔹 Si es solo vista, deshabilitar todo
     if (type === 'view') {
@@ -348,10 +358,7 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
 
   private getSubmitAction(): Observable<MessageResponse<IpQuotation>> {
     const data = this.getRequest();
-    if (this.tabItem.type === 'create') {
-      // Create is handled in modal, this should be unreachable
-      throw new Error('Create not implemented in form view for Quotation');
-    } else if (this.tabItem.type === 'edit') {
+    if (this.tabItem.type === 'edit') {
       return this.quotetationSV.updateQuotation(this.tabItem.item.id, data);
     } else {
       throw new Error('Invalid tab type');

@@ -513,7 +513,7 @@
                     -
                   </td>
                   <td style="text-align: right;">
-                    {{ productControl.value.unitPrice | customCurrency:formTab.value.currency:'1.2-5' }}
+                    {{ productControl.value.unitPrice | customCurrency:getCurrency():'1.2-5' }}
                   </td>
                   <td style="text-align: center;">
                     {{ productControl.value.condition || '-' }}
@@ -530,10 +530,10 @@
                     {{ productControl.value.profitMargin }}%
                   </td>
                   <td style="text-align: right;">
-                    {{ productControl.value.sellingUnitPrice | customCurrency:formTab.value.currency:'1.2-5' }}
+                    {{ productControl.value.sellingUnitPrice | customCurrency:getCurrency():'1.2-5' }}
                   </td>
                   <td style="text-align: right;">
-                    {{ productControl.value.extendedPrice | customCurrency:formTab.value.currency:'1.2-5' }}
+                    {{ productControl.value.extendedPrice | customCurrency:getCurrency():'1.2-5' }}
                   </td>
                   @if (tabItem.type === 'edit' && permissions().updateIpQuotation) {
                     <td style="text-align: end;">
@@ -618,7 +618,7 @@
                   <p-inputNumber
                     [inputStyle]="{ 'text-align': 'right' }"
                     mode="currency"
-                    [currency]="formTab.value.currency"
+                    [currency]="getCurrency()"
                     currencyDisplay="code"
                     [max]="999999999999"
                     formControlName="subTotal" />
@@ -632,7 +632,7 @@
                   <p-inputNumber
                     [inputStyle]="{ 'text-align': 'right' }"
                     mode="currency"
-                    [currency]="formTab.value.currency"
+                    [currency]="getCurrency()"
                     currencyDisplay="code"
                     [minFractionDigits]="5"
                     [maxFractionDigits]="5"
@@ -648,7 +648,7 @@
                   <p-inputNumber
                     [inputStyle]="{ 'text-align': 'right' }"
                     mode="currency"
-                    [currency]="formTab.value.currency"
+                    [currency]="getCurrency()"
                     currencyDisplay="code"
                     [max]="999999999999"
                     formControlName="otherCharges" />
@@ -672,7 +672,7 @@
                   <p-inputNumber
                     [inputStyle]="{ 'text-align': 'right' }"
                     mode="currency"
-                    [currency]="formTab.value.currency"
+                    [currency]="getCurrency()"
                     currencyDisplay="code"
                     [max]="999999999999"
                     formControlName="total" />

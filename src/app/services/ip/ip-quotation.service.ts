@@ -6,12 +6,11 @@ import { BaseAutoCompleteService } from '@services/base-auto-complete-service.se
 import { AuthService } from '@services/security';
 import { catchError, concatMap, Observable, of, Subject, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { CreateIpQuotationRequest, IpQuotation, IpQuotationFilter, ListIpQuotation, IpQuotationOtherCharge, IpQuotationOtherChargeRequest, IpQuotationAddQrRequest } from '@interfaces/ip/quotation';
+import { CreateIpQuotationRequest, IpQuotation, IpQuotationFilter, ListIpQuotation, IpQuotationOtherCharge, IpQuotationOtherChargeRequest, IpQuotationAddQrRequest, IpQuotationRequest } from '@interfaces/ip/quotation';
 import { Page } from '@interfaces/page.model';
 import { IpQuoteRequestAvailableForQ } from '@interfaces/ip/quoteRequest';
 
 const URL_SERVICES = environment.api_url + 'ip/q';
-const URL_QR_SERVICES = environment.api_url + 'ip/qr';
 
 @Injectable({
   providedIn: 'root'
@@ -101,7 +100,8 @@ export class IpQuotationService extends  BaseAutoCompleteService<any>{
       );
   }
 
-  updateQuotation(id: string, request: any): Observable<MessageResponse<IpQuotation>> {
+  updateQuotation(id: string, request: IpQuotationRequest): Observable<MessageResponse<IpQuotation>> {
+    console.log(request);
     const url  = `${ URL_SERVICES }/${id}`;
     return this.http.put<MessageResponse<IpQuotation>>( url, request, {headers: this.authSV.headers()} )
       .pipe(
@@ -193,14 +193,6 @@ export class IpQuotationService extends  BaseAutoCompleteService<any>{
   cloneQuotation(id: string): Observable<MessageResponse<IpQuotation>> {
     const url = `${ URL_SERVICES }/clone/${id}`;
     return this.http.patch<MessageResponse<IpQuotation>>( url, null, {headers: this.authSV.headers()} )
-      .pipe(
-        catchError( err => throwError( () => err.error.errorMessage ))
-      );
-  }
-
-  getAvailableQuoteRequestsForQuotation(clientId: string, viewCompletedQR: boolean, currency: string): Observable<IpQuoteRequestAvailableForQ[]> {
-    const url = `${ URL_QR_SERVICES }/available-for-quotation/${clientId}?view-completed-qr=${viewCompletedQR}&currency=${currency}`;
-    return this.http.get<IpQuoteRequestAvailableForQ[]>( url, {headers: this.authSV.headers()} )
       .pipe(
         catchError( err => throwError( () => err.error.errorMessage ))
       );
