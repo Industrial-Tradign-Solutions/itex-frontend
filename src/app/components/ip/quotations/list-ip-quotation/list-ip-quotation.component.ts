@@ -56,7 +56,6 @@ export class ListIpQuotationComponent extends CommonListTab<ListIpQuotation, IpQ
 
   ngOnInit(): void {
     this._listEmployees.set(this.userSV.listEmployees());
-
     this.formFilter.patchValue({
       date: 'DAY',
       salesRepId: this.userData()?.id,

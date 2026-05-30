@@ -584,14 +584,14 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
 
     const modal = this.dialogSV.open(AddQuoteRequestsModalComponent, {
       header: 'ADD QUOTE REQUESTS TO QUOTATION',
-      width: '70rem',
+      width: '60rem',
       closable: false,
       closeOnEscape: false,
       data: {
         qId: this.item()!.id,
         clientId: this.item()!.client.id,
         currency: this.item()!.currency,
-        viewCompletedQr: false
+        listAddQR: this.item()!.listQuoteRequests
       }
     });
     modal.onClose.subscribe({

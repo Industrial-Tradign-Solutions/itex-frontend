@@ -4,11 +4,10 @@ import { EmitedTab, TypeTab } from '@config/types/tabs';
 import { MessageResponse } from '@interfaces/message-response';
 import { BaseAutoCompleteService } from '@services/base-auto-complete-service.service';
 import { AuthService } from '@services/security';
-import { catchError, concatMap, Observable, of, Subject, throwError } from 'rxjs';
+import { catchError, concatMap, map, Observable, of, Subject, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { CreateIpQuotationRequest, IpQuotation, IpQuotationFilter, ListIpQuotation, IpQuotationOtherCharge, IpQuotationOtherChargeRequest, IpQuotationAddQrRequest, IpQuotationRequest } from '@interfaces/ip/quotation';
 import { Page } from '@interfaces/page.model';
-import { IpQuoteRequestAvailableForQ } from '@interfaces/ip/quoteRequest';
 
 const URL_SERVICES = environment.api_url + 'ip/q';
 
@@ -18,8 +17,8 @@ const URL_SERVICES = environment.api_url + 'ip/q';
 export class IpQuotationService extends  BaseAutoCompleteService<any>{
 
   //! Inyecciones
-  private authSV     = inject(AuthService);
-  private http       = inject(HttpClient);
+  private readonly authSV     = inject(AuthService);
+  private readonly http       = inject(HttpClient);
   //!---------------------------------------
 
   private openAndLockRequestQueue = new Subject<{ quotationId: string, type: TypeTab, observer: any }>();
@@ -94,8 +93,20 @@ export class IpQuotationService extends  BaseAutoCompleteService<any>{
 
   createQuotation(request: CreateIpQuotationRequest): Observable<MessageResponse<EmitedTab<ListIpQuotation>>> {
     const url  = `${ URL_SERVICES }`;
-    return this.http.post<MessageResponse<EmitedTab<ListIpQuotation>>>( url, request, {headers: this.authSV.headers()} )
+    return this.http.post<MessageResponse<ListIpQuotation>>( url, request, {headers: this.authSV.headers()} )
       .pipe(
+        map(response => {
+          const resp: MessageResponse<EmitedTab<ListIpQuotation>> = {
+            title: response.title,
+            message: response.message,
+            data: {
+              item: response.data,
+              pristine: true,
+              type: 'edit'
+            }
+          };
+          return resp;
+        }),
         catchError( err => throwError( () => err.error ))
       );
   }

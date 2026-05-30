@@ -1,12 +1,11 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { IpQuotation } from '@interfaces/ip/quotation';
 import { IpQuoteRequestAvailableForQ, ListIpQuoteRequest } from '@interfaces/ip/quoteRequest';
 import { IpQuotationService, IpQuoteRequestService } from '@services/ip';
 import { UtilService } from '@services/util';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { environment } from '../../../../../environments/environment';
 import { TitlesMessages } from '@config/messages';
-import { finalize } from 'rxjs';
+import { finalize, map } from 'rxjs';
 
 const TIMEOUT = environment.timeout;
 const TITLES = TitlesMessages;
@@ -30,29 +29,30 @@ export class AddQuoteRequestsModalComponent implements OnInit {
   private _loading = signal<boolean>(true);
   loading = computed<boolean>(() => this._loading());
   qId = computed<string>(() => this.config.data.qId);
+  listAdQR = computed<{qqrId?: string, id?: string, number?: string}[]>(() => this.config.data.listAddQR);
   clientId = computed<string>(() => this.config.data.clientId);
   currency = computed<string>(() => this.config.data.currency);
-  viewCompletedQr = computed<boolean>(() => this.config.data.viewCompletedQr ?? false);
   //*------------------------------------------------
+  //? Variables
+  viewCompletedQR: boolean = false;
+  selectedQR: ListIpQuoteRequest[] = [];
+  //?------------------------------------------------------------
 
-  private _listAvailableQRs = signal<ListIpQuoteRequest[]>([]);
-  listAvailableQRs = computed<ListIpQuoteRequest[]>(() => this._listAvailableQRs());
-
-  private _selectedQRs = signal<IpQuoteRequestAvailableForQ[]>([]);
-  selectedQRs = computed<IpQuoteRequestAvailableForQ[]>(() => this._selectedQRs());
+  private _listQR = signal<ListIpQuoteRequest[]>([]);
+  listQR = computed<ListIpQuoteRequest[]>(() => this._listQR());
 
   ngOnInit(): void {
-    setTimeout(() => this.loadAvailableQRs(), TIMEOUT);
+    setTimeout(() => this.search(), TIMEOUT);
   }
 
   onSubmit(): void {
-    if (this.selectedQRs().length === 0) {
+    if (this.selectedQR.length === 0) {
       this.utilSV.setMessage(TITLES.warning, 'Please select at least one Quote Request', 'warn');
       return;
     }
 
     this._loading.set(true);
-    const quoteRequestIds = this.selectedQRs().map(qr => qr.id);
+    const quoteRequestIds = this.selectedQR.map(qr => qr.id);
 
     setTimeout(() => {
       this.qSV.addQuoteRequestsToQuotation(this.qId(), { quoteRequestIds })
@@ -73,18 +73,24 @@ export class AddQuoteRequestsModalComponent implements OnInit {
     this.ref.close({ valid: false });
   }
 
-  private loadAvailableQRs(): void {
+  search(): void {
+    this._loading.set(true);
     this.quoteRequestSV.getListQuoteRequestByClientAvailableToQuotation(
       this.clientId(),
-      this.viewCompletedQr(),
+      this.viewCompletedQR,
       this.currency()
     )
     .pipe(
-      finalize(() => this._loading.set(false))
+      finalize(() => this.disableLogin()),
+      map((items: ListIpQuoteRequest[]) => {
+        const idsExistentes = new Set(this.listAdQR().map(item => item.id));
+        const resp: ListIpQuoteRequest[] =  items.filter(item => !idsExistentes.has(item.id));
+        return resp;
+      })
     )
     .subscribe({
       next: (resp) => {
-        this._listAvailableQRs.set(resp);
+        this._listQR.set(resp);
       },
       error: (err) => {
         this.utilSV.setMessage(TITLES.error, err, 'error');
@@ -92,7 +98,25 @@ export class AddQuoteRequestsModalComponent implements OnInit {
     });
   }
 
-  onSelectionChange(event: any) {
-    this._selectedQRs.set(event);
+  getStatusColor(status: 'CREATED' | 'SENT' | 'REJECTED' | 'ANSWERED' | 'COMPLETE'): string {
+    if (status === 'CREATED') {
+      return 'new';
+    } else if (status === 'REJECTED') {
+      return 'unqualified';
+    } else if (status === 'SENT') {
+      return 'renewal';
+    } else if (status === 'ANSWERED') {
+      return 'negotiation';
+    } else if (status === 'COMPLETE') {
+      return 'qualified';
+    } else {
+      return 'new';
+    }
+  }
+
+  private disableLogin() {
+    setTimeout(() => {
+      this._loading.set(false);
+    }, TIMEOUT);
   }
 }

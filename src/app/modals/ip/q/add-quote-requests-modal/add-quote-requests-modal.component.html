@@ -2,79 +2,46 @@
   <div class="animate__animated animate__fadeIn">
     <div class="p-fluid">
       <div class="formgrid grid">
+        <div class="field col-12 md:col-3 mt-2">
+          <div class="flex align-items-center check">
+            <p-checkbox
+              value="View Completed QR"
+              [(ngModel)]="viewCompletedQR"
+              (onChange)="search()"
+              [binary]="true" />
+            <label class="lablel-check">View Completed QR</label>
+          </div>
+        </div>
         <div class="field col-12">
           <p-table
-            #dt
-            styleClass="p-datatable-sm"
-            [value]="listAvailableQRs()"
-            [(selection)]="selectedQRs"
-            (selectionChange)="onSelectionChange($event)"
-            [scrollable]="true"
-            scrollHeight="25rem"
+            [value]="listQR()"
+            [(selection)]="selectedQR"
             dataKey="id"
-            [loading]="loading()">
+            [scrollable]="true"
+            scrollHeight="20rem"
+            [tableStyle]="{'min-width': '50rem'}">
             <ng-template pTemplate="header">
               <tr>
-                <th style="width: 3rem">
-                  <p-tableHeaderCheckbox />
-                </th>
-                <th style="min-width: 8rem">
-                  <div class="flex justify-content-between">
-                    QR #
-                  </div>
-                </th>
-                <th style="min-width: 12rem">
-                  <div class="flex justify-content-between">
-                    SUPPLIER
-                  </div>
-                </th>
-                <th style="min-width: 8rem">
-                  <div class="flex justify-content-between">
-                    PRODUCTS
-                  </div>
-                </th>
-                <th style="min-width: 10rem">
-                  <div class="flex justify-content-between">
-                    SUBTOTAL
-                  </div>
-                </th>
-                <th style="min-width: 8rem">
-                  <div class="flex justify-content-between">
-                    STATUS
-                  </div>
-                </th>
+                <th style="width: 4rem"><p-tableHeaderCheckbox /></th>
+                <th>QR #</th>
+                <th>SUPPLIER</th>
+                <th>STATUS</th>
+                <th>DATE OF CREATED</th>
               </tr>
             </ng-template>
-            <ng-template pTemplate="body" let-qr>
+            <ng-template pTemplate="body" let-quoteRequest>
               <tr>
                 <td>
-                  <p-tableCheckbox [value]="qr" />
+                  <p-tableCheckbox [value]="quoteRequest" />
                 </td>
+                <td>{{quoteRequest.name}}</td>
+                <td>{{quoteRequest.supplier.name}}</td>
                 <td>
-                  {{ qr.number }}
+                  <span [class]="'customer-badge status-' + getStatusColor(quoteRequest.status)">
+                    {{quoteRequest.status}}
+                  </span>
                 </td>
-                <td>
-                  {{ qr.supplierName }}
-                </td>
-                <td style="text-align: center;">
-                  {{ qr.totalProducts }}
-                </td>
-                <td>
-                  {{ qr.subtotal | customCurrency:currency():'1.2-5' }}
-                </td>
-                <td>
-                  <p-tag
-                    [value]="qr.status"
-                    [severity]="qr.status === 'COMPLETED' ? 'success' : 'info'">
-                  </p-tag>
-                </td>
-              </tr>
-            </ng-template>
-            <ng-template pTemplate="emptymessage">
-              <tr>
-                <td colspan="6" class="text-center">
-                  No available Quote Requests found for this client and currency
-                </td>
+                <td>{{quoteRequest.createdAt | date:'MMM dd, yyyy hh:mm a'}}</td>
               </tr>
             </ng-template>
           </p-table>
@@ -96,7 +63,7 @@
         type="button"
         label="Add Selected QRs"
         icon="pi pi-plus-circle"
-        [disabled]="selectedQRs().length === 0"
+        [disabled]="selectedQR.length === 0"
         severity="success"
         (click)="onSubmit()"
         class="p-button-sm">

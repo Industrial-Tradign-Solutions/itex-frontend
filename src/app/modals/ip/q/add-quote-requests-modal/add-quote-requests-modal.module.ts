@@ -6,6 +6,8 @@ import { TableModule } from 'primeng/table';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { TagModule } from 'primeng/tag';
 import { PipesModule } from '@pipes/pipes.module';
+import { CheckboxModule } from 'primeng/checkbox';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 @NgModule({
   declarations: [
@@ -13,11 +15,14 @@ import { PipesModule } from '@pipes/pipes.module';
   ],
   imports: [
     CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
     ButtonModule,
     TableModule,
     ProgressBarModule,
     TagModule,
-    PipesModule
+    PipesModule,
+    CheckboxModule
   ],
   exports: [
     AddQuoteRequestsModalComponent
