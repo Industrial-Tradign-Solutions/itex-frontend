@@ -136,7 +136,7 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
 
   private handleChangeStatus(
     message: string,
-    action: () => Observable<MessageResponse<IpQuotation>>,
+    action: () => Observable<MessageResponse<ListIpQuotation>>,
     newStatus: 'CREATED' | 'ANSWERED' | 'SENT' | 'COMPLETE' | 'REJECTED'
   ) {
     this.utilSV.confirm({
@@ -156,7 +156,7 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
     this.formTab.patchValue({ status: this.item()?.status ?? 'ACTIVE' });
   }
 
-  private executeChangeStatus(action: Observable<MessageResponse<IpQuotation>>, newStatus: 'CREATED' | 'ANSWERED' | 'SENT' | 'COMPLETE' | 'REJECTED') {
+  private executeChangeStatus(action: Observable<MessageResponse<ListIpQuotation>>, newStatus: 'CREATED' | 'ANSWERED' | 'SENT' | 'COMPLETE' | 'REJECTED') {
     this._loading.set(true);
     this.showForm = false;
     action

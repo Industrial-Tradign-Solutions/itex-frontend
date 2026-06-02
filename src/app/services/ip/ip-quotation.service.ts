@@ -119,17 +119,17 @@ export class IpQuotationService extends  BaseAutoCompleteService<any>{
       );
   }
 
-  changeStatusQuotation(id: string, status: string): Observable<MessageResponse<IpQuotation>> {
-    const url  = `${ URL_SERVICES }/change-status/${id}?status=${status}`;
-    return this.http.patch<MessageResponse<IpQuotation>>( url, {}, {headers: this.authSV.headers()} )
+  changeStatusQuotation(id: string, status: 'CREATED' | 'ANSWERED' | 'COMPLETE' | 'SENT' ): Observable<MessageResponse<ListIpQuotation>> {
+    const url  = `${ URL_SERVICES }/${id}/change-status?status=${status}`;
+    return this.http.patch<MessageResponse<ListIpQuotation>>( url, {}, {headers: this.authSV.headers()} )
       .pipe(
         catchError( err => throwError( () => err.error.errorMessage ))
       );
   }
 
-  rejectQuotation(id: string): Observable<MessageResponse<IpQuotation>> {
-    const url  = `${ URL_SERVICES }/reject/${id}`;
-    return this.http.patch<MessageResponse<IpQuotation>>( url, {}, {headers: this.authSV.headers()} )
+  rejectQuotation(id: string): Observable<MessageResponse<ListIpQuotation>> {
+    const url  = `${ URL_SERVICES }/${id}`;
+    return this.http.delete<MessageResponse<ListIpQuotation>>( url, {headers: this.authSV.headers()} )
       .pipe(
         catchError( err => throwError( () => err.error.errorMessage ))
       );
