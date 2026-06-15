@@ -414,44 +414,44 @@
               [loading]="loading()">
               <ng-template pTemplate="header">
                 <tr>
-                  <th style="min-width: 8rem">
+                  <th style="min-width: 3rem">
                     <div class="flex justify-content-between">
-                      QR #
+                      #
                     </div>
                   </th>
-                  <th style="min-width: 15rem">
+                  <th style="min-width: 7rem">
+                    <div class="flex justify-content-between">
+                      QUANTITY
+                    </div>
+                  </th>
+                  <th style="min-width: 7rem">
+                    <div class="flex justify-content-between">
+                      TYPE
+                    </div>
+                  </th>
+                  <th style="min-width: 8rem">
+                    <div class="flex justify-content-between">
+                      QR NUMBER
+                    </div>
+                  </th>
+                  <th style="min-width: 20rem">
+                    <div class="flex justify-content-between">
+                      SUPPLIER
+                    </div>
+                  </th>
+                  <th style="min-width: 16rem">
+                    <div class="flex justify-content-between">
+                      COMPLIANCE INFO
+                    </div>
+                  </th>
+                  <th style="min-width: 30rem">
                     <div class="flex justify-content-between">
                       DESCRIPTION
                     </div>
                   </th>
                   <th style="min-width: 10rem">
                     <div class="flex justify-content-between">
-                      MFR REFERENCE
-                    </div>
-                  </th>
-                  <th style="min-width: 6rem">
-                    <div class="flex justify-content-between">
-                      QTY
-                    </div>
-                  </th>
-                  <th style="min-width: 6rem">
-                    <div class="flex justify-content-between">
-                      TYPE
-                    </div>
-                  </th>
-                  <th style="min-width: 10rem">
-                    <div class="flex justify-content-between">
-                      UNIT PRICE
-                    </div>
-                  </th>
-                  <th style="min-width: 8rem">
-                    <div class="flex justify-content-between">
-                      CONDITION
-                    </div>
-                  </th>
-                  <th style="min-width: 10rem">
-                    <div class="flex justify-content-between">
-                      COMPLIANCE INFO
+                      REFERENCE
                     </div>
                   </th>
                   <th style="min-width: 8rem">
@@ -459,30 +459,39 @@
                       LEAD TIME
                     </div>
                   </th>
-                  <th style="min-width: 9rem">
-                    <div class="flex justify-content-between">
+                  <th style="min-width: 13rem">
+                    <div class="flex justify-content-end">
+                      PURCHASE PRICE
+                    </div>
+                  </th>
+                  <th style="min-width: 10rem">
+                    <div class="flex justify-content-end">
                       PROFIT MARGIN
                     </div>
                   </th>
-                  <th style="min-width: 10rem">
-                    <div class="flex justify-content-between">
+                  <th style="min-width: 13rem">
+                    <div class="flex justify-content-end">
                       SELLING PRICE
                     </div>
                   </th>
-                  <th style="min-width: 10rem">
-                    <div class="flex justify-content-between">
-                      EXTENDED PRICE
-                    </div>
-                  </th>
                   @if (tabItem.type === 'edit' && permissions().updateIpQuotation) {
-                    <th style="min-width: 5rem; text-align: end;">
-                      ACTIONS
+                    <th style="min-width: 10rem; text-align: end;">
+                      <div class="flex justify-content-end"></div>
                     </th>
                   }
                 </tr>
               </ng-template>
               <ng-template pTemplate="body" let-productControl let-rowIndex="rowIndex">
                 <tr [formGroup]="productControl">
+                  <td>
+                    {{index + 1}}
+                  </td>
+                  <td>
+                    {{ productControl.value.quantity }}
+                  </td>
+                  <td>
+                    {{ productControl.value.unitType ? productControl.value.unitType.replace('_', ' ') : '-' }}
+                  </td>
                   <td>
                     @if (item()?.listQuoteRequests) {
                       @for (qr of item()!.listQuoteRequests; track qr.id) {
@@ -500,40 +509,99 @@
                     }
                   </td>
                   <td>
-                    {{ productControl.value.description }}
+                    -
                   </td>
                   <td>
-                    {{ productControl.value.mfrReference }}
+                    <div class="formgrid grid">
+                      <div class="field col-12 md:col-5 tittle">
+                        <b>HTS: </b>
+                      </div>
+                      <div class="field col-12 md:col-7">
+                        {{productControl.value.hts}}
+                      </div>
+                      <div class="field col-12 md:col-5 tittle">
+                        <b>DUAL USE: </b>
+                      </div>
+                      <div class="field col-12 md:col-7">
+                        {{productControl.value.dualUse ? 'YES': 'NO'}}
+                      </div>
+                      <div class="field col-12 md:col-5 tittle">
+                        <b>ECCN: </b>
+                      </div>
+                      <div class="field col-12 md:col-7">
+                        {{productControl.value.eccn}}
+                      </div>
+                      <div class="field col-12 md:col-5 tittle">
+                        <b>CONDITION: </b>
+                      </div>
+                      <div class="field col-12 md:col-7">
+                        {{productControl.value.condition || '-'}}
+                      </div>
+                    </div>
                   </td>
-                  <td style="text-align: center;">
-                    {{ productControl.value.quantity }} {{ productControl.value.unitType }}
+                  <td>
+                    <div class="formgrid grid">
+                      <div class="field col-12 md:col-3 tittle">
+                        <b>SUPPLIER: </b>
+                      </div>
+                      <div class="field col-12 md:col-9">
+                        {{productControl.value.description}}
+                      </div>
+                      <div class="field col-12 md:col-3 tittle">
+                        <b>CLIENT: </b>
+                      </div>
+                      <div class="field col-12 md:col-9">
+                        {{productControl.value.clientDescription}}
+                      </div>
+                    </div>
                   </td>
-                  <td style="text-align: center;">
-                    <!-- TODO: Add type field to product model -->
-                    -
+                  <td>
+                    <div class="formgrid grid">
+                      <div class="field col-12">
+                        {{productControl.value.mfrReference}}
+                      </div>
+                      <div class="field col-12">
+                        {{productControl.value.clientReference}}
+                      </div>
+                    </div>
                   </td>
-                  <td style="text-align: right;">
-                    {{ productControl.value.unitPrice | customCurrency:getCurrency():'1.2-5' }}
+                  <td>
+                    {{productControl.value.leadTime + ' ' + productControl.value.leadTimeType}}
                   </td>
-                  <td style="text-align: center;">
-                    {{ productControl.value.condition || '-' }}
-                  </td>
-                  <td style="text-align: center;">
-                    <!-- TODO: Add complianceInfo field to product model -->
-                    -
-                  </td>
-                  <td style="text-align: center;">
-                    <!-- TODO: Add leadTime field to product model -->
-                    -
+                  <td style="text-align: end;">
+                    <div class="formgrid grid">
+                      <div class="field col-12 md:col-5 tittle">
+                        <b>UNIT PRICE: </b>
+                      </div>
+                      <div class="field col-12 md:col-7" style="text-align: right;">
+                        {{ productControl.value.unitPrice | customCurrency:getCurrency():'1.2-5' }}
+                      </div>
+                      <div class="field col-12 md:col-5 tittle">
+                        <b>EXTENDED PRICE: </b>
+                      </div>
+                      <div class="field col-12 md:col-7" style="text-align: right;">
+                        {{productControl.value.extendedPrice | customCurrency:getCurrency():'1.2-2'}}
+                      </div>
+                    </div>
                   </td>
                   <td style="text-align: right;">
                     {{ productControl.value.profitMargin }}%
                   </td>
-                  <td style="text-align: right;">
-                    {{ productControl.value.sellingUnitPrice | customCurrency:getCurrency():'1.2-5' }}
-                  </td>
-                  <td style="text-align: right;">
-                    {{ productControl.value.extendedPrice | customCurrency:getCurrency():'1.2-5' }}
+                  <td style="text-align: end;">
+                    <div class="formgrid grid">
+                      <div class="field col-12 md:col-5 tittle">
+                        <b>UNIT: </b>
+                      </div>
+                      <div class="field col-12 md:col-7" style="text-align: right;">
+                        {{ productControl.value.sellingUnitPrice | customCurrency:getCurrency():'1.2-5' }}
+                      </div>
+                      <div class="field col-12 md:col-5 tittle">
+                        <b>EXTENDED: </b>
+                      </div>
+                      <div class="field col-12 md:col-7" style="text-align: right;">
+                        {{productControl.value.extendedPrice | customCurrency:getCurrency():'1.2-2'}}
+                      </div>
+                    </div>
                   </td>
                   @if (tabItem.type === 'edit' && permissions().updateIpQuotation) {
                     <td style="text-align: end;">
@@ -546,6 +614,16 @@
                         severity="warning"
                         (click)="openModalProduct('edit', productControl.value.id)"
                         tooltipPosition="left">
+                      </button>
+                      <button
+                        pButton
+                        type="button"
+                        icon="pi pi-box"
+                        class="p-button-rounded p-button-text"
+                        pTooltip="Open Product"
+                        severity="secondary"
+                        (click)="openProduct(productControl.value.ipProductId)"
+                        tooltipPosition="bottom">
                       </button>
                       <button
                         pButton

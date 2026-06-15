@@ -435,17 +435,41 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
       quoteRequestProductId: [
         product?.quoteRequestProduct?.id ?? null
       ],
+      ipProductId: [
+        product?.quoteRequestProduct?.ipProduct?.id ?? null
+      ],
       description: [
         product?.quoteRequestProduct?.ipProduct?.description ?? ''
       ],
+      clientDescription: [
+        product?.quoteRequestProduct?.ipProduct?.clientDescription ?? ''
+      ],
       mfrReference: [
         product?.quoteRequestProduct?.ipProduct?.mfrReference ?? ''
+      ],
+      clientReference: [
+        product?.quoteRequestProduct?.ipProduct?.clientReference ?? ''
       ],
       quantity: [
         product?.quoteRequestProduct?.quantity ?? 0
       ],
       unitType: [
         product?.quoteRequestProduct?.unitType ?? ''
+      ],
+      hts: [
+        product?.quoteRequestProduct?.ipProduct?.htsScheduleBNumber ?? ''
+      ],
+      dualUse: [
+        product?.quoteRequestProduct?.ipProduct?.dualUse ?? false
+      ],
+      eccn: [
+        product?.quoteRequestProduct?.ipProduct?.eccn ?? ''
+      ],
+      leadTime: [
+        product?.quoteRequestProduct?.leadTime ?? 0
+      ],
+      leadTimeType: [
+        product?.quoteRequestProduct?.leadTimeType ?? 'WEEKS'
       ],
       unitPrice: [
         product?.quoteRequestProduct?.unitPrice ?? 0
