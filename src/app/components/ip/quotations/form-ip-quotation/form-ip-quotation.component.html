@@ -439,7 +439,7 @@
                       SUPPLIER
                     </div>
                   </th>
-                  <th style="min-width: 16rem">
+                  <th style="min-width: 18rem">
                     <div class="flex justify-content-between">
                       COMPLIANCE INFO
                     </div>
@@ -459,19 +459,24 @@
                       LEAD TIME
                     </div>
                   </th>
-                  <th style="min-width: 13rem">
-                    <div class="flex justify-content-end">
-                      PURCHASE PRICE
+                  <th style="min-width: 8rem">
+                    <div class="flex justify-content-center">
+                      MARGIN
                     </div>
                   </th>
-                  <th style="min-width: 10rem">
+                  <th style="min-width: 4rem">
                     <div class="flex justify-content-end">
-                      PROFIT MARGIN
+                      PRICE
                     </div>
                   </th>
                   <th style="min-width: 13rem">
                     <div class="flex justify-content-end">
-                      SELLING PRICE
+                      PURCHASE
+                    </div>
+                  </th>
+                  <th style="min-width: 13rem">
+                    <div class="flex justify-content-end">
+                      SELLING
                     </div>
                   </th>
                   @if (tabItem.type === 'edit' && permissions().updateIpQuotation) {
@@ -481,35 +486,22 @@
                   }
                 </tr>
               </ng-template>
-              <ng-template pTemplate="body" let-productControl let-rowIndex="rowIndex">
-                <tr [formGroup]="productControl">
+              <ng-template pTemplate="body" let-product let-index="rowIndex">
+                <tr [formGroup]="product">
                   <td>
                     {{index + 1}}
                   </td>
                   <td>
-                    {{ productControl.value.quantity }}
+                    {{ product.value.quantity }}
                   </td>
                   <td>
-                    {{ productControl.value.unitType ? productControl.value.unitType.replace('_', ' ') : '-' }}
+                    {{ product.value.unitType ? product.value.unitType.replace('_', ' ') : '-' }}
                   </td>
                   <td>
-                    @if (item()?.listQuoteRequests) {
-                      @for (qr of item()!.listQuoteRequests; track qr.id) {
-                        @if (qr.id === productControl.value.quotationsQuoteRequestId) {
-                          <button
-                            pButton
-                            [label]="qr.number || ''"
-                            [text]="true"
-                            severity="primary"
-                            (click)="openQuoteRequest(qr)"
-                            type="button">
-                          </button>
-                        }
-                      }
-                    }
+                    {{ product.value.qrNumber }}
                   </td>
                   <td>
-                    -
+                    {{ product.value.supplierName }}
                   </td>
                   <td>
                     <div class="formgrid grid">
@@ -517,25 +509,25 @@
                         <b>HTS: </b>
                       </div>
                       <div class="field col-12 md:col-7">
-                        {{productControl.value.hts}}
+                        {{product.value.hts}}
                       </div>
                       <div class="field col-12 md:col-5 tittle">
                         <b>DUAL USE: </b>
                       </div>
                       <div class="field col-12 md:col-7">
-                        {{productControl.value.dualUse ? 'YES': 'NO'}}
+                        {{product.value.dualUse ? 'YES': 'NO'}}
                       </div>
                       <div class="field col-12 md:col-5 tittle">
                         <b>ECCN: </b>
                       </div>
                       <div class="field col-12 md:col-7">
-                        {{productControl.value.eccn}}
+                        {{product.value.eccn}}
                       </div>
                       <div class="field col-12 md:col-5 tittle">
                         <b>CONDITION: </b>
                       </div>
                       <div class="field col-12 md:col-7">
-                        {{productControl.value.condition || '-'}}
+                        {{product.value.condition || '-'}}
                       </div>
                     </div>
                   </td>
@@ -545,61 +537,60 @@
                         <b>SUPPLIER: </b>
                       </div>
                       <div class="field col-12 md:col-9">
-                        {{productControl.value.description}}
+                        {{product.value.description}}
                       </div>
                       <div class="field col-12 md:col-3 tittle">
                         <b>CLIENT: </b>
                       </div>
                       <div class="field col-12 md:col-9">
-                        {{productControl.value.clientDescription}}
+                        {{product.value.clientDescription}}
                       </div>
                     </div>
                   </td>
                   <td>
                     <div class="formgrid grid">
                       <div class="field col-12">
-                        {{productControl.value.mfrReference}}
+                        {{product.value.mfrReference || '-'}}
                       </div>
                       <div class="field col-12">
-                        {{productControl.value.clientReference}}
+                        {{product.value.clientReference || '-'}}
                       </div>
                     </div>
                   </td>
                   <td>
-                    {{productControl.value.leadTime + ' ' + productControl.value.leadTimeType}}
+                    {{product.value.leadTime + ' ' + product.value.leadTimeType}}
                   </td>
-                  <td style="text-align: end;">
+                  <td style="text-align: center !important;">
+                    {{ product.value.profitMargin }}%
+                  </td>
+                   <td style="text-align: end;">
                     <div class="formgrid grid">
-                      <div class="field col-12 md:col-5 tittle">
-                        <b>UNIT PRICE: </b>
-                      </div>
-                      <div class="field col-12 md:col-7" style="text-align: right;">
-                        {{ productControl.value.unitPrice | customCurrency:getCurrency():'1.2-5' }}
-                      </div>
-                      <div class="field col-12 md:col-5 tittle">
-                        <b>EXTENDED PRICE: </b>
-                      </div>
-                      <div class="field col-12 md:col-7" style="text-align: right;">
-                        {{productControl.value.extendedPrice | customCurrency:getCurrency():'1.2-2'}}
-                      </div>
-                    </div>
-                  </td>
-                  <td style="text-align: right;">
-                    {{ productControl.value.profitMargin }}%
-                  </td>
-                  <td style="text-align: end;">
-                    <div class="formgrid grid">
-                      <div class="field col-12 md:col-5 tittle">
+                      <div class="field col-12 md:col-12 tittle">
                         <b>UNIT: </b>
                       </div>
-                      <div class="field col-12 md:col-7" style="text-align: right;">
-                        {{ productControl.value.sellingUnitPrice | customCurrency:getCurrency():'1.2-5' }}
-                      </div>
-                      <div class="field col-12 md:col-5 tittle">
+                      <div class="field col-12 md:col-12 tittle">
                         <b>EXTENDED: </b>
                       </div>
-                      <div class="field col-12 md:col-7" style="text-align: right;">
-                        {{productControl.value.extendedPrice | customCurrency:getCurrency():'1.2-2'}}
+                    </div>
+                  </td>
+                  <td style="text-align: end;">
+                    <div class="formgrid grid">
+                      <div class="field col-12 md:col-12" style="text-align: right;">
+                        {{ product.value.unitPrice | customCurrency:getCurrency():'1.2-5' }}
+                      </div>
+                      <div class="field col-12 md:col-12" style="text-align: right;">
+                        {{product.value.extendedPrice | customCurrency:getCurrency():'1.2-2'}}
+                      </div>
+                    </div>
+                  </td>
+
+                  <td style="text-align: end;">
+                    <div class="formgrid grid">
+                      <div class="field col-12 md:col-12" style="text-align: right;">
+                        {{ product.value.sellingUnitPrice | customCurrency:getCurrency():'1.2-5' }}
+                      </div>
+                      <div class="field col-12 md:col-12" style="text-align: right;">
+                        {{product.value.sellingExtendedPrice | customCurrency:getCurrency():'1.2-2'}}
                       </div>
                     </div>
                   </td>
@@ -612,7 +603,7 @@
                         class="p-button-rounded p-button-text"
                         pTooltip="Edit"
                         severity="warning"
-                        (click)="openModalProduct('edit', productControl.value.id)"
+                        (click)="openModalProduct('edit', product.value.id)"
                         tooltipPosition="left">
                       </button>
                       <button
@@ -622,7 +613,7 @@
                         class="p-button-rounded p-button-text"
                         pTooltip="Open Product"
                         severity="secondary"
-                        (click)="openProduct(productControl.value.ipProductId)"
+                        (click)="openProduct(product.value.ipProductId)"
                         tooltipPosition="bottom">
                       </button>
                       <button
@@ -632,7 +623,7 @@
                         class="p-button-rounded p-button-text"
                         pTooltip="Remove"
                         severity="danger"
-                        (click)="removeProduct(productControl.value)"
+                        (click)="removeProduct(product.value)"
                         tooltipPosition="right">
                       </button>
                     </td>

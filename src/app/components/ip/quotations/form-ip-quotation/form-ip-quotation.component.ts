@@ -439,16 +439,16 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
         product?.quoteRequestProduct?.ipProduct?.id ?? null
       ],
       description: [
-        product?.quoteRequestProduct?.ipProduct?.description ?? ''
+        product?.quoteRequestProduct?.ipProduct?.description ?? '-'
       ],
       clientDescription: [
-        product?.quoteRequestProduct?.ipProduct?.clientDescription ?? ''
+        product?.quoteRequestProduct?.ipProduct?.clientDescription ?? '-'
       ],
       mfrReference: [
-        product?.quoteRequestProduct?.ipProduct?.mfrReference ?? ''
+        product?.quoteRequestProduct?.ipProduct?.mfrReference ?? '-'
       ],
       clientReference: [
-        product?.quoteRequestProduct?.ipProduct?.clientReference ?? ''
+        product?.quoteRequestProduct?.ipProduct?.clientReference ?? '-'
       ],
       quantity: [
         product?.quoteRequestProduct?.quantity ?? 0
@@ -474,17 +474,26 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
       unitPrice: [
         product?.quoteRequestProduct?.unitPrice ?? 0
       ],
+      extendedPrice: [
+        product?.quoteRequestProduct.extendedPrice ?? 0
+      ],
       sellingUnitPrice: [
         product?.sellingUnitPrice ?? 0
       ],
-      extendedPrice: [
-        product?.extendedPrice ?? 0
+      sellingExtendedPrice: [
+        product?.sellingExtendedPrice ?? 0
       ],
       profitMargin: [
-        product?.profitMargin ?? 0
+        (product?.profitMargin ?? 0) * 100
       ],
       condition: [
         product?.condition ?? ''
+      ],
+      qrNumber: [
+        product?.qrNumber ?? ''
+      ],
+      supplierName: [
+        product?.supplierName ?? ''
       ]
     });
   }

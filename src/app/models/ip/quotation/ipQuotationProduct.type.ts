@@ -8,6 +8,8 @@ export type IpQuotationProduct = {
   profitMargin: number;
   condition: 'NEW' | 'USED' | 'REFURBISHED';
   sellingUnitPrice: number;
-  extendedPrice: number;
+  sellingExtendedPrice: number;
   grossWeightLbs: number;
+  qrNumber: string;
+  supplierName: string;
 }
