@@ -663,7 +663,7 @@
                   severity="warning"
                   [outlined]="true"
                   (click)="openModalListOtherCharges()"
-                  [disabled]="tabItem.type === 'create'"
+                  [disabled]="tabItem.type !== 'edit'"
                   type="button">
                 </button>
               </div>
