@@ -459,31 +459,29 @@
                       LEAD TIME
                     </div>
                   </th>
-                  <th style="min-width: 8rem">
+                  <th style="min-width: 8rem" pFrozenColumn alignFrozen="right">
                     <div class="flex justify-content-center">
                       MARGIN
                     </div>
                   </th>
-                  <th style="min-width: 4rem">
+                  <th style="min-width: 4rem" pFrozenColumn alignFrozen="right">
                     <div class="flex justify-content-end">
                       PRICE
                     </div>
                   </th>
-                  <th style="min-width: 13rem">
+                  <th style="min-width: 13rem" pFrozenColumn alignFrozen="right">
                     <div class="flex justify-content-end">
                       PURCHASE
                     </div>
                   </th>
-                  <th style="min-width: 13rem">
+                  <th style="min-width: 13rem" pFrozenColumn alignFrozen="right">
                     <div class="flex justify-content-end">
                       SELLING
                     </div>
                   </th>
-                  @if (tabItem.type === 'edit' && permissions().updateIpQuotation) {
-                    <th style="min-width: 10rem; text-align: end;">
-                      <div class="flex justify-content-end"></div>
-                    </th>
-                  }
+                  <th style="min-width: 10rem; text-align: end;" pFrozenColumn alignFrozen="right">
+                    <div class="flex justify-content-end"></div>
+                  </th>
                 </tr>
               </ng-template>
               <ng-template pTemplate="body" let-product let-index="rowIndex">
@@ -560,10 +558,10 @@
                   <td>
                     {{product.value.leadTime + ' ' + product.value.leadTimeType}}
                   </td>
-                  <td style="text-align: center !important;">
+                  <td style="text-align: center !important;" pFrozenColumn alignFrozen="right">
                     {{ product.value.profitMargin }}%
                   </td>
-                   <td style="text-align: end;">
+                   <td style="text-align: end;" pFrozenColumn alignFrozen="right">
                     <div class="formgrid grid">
                       <div class="field col-12 md:col-12 tittle">
                         <b>UNIT: </b>
@@ -573,7 +571,7 @@
                       </div>
                     </div>
                   </td>
-                  <td style="text-align: end;">
+                  <td style="text-align: end;" pFrozenColumn alignFrozen="right">
                     <div class="formgrid grid">
                       <div class="field col-12 md:col-12" style="text-align: right;">
                         {{ product.value.unitPrice | customCurrency:getCurrency():'1.2-5' }}
@@ -584,7 +582,7 @@
                     </div>
                   </td>
 
-                  <td style="text-align: end;">
+                  <td style="text-align: end;" pFrozenColumn alignFrozen="right">
                     <div class="formgrid grid">
                       <div class="field col-12 md:col-12" style="text-align: right;">
                         {{ product.value.sellingUnitPrice | customCurrency:getCurrency():'1.2-5' }}
@@ -594,8 +592,8 @@
                       </div>
                     </div>
                   </td>
-                  @if (tabItem.type === 'edit' && permissions().updateIpQuotation) {
-                    <td style="text-align: end;">
+                  <td style="text-align: end;" pFrozenColumn alignFrozen="right">
+                    @if (tabItem.type === 'edit' && permissions().updateIpQuotation) {
                       <button
                         pButton
                         type="button"
@@ -626,8 +624,8 @@
                         (click)="removeProduct(product.value)"
                         tooltipPosition="right">
                       </button>
-                    </td>
-                  }
+                    }
+                  </td>
                 </tr>
               </ng-template>
             </p-table>
