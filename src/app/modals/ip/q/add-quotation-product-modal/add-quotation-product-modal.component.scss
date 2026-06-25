@@ -1,0 +1,15 @@
+p-checkbox {
+  margin-top: 0.6rem;
+}
+
+.row-selected {
+  background-color: var(--highlight-bg) !important;
+}
+
+.gap-2 {
+  gap: 0.5rem;
+}
+
+:host ::ng-deep .p-dropdown .p-dropdown-label {
+  text-align: left;
+}
