@@ -6,7 +6,7 @@ import { BaseAutoCompleteService } from '@services/base-auto-complete-service.se
 import { AuthService } from '@services/security';
 import { catchError, concatMap, map, Observable, of, Subject, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { CreateIpQuotationRequest, IpQuotation, IpQuotationFilter, ListIpQuotation, IpQuotationOtherCharge, IpQuotationOtherChargeRequest, IpQuotationAddQrRequest, IpQuotationRequest } from '@interfaces/ip/quotation';
+import { CreateIpQuotationRequest, IpQuotation, IpQuotationFilter, ListIpQuotation, IpQuotationOtherCharge, IpQuotationOtherChargeRequest, IpQuotationAddQrRequest, IpQuotationRequest, IpQuotationProductBulkRequest, IpQuotationProduct } from '@interfaces/ip/quotation';
 import { Page } from '@interfaces/page.model';
 
 const URL_SERVICES = environment.api_url + 'ip/q';
@@ -160,12 +160,12 @@ export class IpQuotationService extends  BaseAutoCompleteService<any>{
     ).subscribe();
   }
 
-  createQuotationProduct(qId: string, qProduct: any): Observable<MessageResponse<any>> {
-    let url  = `${ URL_SERVICES }/${qId}/product`;
-    return this.http.post<MessageResponse<any>>( url, qProduct, {headers: this.authSV.headers()} )
+  createQuotationProductsBulk(qId: string, request: IpQuotationProductBulkRequest): Observable<MessageResponse<IpQuotationProduct[]>> {
+    const url = `${URL_SERVICES}/${qId}/product`;
+    return this.http.post<MessageResponse<IpQuotationProduct[]>>(url, request, { headers: this.authSV.headers() })
       .pipe(
-        catchError( err => throwError( () => err.error.errorMessage ))
-    );
+        catchError(err => throwError(() => err.error.errorMessage))
+      );
   }
 
   updateQuotationProduct(qId: string, qProductId: string, qProduct: any): Observable<MessageResponse<any>> {
