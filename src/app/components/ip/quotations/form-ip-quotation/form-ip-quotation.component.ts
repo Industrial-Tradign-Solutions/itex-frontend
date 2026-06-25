@@ -20,7 +20,8 @@ import { DialogService } from 'primeng/dynamicdialog';
 import { finalize, Observable } from 'rxjs';
 import { MessageResponse } from '@interfaces/message-response';
 import { FormArray } from '@angular/forms';
-import { QuotationProductModalComponent } from '@modals/ip/q/quotation-product-modal/quotation-product-modal.component';
+import { AddQuotationProductModalComponent } from '@modals/ip/q/add-quotation-product-modal/add-quotation-product-modal.component';
+import { EditQuotationProductModalComponent } from '@modals/ip/q/edit-quotation-product-modal/edit-quotation-product-modal.component';
 import { ListOtherChargesModalComponent } from '@modals/ip/q/list-other-charges-modal/list-other-charges-modal.component';
 import { AddQuoteRequestsModalComponent } from '@modals/ip/q/add-quote-requests-modal/add-quote-requests-modal.component';
 
@@ -549,22 +550,55 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
     });
   }
 
-  openModalProduct(type: 'create' | 'edit', productId?: string) {
+  openModalAddProducts() {
     if (this.tabItem.type !== 'edit') return;
-    let modal =  this.dialogSV.open(QuotationProductModalComponent,{
-      header: `${(type === 'edit'? 'UPDATE' : 'ADD')} PRODUCT` ,
-      width: '70rem',
+
+    const modal = this.dialogSV.open(AddQuotationProductModalComponent, {
+      header: 'ADD PRODUCTS',
+      width: '90vw',
       closable: false,
       closeOnEscape: false,
       data: {
-        type,
-        productId,
         qId: this.item()?.id,
-        listQuoteRequests: this.item()?.listQuoteRequests ?? []
+        listQuoteRequests: this.item()?.listQuoteRequests ?? [],
+        existingProducts: this.item()?.products ?? [],
+        currency: this.item()?.currency ?? 'USD'
       }
     });
+
     modal.onClose.subscribe({
-      next: (resp: {valid: boolean}) => {
+      next: (resp: { valid: boolean }) => {
+        if (resp && resp.valid) {
+          this.tabItem.pristine = false;
+          this.onSubmit();
+        }
+      }
+    });
+  }
+
+  openModalEditProduct(productId: string) {
+    if (this.tabItem.type !== 'edit') return;
+    const products = this.getListProducts().controls;
+    const product = products.find(p => p.value.id === productId);
+    if (!product) return;
+
+    const modal = this.dialogSV.open(EditQuotationProductModalComponent, {
+      header: 'UPDATE PRODUCT',
+      width: '35rem',
+      closable: false,
+      closeOnEscape: false,
+      data: {
+        qId: this.item()?.id,
+        qProductId: productId,
+        quotationsQuoteRequestId: product.value.quotationsQuoteRequestId,
+        quoteRequestProductId: product.value.quoteRequestProductId,
+        profitMargin: product.value.profitMargin,
+        condition: product.value.condition
+      }
+    });
+
+    modal.onClose.subscribe({
+      next: (resp: { valid: boolean }) => {
         if (resp && resp.valid) {
           this.tabItem.pristine = false;
           this.onSubmit();

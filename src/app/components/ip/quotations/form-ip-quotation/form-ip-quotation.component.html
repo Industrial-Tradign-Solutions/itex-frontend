@@ -601,7 +601,7 @@
                         class="p-button-rounded p-button-text"
                         pTooltip="Edit"
                         severity="warning"
-                        (click)="openModalProduct('edit', product.value.id)"
+                        (click)="openModalEditProduct(product.value.id)"
                         tooltipPosition="left">
                       </button>
                       <button
@@ -638,7 +638,7 @@
                   icon="pi pi-plus"
                   severity="success"
                   [outlined]="true"
-                  (click)="openModalProduct('create')"
+                  (click)="openModalAddProducts()"
                   [disabled]="tabItem.type !== 'edit'"
                   type="button">
                 </button>
