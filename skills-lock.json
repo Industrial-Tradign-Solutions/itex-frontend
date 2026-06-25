@@ -9,12 +9,12 @@
     "adev-writing-guide": {
       "source": "angular/angular",
       "sourceType": "autoskills-registry",
-      "computedHash": "8f088248ee2b10c69d502cba98d17c62ee8440cbc88a4dd1969ba3c9c8308f10"
+      "computedHash": "b8933a369cba1517ae21800f9f108cbdb3ca4e7b4eacd850103117ed51039795"
     },
     "angular-developer": {
       "source": "angular/skills",
       "sourceType": "autoskills-registry",
-      "computedHash": "cddf38a5db23010989f610c8543e1e66268a45940bd5e5489ee50e532c49b438"
+      "computedHash": "fc045be84cd51d105e4523a555510e3fd465a3e931f9b0049b0dfbdf68775eac"
     },
     "cavecrew": {
       "source": "JuliusBrussee/caveman",
@@ -77,12 +77,12 @@
     "nodejs-best-practices": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "autoskills-registry",
-      "computedHash": "9dbca8bf122ad4b6d8b6686e05e4e434e00ae1dfa5fa412566ae7ee88780a18f"
+      "computedHash": "7361ab02fb6b09913e3bdd9cf61c629ed6c17de9485e6a781054e5d437ccfc29"
     },
     "pr_review": {
       "source": "angular/angular",
       "sourceType": "autoskills-registry",
-      "computedHash": "821975f20a0647c1f2f979db7d9c3a02a32df86f5e043af3562bc0931e9bae3c"
+      "computedHash": "7fe60167662a2a7df0f81af064d22298cffe1a13164f250f75cac8d71a452cfd"
     },
     "reference-compiler-cli": {
       "source": "angular/angular",
