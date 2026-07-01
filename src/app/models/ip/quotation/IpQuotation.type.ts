@@ -2,6 +2,7 @@ import { BasicUser } from "@interfaces/administration/user";
 import { Client, ClientContact } from "@interfaces/partners/clients";
 import { IpQuotationProduct } from "./ipQuotationProduct.type";
 import { IpQuotationOtherCharge } from "./IpQuotationOtherCharge.type";
+import { ListIpQuotation } from "./listIpQ.type";
 
 export type IpQuotation = {
   id: string;
@@ -28,7 +29,8 @@ export type IpQuotation = {
   listQuoteRequests: {qqrId?: string, id?: string, number?: string}[];
   products: IpQuotationProduct[];
   otherCharges: IpQuotationOtherCharge[];
-  clonedQuotations?: { id: string; number: string }[];
+  clonedByQuotation?: IpQuotation;
+  clonedQuotations?: ListIpQuotation[];
   listPurchaseOrders?: { id: string; number: string }[];
   grossWeightLbs?: number;
   subTotal?: number;

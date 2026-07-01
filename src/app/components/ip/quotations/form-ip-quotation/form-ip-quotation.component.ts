@@ -626,14 +626,11 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
         )
         .subscribe({
           next: (resp) => {
+            this._item()?.clonedQuotations?.push(resp.data);
             this.utilSV.setMessage(resp.title, resp.message, 'success');
             this.opened.emit({
-              item: {
-                id: resp.data.id,
-                name: resp.data.number,
-                status: resp.data.status
-              },
               type: 'edit',
+              item: resp.data,
               pristine: true
             });
           },

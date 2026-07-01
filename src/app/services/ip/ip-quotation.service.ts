@@ -200,9 +200,9 @@ export class IpQuotationService extends  BaseAutoCompleteService<any>{
       );
   }
 
-  cloneQuotation(id: string): Observable<MessageResponse<IpQuotation>> {
+  cloneQuotation(id: string): Observable<MessageResponse<ListIpQuotation>> {
     const url = `${ URL_SERVICES }/clone/${id}`;
-    return this.http.patch<MessageResponse<IpQuotation>>( url, null, {headers: this.authSV.headers()} )
+    return this.http.patch<MessageResponse<ListIpQuotation>>( url, null, {headers: this.authSV.headers()} )
       .pipe(
         catchError( err => throwError( () => err.error.errorMessage ))
       );

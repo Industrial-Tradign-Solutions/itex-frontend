@@ -649,7 +649,7 @@
                   icon="pi pi-copy"
                   severity="secondary"
                   [outlined]="true"
-                  [disabled]="!(permissions().updateIpQuotation && tabItem.type !== 'create')"
+                  [disabled]="!(permissions().cloneIpQuotation && tabItem.type !== 'create')"
                   (click)="cloneQ()"
                   type="button">
                 </button>
@@ -755,7 +755,7 @@
 
       <!-- Footer: Dates -->
       <div class="formgrid grid" style="margin-bottom: -2.5rem;">
-        <div class="field col-12 md:col-12 lg:col-12 xl:col-12 md:mt-5 lg:mt-5 xl:mt-5">
+        <div class="field col-12 md:col-8 lg:col-8 xl:col-9 md:mt-5 lg:mt-5 xl:mt-5">
           @if(item() && item()?.createdAt) {
             <p-chip>
               <div class="p-2">
@@ -797,6 +797,26 @@
             </p-chip>
           }
         </div>
+        @if(item() && item()?.clonedByQuotation && item()?.clonedByQuotation?.number) {
+          <div class="field col-12 md:col-1 lg:col-1 xl:col-1" style="text-align: end !important; margin-top: 2.3rem !important; margin-right: -3rem !important;">
+            <b>Cloned By Q# </b>
+          </div>
+          <div class="field col-12 md:col-1 lg:col-1 xl:col-1 md:mt-5 lg:mt-4 xl:mt-4">
+            <p-button
+              [label]="item()!.clonedByQuotation!.number"
+              [link]="true"
+              severity="primary"
+              (click)="openQuotation({
+                id: item()!.clonedByQuotation!.id,
+                name: item()!.clonedByQuotation!.number
+              })"
+              type="button">
+            </p-button>
+          </div>
+          <div style="margin-right: 3rem !important;"></div>
+        } @else {
+          <div class="field col-12 md:col-2 lg:col-2 xl:col-2"></div>
+        }
       </div>
     </form>
   </div>
