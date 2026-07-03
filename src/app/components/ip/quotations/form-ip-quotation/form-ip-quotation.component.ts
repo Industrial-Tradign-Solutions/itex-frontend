@@ -702,4 +702,8 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
     // TODO FASE 8: Implement print and send functionality
     this.utilSV.setMessage(TITLES.info, 'Print & Send functionality coming in FASE 8', 'info');
   }
+
+  openHistory(quotation: IpQuotation) {
+
+  }
 }

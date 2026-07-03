@@ -270,7 +270,7 @@
                           (click)="openQuoteRequest(qr)"
                           tooltipPosition="left">
                         </button>
-                        @if (tabItem.type === 'edit' && permissions().updateIpQuotation) {
+                        @if (tabItem.type === 'edit' && permissions().updateIpQuotation && (item()?.status === 'CREATED' || item()?.status === 'SENT')) {
                           <button
                             pButton
                             type="button"
@@ -816,6 +816,18 @@
           <div style="margin-right: 3rem !important;"></div>
         } @else {
           <div class="field col-12 md:col-2 lg:col-2 xl:col-2"></div>
+        }
+        @if (permissions().viewHistoryIpQuotation && tabItem.type !== 'create') {
+          <div class="field col-12 md:col-2 lg:col-2 xl:col-1 md:mt-5 lg:mt-5 xl:mt-5">
+            <button pButton
+              label="View History"
+              icon="pi pi-book"
+              class="w-full"
+              severity="help"
+              (click)="openHistory(item()!)"
+              type="button">
+            </button>
+          </div>
         }
       </div>
     </form>
