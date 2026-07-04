@@ -24,12 +24,13 @@
                 </tr>
               </ng-template>
               <ng-template pTemplate="body" let-charge>
-                <tr>
+                <tr [class]="charge.selected ? 'row-selected' : ''">
                   <td>
-                    <input
-                      type="checkbox"
-                      [checked]="_selectedIds().has(charge.id)"
-                      (click)="toggleSelect(charge.id)" />
+                    <p-checkbox
+                      [binary]="true"
+                      [ngModel]="charge.selected"
+                      (onChange)="toggleSelect(charge.id)">
+                    </p-checkbox>
                   </td>
                   <td>{{ charge.qrNumber }}</td>
                   <td>{{ charge.description }}</td>
@@ -57,7 +58,7 @@
         icon="pi pi-upload"
         label="Import"
         class="p-button-sm p-button-success"
-        [disabled]="_selectedIds().size === 0 || importing()"
+        [disabled]="!hasSelection() || importing()"
         (click)="importSelected()">
       </button>
     </div>
