@@ -670,11 +670,10 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
 
   openModalListOtherCharges() {
     if (!this.item()) return;
-    console.log(this.item());
 
     const modal = this.dialogSV.open(ListOtherChargesModalComponent, {
       header: 'OTHER CHARGES',
-      width: '70rem',
+      width: '60rem',
       closable: false,
       closeOnEscape: false,
       data: {
