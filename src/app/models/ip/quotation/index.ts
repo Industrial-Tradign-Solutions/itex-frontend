@@ -8,4 +8,8 @@ export * from './ipQuotationProductBulkRequest.type';
 export * from './bulkProductTableItem.type';
 export { IpQuotationOtherCharge } from './IpQuotationOtherCharge.type';
 export { IpQuotationOtherChargeRequest, mapToIpQOtherChargeRequest } from './IpQuotationOtherChargeRequest.type';
+export { IpQuotationImportedOtherCharge } from './IpQuotationImportedOtherCharge.type';
+export { IpQuotationOtherChargeAvailableFromQr } from './IpQuotationOtherChargeAvailableFromQr.type';
+export { IpQuotationOtherChargeImportItem, IpQuotationOtherChargeImportRequest } from './IpQuotationOtherChargeImportRequest.type';
+export { DisplayOtherCharge } from './DisplayOtherCharge.type';
 export { IpQuotationAddQrRequest } from './IpQuotationAddQrRequest.type';

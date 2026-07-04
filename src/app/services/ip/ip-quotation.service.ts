@@ -6,7 +6,7 @@ import { BaseAutoCompleteService } from '@services/base-auto-complete-service.se
 import { AuthService } from '@services/security';
 import { catchError, concatMap, map, Observable, of, Subject, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { CreateIpQuotationRequest, IpQuotation, IpQuotationFilter, ListIpQuotation, IpQuotationOtherCharge, IpQuotationOtherChargeRequest, IpQuotationAddQrRequest, IpQuotationRequest, IpQuotationProductBulkRequest, IpQuotationProduct } from '@interfaces/ip/quotation';
+import { CreateIpQuotationRequest, IpQuotation, IpQuotationFilter, ListIpQuotation, IpQuotationOtherCharge, IpQuotationOtherChargeRequest, IpQuotationImportedOtherCharge, IpQuotationOtherChargeAvailableFromQr, IpQuotationOtherChargeImportRequest, IpQuotationAddQrRequest, IpQuotationRequest, IpQuotationProductBulkRequest, IpQuotationProduct } from '@interfaces/ip/quotation';
 import { Page } from '@interfaces/page.model';
 
 const URL_SERVICES = environment.api_url + 'ip/q';
@@ -248,14 +248,37 @@ export class IpQuotationService extends  BaseAutoCompleteService<any>{
       );
   }
 
-  // TODO: Implement when API endpoint is provided
-  // getAllOtherChargesForModal(qId: string): Observable<any> {
-  //   const url = `${ URL_SERVICES }/${qId}/other_charges/all`;
-  //   return this.http.get<any>( url, {headers: this.authSV.headers()} )
-  //     .pipe(
-  //       catchError( err => throwError( () => err.error.errorMessage ))
-  //     );
-  // }
+  getAvailableOtherChargesFromQr(qId: string): Observable<IpQuotationOtherChargeAvailableFromQr[]> {
+    const url = `${ URL_SERVICES }/${qId}/other_charges/available-from-qr`;
+    return this.http.get<IpQuotationOtherChargeAvailableFromQr[]>( url, {headers: this.authSV.headers()} )
+      .pipe(
+        catchError( err => throwError( () => err.error.errorMessage ))
+      );
+  }
+
+  importOtherChargesFromQr(qId: string, request: IpQuotationOtherChargeImportRequest): Observable<MessageResponse<IpQuotationImportedOtherCharge[]>> {
+    const url = `${ URL_SERVICES }/${qId}/other_charges/import-from-qr`;
+    return this.http.post<MessageResponse<IpQuotationImportedOtherCharge[]>>( url, request, {headers: this.authSV.headers()} )
+      .pipe(
+        catchError( err => throwError( () => err.error.errorMessage ))
+      );
+  }
+
+  getImportedOtherChargeFromQr(qId: string, id: string): Observable<IpQuotationImportedOtherCharge> {
+    const url = `${ URL_SERVICES }/${qId}/other_charges/imported-from-qr/${id}`;
+    return this.http.get<IpQuotationImportedOtherCharge>( url, {headers: this.authSV.headers()} )
+      .pipe(
+        catchError( err => throwError( () => err.error.errorMessage ))
+      );
+  }
+
+  removeImportedOtherChargeFromQr(qId: string, id: string): Observable<MessageResponse<string>> {
+    const url = `${ URL_SERVICES }/${qId}/other_charges/imported-from-qr/${id}`;
+    return this.http.delete<MessageResponse<string>>( url, {headers: this.authSV.headers()} )
+      .pipe(
+        catchError( err => throwError( () => err.error.errorMessage ))
+      );
+  }
 
   printQuotation(qId: string): Observable<Blob> {
     const url = `${ URL_SERVICES }/print/${qId}`;

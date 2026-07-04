@@ -6,6 +6,7 @@ import { TableModule } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { PipesModule } from '@pipes/pipes.module';
+import { ImportOtherChargesFromQrModalModule } from '../import-other-charges-from-qr-modal/import-other-charges-from-qr-modal.module';
 
 @NgModule({
   declarations: [
@@ -17,7 +18,8 @@ import { PipesModule } from '@pipes/pipes.module';
     TableModule,
     TooltipModule,
     ProgressBarModule,
-    PipesModule
+    PipesModule,
+    ImportOtherChargesFromQrModalModule
   ],
   exports: [
     ListOtherChargesModalComponent

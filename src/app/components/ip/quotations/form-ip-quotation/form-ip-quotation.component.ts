@@ -670,6 +670,7 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
 
   openModalListOtherCharges() {
     if (!this.item()) return;
+    console.log(this.item());
 
     const modal = this.dialogSV.open(ListOtherChargesModalComponent, {
       header: 'OTHER CHARGES',
@@ -680,7 +681,10 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
         qId: this.item()!.id,
         type: this.tabItem.type === 'edit' ? 'edit' : 'view',
         currency: this.item()!.currency,
-        otherCharges: this.item()!.otherCharges || []
+        otherCharges: this.item()!.otherCharges || [],
+        qrOtherCharges: this.item()!.qrOtherCharges || [],
+        listQuoteRequests: this.item()!.listQuoteRequests || [],
+        qStatus: this.item()!.status
       }
     });
     modal.onClose.subscribe({
