@@ -18,7 +18,7 @@ stages:
               versionSpec: '22.13.1'
           - script: npm i -g @angular/cli@20.3.6
             displayName: 'Install Angular CLI'
-          - script: npm ci
+          - script: npm install
             workingDirectory: frontend
             displayName: 'Descargando los paquetes de NPM'
           - script: ng build --configuration production
