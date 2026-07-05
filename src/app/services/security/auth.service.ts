@@ -234,7 +234,9 @@ export class AuthService {
       'Industries',
       'Dashboard',
       'Brands',
-      'Quote_Requests'
+      'Products',
+      'Quote_Requests',
+      'Quotations'
     ];
   }
 }

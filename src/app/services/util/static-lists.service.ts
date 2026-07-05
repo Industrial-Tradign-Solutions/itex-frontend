@@ -79,8 +79,20 @@ export class StaticListsService {
     return this.storageSV.getPlain<StaticListItem[]>(STATIC_LISTS_NAMES.ip_quote_request_status) ?? [];
   }
 
+  getListIpQuotationStatus(): StaticListItem[] {
+    return this.storageSV.getPlain<StaticListItem[]>(STATIC_LISTS_NAMES.ip_quotation_status) ?? [];
+  }
+
   getListLeadTimeType(): StaticListItem[] {
     return this.storageSV.getPlain<StaticListItem[]>(STATIC_LISTS_NAMES.lead_time) ?? [];
+  }
+
+  getListIncoterms(): StaticListItem[] {
+    return this.storageSV.getPlain<StaticListItem[]>(STATIC_LISTS_NAMES.incoterms) ?? [];
+  }
+
+  getListIpQuotationProductCondition(): StaticListItem[] {
+    return this.storageSV.getPlain<StaticListItem[]>(STATIC_LISTS_NAMES.ip_quotation_product_condition) ?? [];
   }
 }
 

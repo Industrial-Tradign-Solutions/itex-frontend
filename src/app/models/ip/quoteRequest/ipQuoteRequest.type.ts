@@ -37,7 +37,7 @@ export type IpQuoteRequest = {
   totalOtherCharges: number;
   grossWeightLbs: number;
 
-  listQuotations: any[];
+  listQuotations: {id?: string, number?: string}[];
 
   sentAt: string;
   answeredAt: string;

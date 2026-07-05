@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { BaseAutoCompleteService } from '@services/base-auto-complete-service.service';
 import { environment } from '../../../environments/environment';
 import { MessageResponse } from '@interfaces/message-response';
-import { catchError, concatMap, Observable, of, Subject, throwError } from 'rxjs';
+import { catchError, concatMap, map, Observable, of, Subject, throwError } from 'rxjs';
 import { AuthService } from '@services/security';
 import { HttpClient } from '@angular/common/http';
 import { IpQuoteRequestFilter, IpQuoteRequestOtherChargeRequest, IpQuoteRequestOtherCharges, IpQuoteRequestProduct, IpQuoteRequestProductRequest, IpQuoteRequestRequest, ListIpQuoteRequest } from '@interfaces/ip/quoteRequest';
@@ -41,6 +41,17 @@ export class IpQuoteRequestService extends  BaseAutoCompleteService<any> {
     return new Observable(observer => {
       this.openAndLockRequestQueue.next({ quoteRequestId, type, observer });
     });
+  }
+
+  getQuoteRequestById(quoteRequestId: string): Observable<IpQuoteRequest> {
+    return this.http.patch<{data: IpQuoteRequest, isValidOpen: boolean}>(
+      `${URL_SERVICES}/open-lock/${quoteRequestId}?type=VIEW`,
+      null,
+      {headers: this.authSV.headers()}
+    ).pipe(
+      map(resp => resp.data),
+      catchError( err => throwError( () => err.error.errorMessage ))
+    );
   }
 
 
@@ -240,5 +251,13 @@ export class IpQuoteRequestService extends  BaseAutoCompleteService<any> {
       .pipe(
         catchError( err => throwError( () => err.error.errorMessage ))
       );
+  }
+
+  getListQuoteRequestByClientAvailableToQuotation(clientId: string, viewCompletedQR: boolean, currency: string): Observable<ListIpQuoteRequest[]> {
+    let url  = `${ URL_SERVICES }/available-for-quotation/${clientId}?view-completed-qr=${viewCompletedQR}&currency=${currency}`;
+    return this.http.get<ListIpQuoteRequest[]>( url, {headers: this.authSV.headers()} )
+      .pipe(
+        catchError( err => throwError( () => err.error.errorMessage ))
+    );
   }
 }

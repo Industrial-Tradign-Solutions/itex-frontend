@@ -41,6 +41,10 @@ export class NavigateTabsService {
       return 'partners/suppliers';
     if (module === 'Products')
       return 'ip/products';
+    if (module === 'Quotations')
+      return 'ip/q';
+    if (module === 'Quote_Requests')
+      return 'ip/qr';
 
     throw Error('Not Exist Modulo')
   }

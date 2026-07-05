@@ -98,6 +98,15 @@ export const Messages = {
         removeOtherCharge: (description: string, value: number, currency: string) => `Are you sure you want to delete the Other Charge "<b>${description}</b>", which is worth "${currency} ${value}"?`,
         changeStatus: (qrNumber: string, status: 'CREATED' | 'ANSWERED' | 'SENT' | 'COMPLETE' | 'REJECTED') => `Are you sure you want to change the status of QR# "<b>${qrNumber}</b>" to
         ${status.toLowerCase()}?`
+      },
+      quotation: {
+        openBy: (module: Modules, item: string, openBy: String) => openByMessage(module, item, openBy),
+        changeStatus: (qNumber: string, status: 'CREATED' | 'ANSWERED' | 'SENT' | 'COMPLETE' | 'REJECTED') => `Are you sure you want to change the status of Q# "<b>${qNumber}</b>" to
+        ${status.toLowerCase()}?`,
+        removeQrFromQuotation: (qrNumber: string) => `All products and information related to Quote Request "<b>${qrNumber}</b>" will be removed from this Quotation. Are you sure?`,
+        clone: (qNumber: string) => `Are you sure you want to clone Q# "<b>${qNumber}</b>"?`,
+        removeOtherCharge: (description: string, value: number, currency: string) => `Are you sure you want to delete the Other Charge "<b>${description}</b>", which is worth "${currency} ${value}"?`,
+        addQuoteRequests: (count: number) => `Are you sure you want to add ${count} Quote Request(s) to this Quotation?`
       }
     }
   }

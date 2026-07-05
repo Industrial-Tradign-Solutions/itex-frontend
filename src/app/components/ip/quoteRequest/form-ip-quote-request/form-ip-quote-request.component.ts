@@ -86,6 +86,10 @@ export class FormIpQuoteRequestComponent extends CommonPageTab<ListIpQuoteReques
     });
   }
 
+  openQuotation( quotation: {id: string, number: string}) {
+    this.navigateSV.openModuleNewTabAndOpenItem('Quotations', quotation.id);
+  }
+
   cloneQr() {
     if (this.tabItem.type === 'create') return;
     this.utilSV.confirm({
@@ -337,8 +341,9 @@ export class FormIpQuoteRequestComponent extends CommonPageTab<ListIpQuoteReques
   }
 
   protected override getRequest() {
-    return mapToIpQrRequest(this.formTab.value);
+    return mapToIpQrRequest(this.formTab.getRawValue());
   }
+
   protected override buildFormAction(): void {
     this.formTab = this.formBuilder.group({
       currency: [
@@ -577,6 +582,15 @@ export class FormIpQuoteRequestComponent extends CommonPageTab<ListIpQuoteReques
     this.showForm = true;
     this.searchSupplier({ query: '', originalEvent: new Event('') });
     this.searchClient({ query: '', originalEvent: new Event('') });
+
+    if (item?.listQuotations && item.listQuotations.length > 0) {
+      controls['clientId'].disable();
+      controls['currency'].disable();
+    }
+
+    if (item?.status === 'ANSWERED') {
+      controls['supplierId'].disable();
+    }
 
     // 🔹 Si es solo vista, deshabilitar todo
     if (type === 'view') {
