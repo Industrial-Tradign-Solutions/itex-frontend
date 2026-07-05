@@ -11,7 +11,7 @@ import { EmailService, NavigateTabsService, StorageService } from '@services/uti
 import { StaticListItem } from '@interfaces/static-list.model';
 import { BasicUser, UserInfo } from '@interfaces/administration/user';
 import { ClientBasic, ClientContact, ClientInfoDep } from '@interfaces/partners/clients';
-import { storageKeys, constants } from '../../../../../environments';
+import { storageKeys, constants, emailBodyTemplates } from '../../../../../environments';
 import { EmitedTab } from '@config/types/tabs';
 import { FormGroup, Validators } from '@angular/forms';
 import { DropdownChangeEvent } from 'primeng/dropdown';
@@ -20,8 +20,10 @@ import { DialogService } from 'primeng/dynamicdialog';
 import { finalize, Observable } from 'rxjs';
 import { MessageResponse } from '@interfaces/message-response';
 import { FormArray } from '@angular/forms';
-import { CustomCurrencyPipe } from '@pipes/custom-currency.pipe';
-import { QuotationProductModalComponent } from '@modals/ip/q/quotation-product-modal/quotation-product-modal.component';
+import { AddQuotationProductModalComponent } from '@modals/ip/q/add-quotation-product-modal/add-quotation-product-modal.component';
+import { EditQuotationProductModalComponent } from '@modals/ip/q/edit-quotation-product-modal/edit-quotation-product-modal.component';
+import { ListOtherChargesModalComponent } from '@modals/ip/q/list-other-charges-modal/list-other-charges-modal.component';
+import { AddQuoteRequestsModalComponent } from '@modals/ip/q/add-quote-requests-modal/add-quote-requests-modal.component';
 
 const MESSAGES = Messages.pages.ip.quotation;
 const TITLES = TitlesMessages;
@@ -51,7 +53,7 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
   listIncoterms = computed<StaticListItem[]>(() => this.staticListSV.getListIncoterms());
   listLeadTimeType = computed<StaticListItem[]>(() => this.staticListSV.getListLeadTimeType());
   listPaymenTerms = computed<StaticListItem[]>(() => this.staticListSV.getListPaymentTerms());
-  
+
   private _listEmployees = signal<BasicUser[]>([]);
   listEmployees = computed<BasicUser[]>(() => this._listEmployees());
   private _listClientContact = signal<ClientContact[]>([]);
@@ -82,6 +84,21 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
     if (qr.id) {
       this.navigateSV.openModuleNewTabAndOpenItem('Quote_Requests', qr.id);
     }
+  }
+
+  openQuotation(quotation: ListIpQuotation) {
+    this.opened.emit({
+      type: this.permissions().updateIpQuotation ? 'edit' : 'view',
+      item: quotation,
+      pristine: true
+    });
+  }
+
+  openPurchaseOrder(po: {id?: string, number?: string}) {
+    // TODO: Implementar navegación cuando el módulo de Purchase Orders esté disponible
+    // if (po.id) {
+    //   this.navigateSV.openModuleNewTabAndOpenItem('Purchase_Orders', po.id);
+    // }
   }
 
   changeStatus(event: DropdownChangeEvent) {
@@ -120,7 +137,7 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
 
   private handleChangeStatus(
     message: string,
-    action: () => Observable<MessageResponse<IpQuotation>>,
+    action: () => Observable<MessageResponse<ListIpQuotation>>,
     newStatus: 'CREATED' | 'ANSWERED' | 'SENT' | 'COMPLETE' | 'REJECTED'
   ) {
     this.utilSV.confirm({
@@ -140,7 +157,7 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
     this.formTab.patchValue({ status: this.item()?.status ?? 'ACTIVE' });
   }
 
-  private executeChangeStatus(action: Observable<MessageResponse<IpQuotation>>, newStatus: 'CREATED' | 'ANSWERED' | 'SENT' | 'COMPLETE' | 'REJECTED') {
+  private executeChangeStatus(action: Observable<MessageResponse<ListIpQuotation>>, newStatus: 'CREATED' | 'ANSWERED' | 'SENT' | 'COMPLETE' | 'REJECTED') {
     this._loading.set(true);
     this.showForm = false;
     action
@@ -181,7 +198,7 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
   }
 
   protected override getRequest() {
-    return mapToIpQuotationRequest(this.formTab.value);
+    return mapToIpQuotationRequest(this.formTab.getRawValue());
   }
 
   protected override buildFormAction(): void {
@@ -307,12 +324,24 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
 
     // 🔹 Deshabilitar campos de solo lectura
     [
-      'clientAddress'
+      'clientAddress',
+      'grossWeightLbs',
+      'subTotal',
+      'otherCharges',
+      'freightCharges',
+      'total'
     ].forEach(field => controls[field].disable());
+
+
 
     // 🔹 Mostrar formulario y cargar datos
     this.showForm = true;
     this.searchClient({ query: '', originalEvent: new Event('') });
+
+    if (item?.listQuoteRequests && item.listQuoteRequests.length > 0) {
+      controls['clientId'].disable();
+      controls['currency'].disable();
+    }
 
     // 🔹 Si es solo vista, deshabilitar todo
     if (type === 'view') {
@@ -331,10 +360,7 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
 
   private getSubmitAction(): Observable<MessageResponse<IpQuotation>> {
     const data = this.getRequest();
-    if (this.tabItem.type === 'create') {
-      // Create is handled in modal, this should be unreachable
-      throw new Error('Create not implemented in form view for Quotation');
-    } else if (this.tabItem.type === 'edit') {
+    if (this.tabItem.type === 'edit') {
       return this.quotetationSV.updateQuotation(this.tabItem.item.id, data);
     } else {
       throw new Error('Invalid tab type');
@@ -352,13 +378,14 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
   changeClient(event: AutoCompleteSelectEvent) {
     this.formTab.controls['clientContactId'].enable();
     this.formTab.controls['paymentTerms'].enable();
+
     this.formTab.patchValue({
       clientContactId: null,
       clientAddress: event.value.address,
       paymentTerms: event.value.paymentTerms
     });
     this.assignListClientContact(event.value.infoByDepartment);
-    
+
     if (!this.permissions().editPaymentTermsIpQuotation) {
       this.formTab.controls['paymentTerms'].disable();
     }
@@ -409,11 +436,20 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
       quoteRequestProductId: [
         product?.quoteRequestProduct?.id ?? null
       ],
+      ipProductId: [
+        product?.quoteRequestProduct?.ipProduct?.id ?? null
+      ],
       description: [
-        product?.quoteRequestProduct?.ipProduct?.description ?? ''
+        product?.quoteRequestProduct?.ipProduct?.description ?? '-'
+      ],
+      clientDescription: [
+        product?.quoteRequestProduct?.ipProduct?.clientDescription ?? '-'
       ],
       mfrReference: [
-        product?.quoteRequestProduct?.ipProduct?.mfrReference ?? ''
+        product?.quoteRequestProduct?.ipProduct?.mfrReference ?? '-'
+      ],
+      clientReference: [
+        product?.quoteRequestProduct?.ipProduct?.clientReference ?? '-'
       ],
       quantity: [
         product?.quoteRequestProduct?.quantity ?? 0
@@ -421,20 +457,44 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
       unitType: [
         product?.quoteRequestProduct?.unitType ?? ''
       ],
+      hts: [
+        product?.quoteRequestProduct?.ipProduct?.htsScheduleBNumber ?? ''
+      ],
+      dualUse: [
+        product?.quoteRequestProduct?.ipProduct?.dualUse ?? false
+      ],
+      eccn: [
+        product?.quoteRequestProduct?.ipProduct?.eccn ?? ''
+      ],
+      leadTime: [
+        product?.quoteRequestProduct?.leadTime ?? 0
+      ],
+      leadTimeType: [
+        product?.quoteRequestProduct?.leadTimeType ?? 'WEEKS'
+      ],
       unitPrice: [
         product?.quoteRequestProduct?.unitPrice ?? 0
+      ],
+      extendedPrice: [
+        product?.quoteRequestProduct.extendedPrice ?? 0
       ],
       sellingUnitPrice: [
         product?.sellingUnitPrice ?? 0
       ],
-      extendedPrice: [
-        product?.extendedPrice ?? 0
+      sellingExtendedPrice: [
+        product?.sellingExtendedPrice ?? 0
       ],
       profitMargin: [
-        product?.profitMargin ?? 0
+        (product?.profitMargin ?? 0) * 100
       ],
       condition: [
         product?.condition ?? ''
+      ],
+      qrNumber: [
+        product?.qrNumber ?? ''
+      ],
+      supplierName: [
+        product?.supplierName ?? ''
       ]
     });
   }
@@ -490,22 +550,24 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
     });
   }
 
-  openModalProduct(type: 'create' | 'edit', productId?: string) {
+  openModalAddProducts() {
     if (this.tabItem.type !== 'edit') return;
-    let modal =  this.dialogSV.open(QuotationProductModalComponent,{
-      header: `${(type === 'edit'? 'UPDATE' : 'ADD')} PRODUCT` ,
-      width: '70rem',
+
+    const modal = this.dialogSV.open(AddQuotationProductModalComponent, {
+      header: 'ADD PRODUCTS',
+      width: '90vw',
       closable: false,
       closeOnEscape: false,
       data: {
-        type,
-        productId,
         qId: this.item()?.id,
-        listQuoteRequests: this.item()?.listQuoteRequests ?? []
+        listQuoteRequests: this.item()?.listQuoteRequests ?? [],
+        existingProducts: this.item()?.products ?? [],
+        currency: this.item()?.currency ?? 'USD'
       }
     });
+
     modal.onClose.subscribe({
-      next: (resp: {valid: boolean}) => {
+      next: (resp: { valid: boolean }) => {
         if (resp && resp.valid) {
           this.tabItem.pristine = false;
           this.onSubmit();
@@ -514,7 +576,182 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
     });
   }
 
-  printQR() {}
-  printAndSendQR(){}
-  openModalListOtherCharges(){}
+  openModalEditProduct(productId: string) {
+    if (this.tabItem.type !== 'edit') return;
+    const products = this.getListProducts().controls;
+    const product = products.find(p => p.value.id === productId);
+    if (!product) return;
+
+    const modal = this.dialogSV.open(EditQuotationProductModalComponent, {
+      header: 'UPDATE PRODUCT',
+      width: '35rem',
+      closable: false,
+      closeOnEscape: false,
+      data: {
+        qId: this.item()?.id,
+        qProductId: productId,
+        quotationsQuoteRequestId: product.value.quotationsQuoteRequestId,
+        quoteRequestProductId: product.value.quoteRequestProductId,
+        profitMargin: product.value.profitMargin,
+        condition: product.value.condition
+      }
+    });
+
+    modal.onClose.subscribe({
+      next: (resp: { valid: boolean }) => {
+        if (resp && resp.valid) {
+          this.tabItem.pristine = false;
+          this.onSubmit();
+        }
+      }
+    });
+  }
+
+  cloneQ() {
+    const qNumber = this.tabItem.item.name;
+    this.utilSV.confirm({
+      message: MESSAGES.clone(qNumber),
+      header: TITLES.confirmation,
+      accept: () => {
+        this._loading.set(true);
+        this.showForm = false;
+        this.quotetationSV.cloneQuotation(this.tabItem.item.id)
+        .pipe(
+          finalize(() => {
+            setTimeout(() => {
+              this._loading.set(false);
+              this.enableForm();
+            }, TIMEOUT);
+          })
+        )
+        .subscribe({
+          next: (resp) => {
+            this._item()?.clonedQuotations?.push(resp.data);
+            this.utilSV.setMessage(resp.title, resp.message, 'success');
+            this.opened.emit({
+              type: 'edit',
+              item: resp.data,
+              pristine: true
+            });
+          },
+          error: (err) => {
+            this.utilSV.setMessage(TITLES.error, err, 'error');
+          }
+        });
+      }
+    });
+  }
+
+  openModalAddQuoteRequests() {
+    if (this.tabItem.type !== 'edit') return;
+    if (!this.item()) return;
+
+    const modal = this.dialogSV.open(AddQuoteRequestsModalComponent, {
+      header: 'ADD QUOTE REQUESTS TO QUOTATION',
+      width: '60rem',
+      closable: false,
+      closeOnEscape: false,
+      data: {
+        qId: this.item()!.id,
+        clientId: this.item()!.client.id,
+        currency: this.item()!.currency,
+        listAddQR: this.item()!.listQuoteRequests
+      }
+    });
+    modal.onClose.subscribe({
+      next: (resp: { valid: boolean; quotation?: IpQuotation }) => {
+        if (resp && resp.valid) {
+          this.tabItem.pristine = false;
+          this.onSubmit();
+        }
+      }
+    });
+  }
+
+  openModalListOtherCharges() {
+    if (!this.item()) return;
+
+    const modal = this.dialogSV.open(ListOtherChargesModalComponent, {
+      header: 'OTHER CHARGES',
+      width: '60rem',
+      closable: false,
+      closeOnEscape: false,
+      data: {
+        qId: this.item()!.id,
+        type: this.tabItem.type === 'edit' ? 'edit' : 'view',
+        currency: this.item()!.currency,
+        otherCharges: this.item()!.otherCharges || [],
+        qrOtherCharges: this.item()!.qrOtherCharges || [],
+        listQuoteRequests: this.item()!.listQuoteRequests || [],
+        qStatus: this.item()!.status
+      }
+    });
+    modal.onClose.subscribe({
+      next: (resp: { valid: boolean }) => {
+        if (resp && resp.valid) {
+          this.tabItem.pristine = false;
+          this.onSubmit();
+        }
+      }
+    });
+  }
+
+  printQR() {
+    this.downloadFile(this.quotetationSV.printQuotation(this.item()!.id), this.item()!.number);
+  }
+
+  printAndSendQR() {
+    if (this.item()!.products.length <= 0) {
+      this.formTab.patchValue({ status: this.item()!.status });
+      return;
+    }
+
+    this._loadingPrintAndSent.set(true);
+    this.quotetationSV.printQuotation(this.item()!.id)
+      .pipe(finalize(() => {
+        setTimeout(() => {
+          this._loadingPrintAndSent.set(false);
+        }, TIMEOUT);
+      }))
+      .subscribe({
+        next: (file) => {
+          const clientContact = this.item()!.clientContact;
+          const isSpanish = this.item()!.client?.language === 'SPANISH';
+
+          this.emailSV.openModalEmail({
+            tittle: `SEND QUOTATION ${this.item()!.number}`,
+            subjectTemplate: isSpanish
+              ? `Cotización ${this.item()!.number}`
+              : `Quotation ${this.item()!.number}`,
+            bodyTemplate: isSpanish
+              ? emailBodyTemplates.ip_quotation_es(clientContact?.name)
+              : emailBodyTemplates.ip_quotation_en(clientContact?.name),
+            toTemplate: clientContact?.email ? [clientContact.email] : [],
+            attachmentsTemplate: [
+              {
+                name: `${this.item()!.number}.pdf`,
+                data: file
+              }
+            ]
+          }).onClose.subscribe({
+            next: (modal) => {
+              if (modal.valid && this.item()?.status === 'CREATED') {
+                this.executeChangeStatus(
+                  this.quotetationSV.changeStatusQuotation(this.item()!.id, 'SENT'),
+                  'SENT'
+                );
+                this.formTab.patchValue({ status: 'SENT' });
+              }
+            }
+          });
+        },
+        error: () => {
+          this.utilSV.setMessage('Error', 'Error printing the document', 'error');
+        }
+      });
+  }
+
+  openHistory(quotation: IpQuotation) {
+
+  }
 }

@@ -254,7 +254,7 @@ export class IpQuoteRequestService extends  BaseAutoCompleteService<any> {
   }
 
   getListQuoteRequestByClientAvailableToQuotation(clientId: string, viewCompletedQR: boolean, currency: string): Observable<ListIpQuoteRequest[]> {
-    let url  = `${ URL_SERVICES }-q/list-qr-by-client-available-quotation/${clientId}?view-completed-qr=${viewCompletedQR}&currency=${currency}`;
+    let url  = `${ URL_SERVICES }/available-for-quotation/${clientId}?view-completed-qr=${viewCompletedQR}&currency=${currency}`;
     return this.http.get<ListIpQuoteRequest[]>( url, {headers: this.authSV.headers()} )
       .pipe(
         catchError( err => throwError( () => err.error.errorMessage ))

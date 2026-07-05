@@ -6,8 +6,10 @@ export type IpQuotationProduct = {
   quoteRequestProduct: IpQuoteRequestProduct;
   number: number;
   profitMargin: number;
-  condition: 'NEW' | 'USED';
+  condition: 'NEW' | 'USED' | 'REFURBISHED';
   sellingUnitPrice: number;
-  extendedPrice: number;
+  sellingExtendedPrice: number;
   grossWeightLbs: number;
+  qrNumber: string;
+  supplierName: string;
 }

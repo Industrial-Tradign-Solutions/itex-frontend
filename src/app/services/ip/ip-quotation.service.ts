@@ -4,9 +4,9 @@ import { EmitedTab, TypeTab } from '@config/types/tabs';
 import { MessageResponse } from '@interfaces/message-response';
 import { BaseAutoCompleteService } from '@services/base-auto-complete-service.service';
 import { AuthService } from '@services/security';
-import { catchError, concatMap, Observable, of, Subject, throwError } from 'rxjs';
+import { catchError, concatMap, map, Observable, of, Subject, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { CreateIpQuotationRequest, IpQuotation, IpQuotationFilter, ListIpQuotation } from '@interfaces/ip/quotation';
+import { CreateIpQuotationRequest, IpQuotation, IpQuotationFilter, ListIpQuotation, IpQuotationOtherCharge, IpQuotationOtherChargeRequest, IpQuotationImportedOtherCharge, IpQuotationOtherChargeAvailableFromQr, IpQuotationOtherChargeImportRequest, IpQuotationAddQrRequest, IpQuotationRequest, IpQuotationProductBulkRequest, IpQuotationProduct } from '@interfaces/ip/quotation';
 import { Page } from '@interfaces/page.model';
 
 const URL_SERVICES = environment.api_url + 'ip/q';
@@ -17,8 +17,8 @@ const URL_SERVICES = environment.api_url + 'ip/q';
 export class IpQuotationService extends  BaseAutoCompleteService<any>{
 
   //! Inyecciones
-  private authSV     = inject(AuthService);
-  private http       = inject(HttpClient);
+  private readonly authSV     = inject(AuthService);
+  private readonly http       = inject(HttpClient);
   //!---------------------------------------
 
   private openAndLockRequestQueue = new Subject<{ quotationId: string, type: TypeTab, observer: any }>();
@@ -93,13 +93,25 @@ export class IpQuotationService extends  BaseAutoCompleteService<any>{
 
   createQuotation(request: CreateIpQuotationRequest): Observable<MessageResponse<EmitedTab<ListIpQuotation>>> {
     const url  = `${ URL_SERVICES }`;
-    return this.http.post<MessageResponse<EmitedTab<ListIpQuotation>>>( url, request, {headers: this.authSV.headers()} )
+    return this.http.post<MessageResponse<ListIpQuotation>>( url, request, {headers: this.authSV.headers()} )
       .pipe(
+        map(response => {
+          const resp: MessageResponse<EmitedTab<ListIpQuotation>> = {
+            title: response.title,
+            message: response.message,
+            data: {
+              item: response.data,
+              pristine: true,
+              type: 'edit'
+            }
+          };
+          return resp;
+        }),
         catchError( err => throwError( () => err.error ))
       );
   }
 
-  updateQuotation(id: string, request: any): Observable<MessageResponse<IpQuotation>> {
+  updateQuotation(id: string, request: IpQuotationRequest): Observable<MessageResponse<IpQuotation>> {
     const url  = `${ URL_SERVICES }/${id}`;
     return this.http.put<MessageResponse<IpQuotation>>( url, request, {headers: this.authSV.headers()} )
       .pipe(
@@ -107,17 +119,17 @@ export class IpQuotationService extends  BaseAutoCompleteService<any>{
       );
   }
 
-  changeStatusQuotation(id: string, status: string): Observable<MessageResponse<IpQuotation>> {
-    const url  = `${ URL_SERVICES }/change-status/${id}?status=${status}`;
-    return this.http.patch<MessageResponse<IpQuotation>>( url, {}, {headers: this.authSV.headers()} )
+  changeStatusQuotation(id: string, status: 'CREATED' | 'ANSWERED' | 'COMPLETE' | 'SENT' ): Observable<MessageResponse<ListIpQuotation>> {
+    const url  = `${ URL_SERVICES }/${id}/change-status?status=${status}`;
+    return this.http.patch<MessageResponse<ListIpQuotation>>( url, {}, {headers: this.authSV.headers()} )
       .pipe(
         catchError( err => throwError( () => err.error.errorMessage ))
       );
   }
 
-  rejectQuotation(id: string): Observable<MessageResponse<IpQuotation>> {
-    const url  = `${ URL_SERVICES }/reject/${id}`;
-    return this.http.patch<MessageResponse<IpQuotation>>( url, {}, {headers: this.authSV.headers()} )
+  rejectQuotation(id: string): Observable<MessageResponse<ListIpQuotation>> {
+    const url  = `${ URL_SERVICES }/${id}`;
+    return this.http.delete<MessageResponse<ListIpQuotation>>( url, {headers: this.authSV.headers()} )
       .pipe(
         catchError( err => throwError( () => err.error.errorMessage ))
       );
@@ -148,12 +160,12 @@ export class IpQuotationService extends  BaseAutoCompleteService<any>{
     ).subscribe();
   }
 
-  createQuotationProduct(qId: string, qProduct: any): Observable<MessageResponse<any>> {
-    let url  = `${ URL_SERVICES }/${qId}/product`;
-    return this.http.post<MessageResponse<any>>( url, qProduct, {headers: this.authSV.headers()} )
+  createQuotationProductsBulk(qId: string, request: IpQuotationProductBulkRequest): Observable<MessageResponse<IpQuotationProduct[]>> {
+    const url = `${URL_SERVICES}/${qId}/product`;
+    return this.http.post<MessageResponse<IpQuotationProduct[]>>(url, request, { headers: this.authSV.headers() })
       .pipe(
-        catchError( err => throwError( () => err.error.errorMessage ))
-    );
+        catchError(err => throwError(() => err.error.errorMessage))
+      );
   }
 
   updateQuotationProduct(qId: string, qProductId: string, qProduct: any): Observable<MessageResponse<any>> {
@@ -181,8 +193,96 @@ export class IpQuotationService extends  BaseAutoCompleteService<any>{
   }
 
   removeQuoteRequestFromQuotation(qId: string, qqrId: string): Observable<MessageResponse<string>> {
-    const url = `${ URL_SERVICES }/${qId}/quote-request/${qqrId}`;
+    const url = `${ URL_SERVICES }/${qId}/quote-requests/${qqrId}`;
     return this.http.delete<MessageResponse<string>>( url, {headers: this.authSV.headers()} )
+      .pipe(
+        catchError( err => throwError( () => err.error.errorMessage ))
+      );
+  }
+
+  cloneQuotation(id: string): Observable<MessageResponse<ListIpQuotation>> {
+    const url = `${ URL_SERVICES }/clone/${id}`;
+    return this.http.patch<MessageResponse<ListIpQuotation>>( url, null, {headers: this.authSV.headers()} )
+      .pipe(
+        catchError( err => throwError( () => err.error.errorMessage ))
+      );
+  }
+
+  addQuoteRequestsToQuotation(qId: string, request: IpQuotationAddQrRequest): Observable<MessageResponse<IpQuotation>> {
+    const url = `${ URL_SERVICES }/${qId}/quote-requests`;
+    return this.http.post<MessageResponse<IpQuotation>>( url, request, {headers: this.authSV.headers()} )
+      .pipe(
+        catchError( err => throwError( () => err.error ))
+      );
+  }
+
+  createQuotationOtherCharge(qId: string, data: IpQuotationOtherChargeRequest): Observable<MessageResponse<IpQuotationOtherCharge>> {
+    const url = `${ URL_SERVICES }/${qId}/other_charges`;
+    return this.http.post<MessageResponse<IpQuotationOtherCharge>>( url, data, {headers: this.authSV.headers()} )
+      .pipe(
+        catchError( err => throwError( () => err.error.errorMessage ))
+      );
+  }
+
+  updateQuotationOtherCharge(qId: string, ocId: string, data: IpQuotationOtherChargeRequest): Observable<MessageResponse<IpQuotationOtherCharge>> {
+    const url = `${ URL_SERVICES }/${qId}/other_charges/${ocId}`;
+    return this.http.put<MessageResponse<IpQuotationOtherCharge>>( url, data, {headers: this.authSV.headers()} )
+      .pipe(
+        catchError( err => throwError( () => err.error.errorMessage ))
+      );
+  }
+
+  getQuotationOtherCharge(qId: string, ocId: string): Observable<IpQuotationOtherCharge> {
+    const url = `${ URL_SERVICES }/${qId}/other_charges/${ocId}`;
+    return this.http.get<IpQuotationOtherCharge>( url, {headers: this.authSV.headers()} )
+      .pipe(
+        catchError( err => throwError( () => err.error.errorMessage ))
+      );
+  }
+
+  removeQuotationOtherCharge(qId: string, ocId: string): Observable<MessageResponse<string>> {
+    const url = `${ URL_SERVICES }/${qId}/other_charges/${ocId}`;
+    return this.http.delete<MessageResponse<string>>( url, {headers: this.authSV.headers()} )
+      .pipe(
+        catchError( err => throwError( () => err.error.errorMessage ))
+      );
+  }
+
+  getAvailableOtherChargesFromQr(qId: string): Observable<IpQuotationOtherChargeAvailableFromQr[]> {
+    const url = `${ URL_SERVICES }/${qId}/other_charges/available-from-qr`;
+    return this.http.get<IpQuotationOtherChargeAvailableFromQr[]>( url, {headers: this.authSV.headers()} )
+      .pipe(
+        catchError( err => throwError( () => err.error.errorMessage ))
+      );
+  }
+
+  importOtherChargesFromQr(qId: string, request: IpQuotationOtherChargeImportRequest): Observable<MessageResponse<IpQuotationImportedOtherCharge[]>> {
+    const url = `${ URL_SERVICES }/${qId}/other_charges/import-from-qr`;
+    return this.http.post<MessageResponse<IpQuotationImportedOtherCharge[]>>( url, request, {headers: this.authSV.headers()} )
+      .pipe(
+        catchError( err => throwError( () => err.error.errorMessage ))
+      );
+  }
+
+  getImportedOtherChargeFromQr(qId: string, id: string): Observable<IpQuotationImportedOtherCharge> {
+    const url = `${ URL_SERVICES }/${qId}/other_charges/imported-from-qr/${id}`;
+    return this.http.get<IpQuotationImportedOtherCharge>( url, {headers: this.authSV.headers()} )
+      .pipe(
+        catchError( err => throwError( () => err.error.errorMessage ))
+      );
+  }
+
+  removeImportedOtherChargeFromQr(qId: string, id: string): Observable<MessageResponse<string>> {
+    const url = `${ URL_SERVICES }/${qId}/other_charges/imported-from-qr/${id}`;
+    return this.http.delete<MessageResponse<string>>( url, {headers: this.authSV.headers()} )
+      .pipe(
+        catchError( err => throwError( () => err.error.errorMessage ))
+      );
+  }
+
+  printQuotation(qId: string): Observable<Blob> {
+    const url = `${ URL_SERVICES }/print/${qId}`;
+    return this.http.get( url, {headers: this.authSV.headersBlob(), responseType: 'blob'} )
       .pipe(
         catchError( err => throwError( () => err.error.errorMessage ))
       );

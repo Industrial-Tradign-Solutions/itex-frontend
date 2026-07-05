@@ -9,12 +9,60 @@
     "adev-writing-guide": {
       "source": "angular/angular",
       "sourceType": "autoskills-registry",
-      "computedHash": "8f088248ee2b10c69d502cba98d17c62ee8440cbc88a4dd1969ba3c9c8308f10"
+      "computedHash": "b8933a369cba1517ae21800f9f108cbdb3ca4e7b4eacd850103117ed51039795"
     },
     "angular-developer": {
       "source": "angular/skills",
       "sourceType": "autoskills-registry",
-      "computedHash": "cddf38a5db23010989f610c8543e1e66268a45940bd5e5489ee50e532c49b438"
+      "computedHash": "fc045be84cd51d105e4523a555510e3fd465a3e931f9b0049b0dfbdf68775eac"
+    },
+    "cavecrew": {
+      "source": "JuliusBrussee/caveman",
+      "sourceType": "github",
+      "skillPath": "skills/cavecrew/SKILL.md",
+      "computedHash": "c8f8004d2e9cf8b98b4555c43807f646c0faf593a55470164e4a6f3ab28f5811"
+    },
+    "caveman": {
+      "source": "JuliusBrussee/caveman",
+      "sourceType": "github",
+      "skillPath": "caveman/SKILL.md",
+      "computedHash": "c9bc6c69829953233bb175d1e3951a7bc53ebbf573bddcaadc3299ca8154bbb2"
+    },
+    "caveman-commit": {
+      "source": "JuliusBrussee/caveman",
+      "sourceType": "github",
+      "skillPath": "skills/caveman-commit/SKILL.md",
+      "computedHash": "89fd592e14079fc99a3ccd4dfca5d609bac6a0252e4ec4e3939f1497e53c4cbe"
+    },
+    "caveman-compress": {
+      "source": "JuliusBrussee/caveman",
+      "sourceType": "github",
+      "skillPath": "caveman-compress/SKILL.md",
+      "computedHash": "125788af20b793e27c81286614fc598a911c919f1fb888ed9474e99ebe123624"
+    },
+    "caveman-help": {
+      "source": "JuliusBrussee/caveman",
+      "sourceType": "github",
+      "skillPath": "skills/caveman-help/SKILL.md",
+      "computedHash": "3468ac41877d388fc19d902ed9d442cd36609bd9e8d16205c41b362f481ea731"
+    },
+    "caveman-review": {
+      "source": "JuliusBrussee/caveman",
+      "sourceType": "github",
+      "skillPath": "skills/caveman-review/SKILL.md",
+      "computedHash": "368a26f2b079ffe0d584f48006524f65cf997cb9369411aa8c6ead216dee22eb"
+    },
+    "caveman-stats": {
+      "source": "JuliusBrussee/caveman",
+      "sourceType": "github",
+      "skillPath": "skills/caveman-stats/SKILL.md",
+      "computedHash": "b48007894af51298ecf717ef6d62d7c2aaf4d67185dfcf06a96a3edcbf6b3968"
+    },
+    "compress": {
+      "source": "JuliusBrussee/caveman",
+      "sourceType": "github",
+      "skillPath": "skills/compress/SKILL.md",
+      "computedHash": "5a1f5c60aa59f61c36c75be4f5e8b32b2e08c406fca454ad8238904d65dfaee2"
     },
     "frontend-design": {
       "source": "anthropics/skills",
@@ -29,12 +77,12 @@
     "nodejs-best-practices": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "autoskills-registry",
-      "computedHash": "9dbca8bf122ad4b6d8b6686e05e4e434e00ae1dfa5fa412566ae7ee88780a18f"
+      "computedHash": "7361ab02fb6b09913e3bdd9cf61c629ed6c17de9485e6a781054e5d437ccfc29"
     },
     "pr_review": {
       "source": "angular/angular",
       "sourceType": "autoskills-registry",
-      "computedHash": "821975f20a0647c1f2f979db7d9c3a02a32df86f5e043af3562bc0931e9bae3c"
+      "computedHash": "7fe60167662a2a7df0f81af064d22298cffe1a13164f250f75cac8d71a452cfd"
     },
     "reference-compiler-cli": {
       "source": "angular/angular",

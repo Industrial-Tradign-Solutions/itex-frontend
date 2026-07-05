@@ -15,7 +15,7 @@ import { Table } from 'primeng/table';
 import { ClientBasic } from '@interfaces/partners/clients';
 import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { environment } from '../../../../../environments/environment';
-import { NewQuotationModalComponent } from '@modals/ip/quotation/new-quotation-modal/new-quotation-modal.component';
+import { NewQuotationModalComponent } from '@modals/ip/q/new-quotation-modal/new-quotation-modal.component';
 import { DialogService } from 'primeng/dynamicdialog';
 
 const TIMEOUT = environment.timeout;
@@ -56,7 +56,6 @@ export class ListIpQuotationComponent extends CommonListTab<ListIpQuotation, IpQ
 
   ngOnInit(): void {
     this._listEmployees.set(this.userSV.listEmployees());
-
     this.formFilter.patchValue({
       date: 'DAY',
       salesRepId: this.userData()?.id,
@@ -65,14 +64,6 @@ export class ListIpQuotationComponent extends CommonListTab<ListIpQuotation, IpQ
     setTimeout(() => {
       this.search(true);
     }, 100);
-    //TODO: Eliminar funcion
-    setTimeout(() => {
-      this.openQuotation({
-        id: '4ab8294f-84cf-4a27-8358-6fa9f0e61037',
-        name: 'GAG260201Q'
-      }, 'edit');
-    }, TIMEOUT);
-    //TODO: Fin Eliminar
   }
 
   customSort(event: SortEvent) {

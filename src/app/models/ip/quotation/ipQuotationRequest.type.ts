@@ -1,6 +1,6 @@
 export type IpQuotationRequest = {
-  currency: string;
   clientId: string;
+  currency: string;
   clientContactId: string;
   clientQrNumber: string;
   salesRepId: string;
@@ -12,7 +12,7 @@ export type IpQuotationRequest = {
   validityType: string;
   incoterms: string;
   paymentTerms: string;
-}
+};
 
 export function mapToIpQuotationRequest(form: any): IpQuotationRequest {
   const data = JSON.parse(JSON.stringify(form));

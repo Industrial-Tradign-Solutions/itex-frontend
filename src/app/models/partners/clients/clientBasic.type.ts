@@ -6,5 +6,6 @@ export type ClientBasic = {
   code: string;
   address: string;
   showName: string;
+  paymentTerms: string;
   infoByDepartment: ClientInfoDep[];
 }

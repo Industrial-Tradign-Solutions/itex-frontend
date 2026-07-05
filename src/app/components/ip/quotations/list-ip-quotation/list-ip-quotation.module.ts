@@ -13,7 +13,7 @@ import { TableModule } from 'primeng/table';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { CalendarModule } from 'primeng/calendar';
-import { NewQuotationModalModule } from '@modals/ip/quotation/new-quotation-modal/new-quotation-modal.module';
+import { NewQuotationModalModule } from '@modals/ip/q/new-quotation-modal/new-quotation-modal.module';
 
 @NgModule({
   declarations: [
