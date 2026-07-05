@@ -663,6 +663,7 @@
                   severity="help"
                   [outlined]="true"
                   (click)="printQR()"
+                  [loading]="loadingDownload()"
                   [disabled]="tabItem.type === 'create' || item()?.products?.length === 0 || !tabItem.pristine"
                   type="button">
                 </button>
@@ -675,6 +676,7 @@
                   [outlined]="true"
                   [disabled]="tabItem.type !== 'edit' || item()?.products?.length === 0 || !tabItem.pristine"
                   (click)="printAndSendQR()"
+                  [loading]="loadingPrintAndSent()"
                   type="button">
                 </button>
               </div>

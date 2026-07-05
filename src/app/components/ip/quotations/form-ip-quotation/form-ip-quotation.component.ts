@@ -11,7 +11,7 @@ import { EmailService, NavigateTabsService, StorageService } from '@services/uti
 import { StaticListItem } from '@interfaces/static-list.model';
 import { BasicUser, UserInfo } from '@interfaces/administration/user';
 import { ClientBasic, ClientContact, ClientInfoDep } from '@interfaces/partners/clients';
-import { storageKeys, constants } from '../../../../../environments';
+import { storageKeys, constants, emailBodyTemplates } from '../../../../../environments';
 import { EmitedTab } from '@config/types/tabs';
 import { FormGroup, Validators } from '@angular/forms';
 import { DropdownChangeEvent } from 'primeng/dropdown';
@@ -697,13 +697,58 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
   }
 
   printQR() {
-    // TODO FASE 8: Implement print functionality with Jasper templates
-    this.utilSV.setMessage(TITLES.info, 'Print functionality coming in FASE 8', 'info');
+    this.downloadFile(this.quotetationSV.printQuotation(this.item()!.id), this.item()!.number);
   }
 
   printAndSendQR() {
-    // TODO FASE 8: Implement print and send functionality
-    this.utilSV.setMessage(TITLES.info, 'Print & Send functionality coming in FASE 8', 'info');
+    if (this.item()!.products.length <= 0) {
+      this.formTab.patchValue({ status: this.item()!.status });
+      return;
+    }
+
+    this._loadingPrintAndSent.set(true);
+    this.quotetationSV.printQuotation(this.item()!.id)
+      .pipe(finalize(() => {
+        setTimeout(() => {
+          this._loadingPrintAndSent.set(false);
+        }, TIMEOUT);
+      }))
+      .subscribe({
+        next: (file) => {
+          const clientContact = this.item()!.clientContact;
+          const isSpanish = this.item()!.client?.language === 'SPANISH';
+
+          this.emailSV.openModalEmail({
+            tittle: `SEND QUOTATION ${this.item()!.number}`,
+            subjectTemplate: isSpanish
+              ? `Cotización ${this.item()!.number}`
+              : `Quotation ${this.item()!.number}`,
+            bodyTemplate: isSpanish
+              ? emailBodyTemplates.ip_quotation_es(clientContact?.name)
+              : emailBodyTemplates.ip_quotation_en(clientContact?.name),
+            toTemplate: clientContact?.email ? [clientContact.email] : [],
+            attachmentsTemplate: [
+              {
+                name: `${this.item()!.number}.pdf`,
+                data: file
+              }
+            ]
+          }).onClose.subscribe({
+            next: (modal) => {
+              if (modal.valid && this.item()?.status === 'CREATED') {
+                this.executeChangeStatus(
+                  this.quotetationSV.changeStatusQuotation(this.item()!.id, 'SENT'),
+                  'SENT'
+                );
+                this.formTab.patchValue({ status: 'SENT' });
+              }
+            }
+          });
+        },
+        error: () => {
+          this.utilSV.setMessage('Error', 'Error printing the document', 'error');
+        }
+      });
   }
 
   openHistory(quotation: IpQuotation) {
