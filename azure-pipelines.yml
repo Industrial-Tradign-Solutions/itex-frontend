@@ -1,0 +1,38 @@
+trigger:
+  - main
+
+pool:
+  name: JDB-SERVER
+
+variables:
+  ${{ if startsWith(variables['Build.SourceBranch'], 'refs/heads/') }}:
+    branchName: $[ replace(variables['Build.SourceBranch'], 'refs/heads/', '') ]
+stages:
+  - stage: Frontend
+    jobs:
+      - job: BuildFrontend
+        steps:
+          - task: NodeTool@0
+            displayName: 'Install Node.js'
+            inputs:
+              versionSpec: '22.13.1'
+          - script: npm i -g @angular/cli@20.3.6
+            displayName: 'Install Angular CLI'
+          - script: npm ci
+            workingDirectory: frontend
+            displayName: 'Descargando los paquetes de NPM'
+          - script: ng build --configuration production
+            workingDirectory: frontend
+            displayName: 'Compilando la aplicación Angular'
+          - task: CopyFiles@2
+            displayName: 'Copiar archivos compilados'
+            inputs:
+              sourceFolder: '$(Build.SourcesDirectory)/dist/itex/browser'
+              contents: '**'
+              targetFolder: $(Build.ArtifactStagingDirectory)
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publicar artefactos'
+            inputs:
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+              ArtifactName: 'itex-frontend-$(branchName)'
+              publishLocation: 'Container'
