@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { IpComponent } from './ip.component';
-import { ipProductGuard, ipQuotationGuard, ipQuoteRequestGuard } from '@guards/ip';
+import { ipProductGuard, ipPurchaseOrderGuard, ipQuotationGuard, ipQuoteRequestGuard } from '@guards/ip';
 
 const routes: Routes = [
   { path: '',
@@ -22,6 +22,14 @@ const routes: Routes = [
         },
         loadChildren: () => import('./quote-request/quote-request.module').then(m => m.QuoteRequestModule),
         canActivateChild: [ ipQuoteRequestGuard ]
+      },
+      {
+        path: 'po',
+        data: {
+          breadcrumb: 'Purchase Orders'
+        },
+        loadChildren: () => import('./purchase-order/purchase-order.module').then(m => m.PurchaseOrderModule),
+        canActivateChild: [ ipPurchaseOrderGuard ]
       },
       {
         path: 'q',
