@@ -1,5 +1,5 @@
 @if(!loading()) {
-  <div class="p-fluid w-full">
+  <div class="p-fluid w-full mt-4">
     <form [formGroup]="form">
       <div class="formgrid grid">
         <div class="field col-12 md:col-6">
@@ -89,7 +89,7 @@
           }
         </div>
         @if(selectedQ) {
-          <div class="field col-12 md:col-4">
+          <div class="field mt-5 col-12 md:col-6">
             <p-floatLabel>
               <p-dropdown
                 formControlName="supplierId"
