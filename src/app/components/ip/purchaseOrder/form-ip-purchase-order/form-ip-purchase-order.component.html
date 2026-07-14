@@ -1,0 +1,9 @@
+@if (!showForm) {
+  @if (loading()) {
+    <p-progressBar mode="indeterminate" />
+  }
+} @else {
+  <p-fieldset legend="Purchase Order Data">
+    <pre>{{ item() | json }}</pre>
+  </p-fieldset>
+}
