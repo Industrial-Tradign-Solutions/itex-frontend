@@ -5,7 +5,7 @@ import { MessageResponse } from '@interfaces/message-response';
 import { catchError, concatMap, Observable, of, Subject, throwError } from 'rxjs';
 import { AuthService } from '@services/security';
 import { HttpClient } from '@angular/common/http';
-import { IpPurchaseOrderFilter, IpPurchaseOrder, ListIpPurchaseOrder, CreatePurchaseOrderRequest } from '@interfaces/ip/purchaseOrder';
+import { IpPurchaseOrderFilter, IpPurchaseOrder, ListIpPurchaseOrder, CreatePurchaseOrderRequest, IpPurchaseOrderHistoryResponse } from '@interfaces/ip/purchaseOrder';
 import { Page } from '@interfaces/page.model';
 import { TypeTab } from '@config/types/tabs';
 
@@ -142,11 +142,35 @@ export class IpPurchaseOrderService extends BaseAutoCompleteService<any> {
       );
   }
 
-  getPurchaseOrderHistory(poId: string): Observable<any[]> {
+  getPurchaseOrderHistory(poId: string): Observable<IpPurchaseOrderHistoryResponse[]> {
     const url = `${URL_SERVICES}/history/${poId}`;
     return this.http.get<any[]>(url, { headers: this.authSV.headers() })
       .pipe(
         catchError(err => throwError(() => err.error.errorMessage))
       );
   }
+
+  //#region TODO Stubs
+
+  updatePurchaseOrder(id: string, request: any): Observable<MessageResponse<IpPurchaseOrder>> {
+    throw new Error('TODO: implement updatePurchaseOrder');
+  }
+
+  getPurchaseOrderById(purchaseOrderId: string): Observable<IpPurchaseOrder> {
+    throw new Error('TODO: implement getPurchaseOrderById');
+  }
+
+  printPurchaseOrder(purchaseOrderId: string): Observable<Blob> {
+    throw new Error('TODO: implement printPurchaseOrder');
+  }
+
+  changeStatusPurchaseOrder(purchaseOrderId: string, status: string): Observable<MessageResponse<ListIpPurchaseOrder>> {
+    throw new Error('TODO: implement changeStatusPurchaseOrder');
+  }
+
+  rejectPurchaseOrder(purchaseOrderId: string): Observable<MessageResponse<ListIpPurchaseOrder>> {
+    throw new Error('TODO: implement rejectPurchaseOrder');
+  }
+
+  //#endregion
 }
