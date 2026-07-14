@@ -1,6 +1,6 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonListTab } from '@config/tabs/commonListTab';
-import { TypeTab } from '@config/types/tabs';
+import { EmitedTab, TypeTab } from '@config/types/tabs';
 import { BasicUser, UserInfo } from '@interfaces/administration/user';
 import { IpPurchaseOrderFilter, ListIpPurchaseOrder } from '@interfaces/ip/purchaseOrder';
 import { StaticListItem } from '@interfaces/static-list.model';
@@ -15,6 +15,8 @@ import { ClientBasic } from '@interfaces/partners/clients';
 import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { ClientsService, SuppliersService } from '@services/partners';
 import { SupplierBasic } from '@interfaces/partners/suppliers';
+import { DialogService } from 'primeng/dynamicdialog';
+import { NewPurchaseOrderModalComponent } from '@modals/ip/po/new-purchase-order-modal/new-purchase-order-modal.component';
 import { environment } from '../../../../../environments/environment';
 
 const TIMEOUT = environment.timeout;
@@ -31,6 +33,7 @@ export class ListIpPurchaseOrderComponent extends CommonListTab<ListIpPurchaseOr
   private userSV            = inject(UsersService);
   private clientSV          = inject(ClientsService);
   private supplierSV        = inject(SuppliersService);
+  private dialogSV          = inject(DialogService);
 
   listIpPurchaseOrderStatus = computed<StaticListItem[]>(() => this.staticListSV.getListIpPurchaseOrderStatus());
   private userData = computed<UserInfo | null>(() => this.storageSV.getPlain<UserInfo>(storageKeys.user_data.info))
@@ -92,9 +95,24 @@ export class ListIpPurchaseOrderComponent extends CommonListTab<ListIpPurchaseOr
   }
 
   newPurchaseOrder() {
-    this.new({
-      id: '',
-      name: 'New PO'
+    const modal = this.dialogSV.open(NewPurchaseOrderModalComponent, {
+      header: 'CREATE PURCHASE ORDER',
+      width: '60rem',
+      closable: false,
+      closeOnEscape: false
+    });
+    modal.onClose.subscribe({
+      next: (resp: any) => {
+        if (resp && resp.valid) {
+          const emitted: EmitedTab<ListIpPurchaseOrder> = {
+            item: resp.data,
+            pristine: true,
+            type: 'edit'
+          };
+          this.open(emitted);
+          this.search(true);
+        }
+      }
     });
   }
 

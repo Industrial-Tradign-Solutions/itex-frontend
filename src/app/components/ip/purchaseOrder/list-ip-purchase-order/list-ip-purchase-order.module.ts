@@ -13,6 +13,7 @@ import { TableModule } from 'primeng/table';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { CalendarModule } from 'primeng/calendar';
+import { NewPurchaseOrderModalModule } from '@modals/ip/po/new-purchase-order-modal/new-purchase-order-modal.module';
 
 @NgModule({
   declarations: [
@@ -32,7 +33,8 @@ import { CalendarModule } from 'primeng/calendar';
     TableModule,
     AutoCompleteModule,
     RadioButtonModule,
-    CalendarModule
+    CalendarModule,
+    NewPurchaseOrderModalModule
   ],
   exports: [
     ListIpPurchaseOrderComponent
