@@ -1,21 +1,34 @@
 import { BasicUser } from "@interfaces/administration/user";
-import { Client } from "@interfaces/partners/clients";
-import { Supplier } from "@interfaces/partners/suppliers";
+import { Client, ClientContact } from "@interfaces/partners/clients";
+import { Supplier, SupplierContact } from "@interfaces/partners/suppliers";
+import { IpPurchaseOrderProduct } from "./ipPurchaseOrderProduct.type";
+import { IpPurchaseOrderOtherCharge } from "./ipPurchaseOrderOtherCharge.type";
+import { IpPurchaseOrderOtherChargesQuotation } from "./ipPurchaseOrderOtherChargesQuotation.type";
+import { IpPurchaseOrderOtherChargesQuotationQr } from "./ipPurchaseOrderOtherChargesQuotationQr.type";
+import { IpPurchaseOrderStatus, Currency, PaymentTerms, LeadTimeType } from "./ipPurchaseOrderEnums.type";
 
 export type IpPurchaseOrder = {
   id: string;
   createdAt: string;
   number: string;
   name: string;
-  status: string;
-  currency: string;
+  status: IpPurchaseOrderStatus;
+  currency: Currency;
+  quotation: { id: string; number: string } | null;
   client: Client;
-  supplier: Supplier;
+  clientContact: ClientContact | null;
+  clientPoNumber: string | null;
   salesRep: BasicUser;
+  supplier: Supplier;
+  supplierContact: SupplierContact | null;
+  supplierPoNumber: string | null;
   openBy: BasicUser;
-  paymentTerms: string;
+  paymentTerms: PaymentTerms | null;
   leadTime: number;
-  leadTimeType: string;
+  leadTimeType: LeadTimeType;
+  shippingMethod: string | null;
+  remarks: string | null;
+  internalRemarks: string | null;
   shipToName: string;
   shipToAddress: string;
   shipToCity: { id: string; name: string };
@@ -23,5 +36,14 @@ export type IpPurchaseOrder = {
   shipToContactName: string;
   shipToEmail: string;
   salesTax: number;
+  pdfUrl: string | null;
   openAt: string;
+  sentAt: string | null;
+  answeredAt: string | null;
+  completeAt: string | null;
+  rejectAt: string | null;
+  products: IpPurchaseOrderProduct[];
+  otherCharges: IpPurchaseOrderOtherCharge[];
+  importedQuotationCharges: IpPurchaseOrderOtherChargesQuotation[];
+  importedQuoteRequestCharges: IpPurchaseOrderOtherChargesQuotationQr[];
 }

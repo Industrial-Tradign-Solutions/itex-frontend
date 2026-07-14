@@ -1,3 +1,5 @@
+import { IpPurchaseOrderStatus, FilterDate } from './ipPurchaseOrderEnums.type';
+
 export type IpPurchaseOrderFilter = {
   shortBy?: string;
   shortOrder?: number;
@@ -6,12 +8,12 @@ export type IpPurchaseOrderFilter = {
   clientId?: string;
   supplierId?: string;
   remarks?: string;
-  status?: string;
+  status?: IpPurchaseOrderStatus;
   clientRef?: string;
   supplierRef?: string;
   productDescription?: string;
   salesRepId?: string;
-  date: 'DAY' | 'MONTH' | 'YEAR' | 'ALL'
+  date?: FilterDate;
   initDate?: Date;
   endDate?: Date;
 }
