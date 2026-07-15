@@ -144,7 +144,7 @@ export class IpPurchaseOrderService extends BaseAutoCompleteService<any> {
 
   getPurchaseOrderHistory(poId: string): Observable<IpPurchaseOrderHistoryResponse[]> {
     const url = `${URL_SERVICES}/history/${poId}`;
-    return this.http.get<any[]>(url, { headers: this.authSV.headers() })
+    return this.http.get<IpPurchaseOrderHistoryResponse[]>(url, { headers: this.authSV.headers() })
       .pipe(
         catchError(err => throwError(() => err.error.errorMessage))
       );

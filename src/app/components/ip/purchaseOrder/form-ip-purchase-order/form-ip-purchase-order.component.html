@@ -12,13 +12,51 @@
                   [suggestions]="filteredClients"
                   (completeMethod)="searchClient($event)"
                   (onSelect)="changeClient($event)"
-                  (onClear)="clearClient($event)"
+                  (onClear)="clearClient()"
                   optionValue="id"
                   [showClear]="true"
                   optionLabel="showName"/>
                 <label>
                   Client
                   <span class="required">*</span>
+                </label>
+              </p-floatLabel>
+            </div>
+            <div class="field col-12 md:col-12 mt-3" >
+              <p-floatLabel>
+                <p-dropdown
+                  [options]="listClientContact()"
+                  optionLabel="name"
+                  [filter]="true"
+                  filterBy="name"
+                  formControlName="clientContactId"
+                  optionValue="id" />
+                <label>
+                  Client Contact
+                </label>
+              </p-floatLabel>
+            </div>
+            <div class="field col-12 md:col-12 mt-3" >
+              <p-floatLabel>
+                <input
+                  pInputText
+                  formControlName="clientAddress"
+                  maxlength="150"
+                  type="text"/>
+                <label>
+                  Client Address
+                </label>
+              </p-floatLabel>
+            </div>
+            <div class="field col-12 md:col-12 mt-3" >
+              <p-floatLabel>
+                <input
+                  pInputText
+                  formControlName="clientPoNumber"
+                  maxlength="150"
+                  type="text"/>
+                <label>
+                  Client PO#
                 </label>
               </p-floatLabel>
             </div>
@@ -33,13 +71,51 @@
                   [suggestions]="filteredSupplier"
                   (completeMethod)="searchSupplier($event)"
                   (onSelect)="changeSupplier($event)"
-                  (onClear)="clearSupplier($event)"
+                  (onClear)="clearSupplier()"
                   optionValue="id"
                   [showClear]="true"
                   optionLabel="name"/>
                 <label>
                   Supplier
                   <span class="required">*</span>
+                </label>
+              </p-floatLabel>
+            </div>
+            <div class="field col-12 md:col-12 mt-3" >
+              <p-floatLabel>
+                <p-dropdown
+                  [options]="listSupplierContact()"
+                  optionLabel="name"
+                  [filter]="true"
+                  filterBy="name"
+                  formControlName="supplierContactId"
+                  optionValue="id" />
+                <label>
+                  Supplier Contact
+                </label>
+              </p-floatLabel>
+            </div>
+            <div class="field col-12 md:col-12 mt-3" >
+              <p-floatLabel>
+                <input
+                  pInputText
+                  formControlName="supplierAddress"
+                  maxlength="150"
+                  type="text"/>
+                <label>
+                  Supplier Address
+                </label>
+              </p-floatLabel>
+            </div>
+            <div class="field col-12 md:col-12 mt-3" >
+              <p-floatLabel>
+                <input
+                  pInputText
+                  formControlName="supplierPoNumber"
+                  maxlength="150"
+                  type="text"/>
+                <label>
+                  Supplier PO#
                 </label>
               </p-floatLabel>
             </div>
@@ -72,6 +148,18 @@
                 <label>
                   Sales Rep
                   <span class="required">*</span>
+                </label>
+              </p-floatLabel>
+            </div>
+            <div class="field col-12 md:col-6 mt-3" >
+              <p-floatLabel>
+                <input
+                  pInputText
+                  formControlName="shippingMethod"
+                  maxlength="150"
+                  type="text"/>
+                <label>
+                  Shipping Method
                 </label>
               </p-floatLabel>
             </div>
@@ -154,7 +242,7 @@
         </div>
         <div class="field col-12 md:col-5 lg:col-5 xl:col-5" >
           <div class="formgrid grid">
-            <div [class]="'field col-12 mt-1'" >
+            <div [class]="'field col-12 md:col-12 mt-1'" >
               <p-tabView>
                 <p-tabPanel header="Remarks">
                   <textarea
@@ -240,6 +328,337 @@
                 </p-tabPanel>
               </p-tabView>
             </div>
+            <div class="field col-12 md:col-6 mt-1" >
+              <p-scrollPanel [style]="{ width: '100%', height: '20rem' }">
+                <p-table
+                  styleClass="p-datatable-sm"
+                  [value]="item()?.clonedPOs ?? []"
+                  dataKey="id"
+                  [loading]="loading()">
+                  <ng-template pTemplate="caption">
+                    <div style="text-align: center !important;">
+                      <b>CLONED PO</b>
+                    </div>
+                  </ng-template>
+                  <ng-template pTemplate="header">
+                    <tr>
+                      <th>
+                        <div class="flex justify-content-between">#</div>
+                      </th>
+                      <th>
+                        <div class="flex justify-content-between"></div>
+                      </th>
+                    </tr>
+                  </ng-template>
+                  <ng-template pTemplate="body" let-poCloned>
+                    <tr [pSelectableRow]="poCloned">
+                      <td>{{poCloned.number}}</td>
+                      <td style="text-align: end;">
+                        <button
+                          pButton
+                          type="button"
+                          (click)="openPurchaseOrder(poCloned)"
+                          icon="pi pi-eye"
+                          class="p-button-rounded p-button-text"
+                          pTooltip="View"
+                          severity="info"
+                          tooltipPosition="left">
+                        </button>
+                      </td>
+                    </tr>
+                  </ng-template>
+                </p-table>
+              </p-scrollPanel>
+            </div>
+            <div class="field col-12 md:col-6 mt-1" >
+              <p-scrollPanel [style]="{ width: '100%', height: '20rem' }">
+                <p-table
+                  styleClass="p-datatable-sm"
+                  [value]="[]"
+                  dataKey="id"
+                  [loading]="loading()">
+                  <ng-template pTemplate="caption">
+                    <div style="text-align: center !important;">
+                      <b>INVOICES</b>
+                    </div>
+                  </ng-template>
+                  <ng-template pTemplate="header">
+                    <tr>
+                      <th>
+                        <div class="flex justify-content-between">#</div>
+                      </th>
+                      <th>
+                        <div class="flex justify-content-between">Date</div>
+                      </th>
+                      <th>
+                        <div class="flex justify-content-between">Amount</div>
+                      </th>
+                      <th>
+                        <div class="flex justify-content-between">Status</div>
+                      </th>
+                      <th>
+                        <div class="flex justify-content-between"></div>
+                      </th>
+                    </tr>
+                  </ng-template>
+                  <ng-template pTemplate="body" let-invoice>
+                    <tr>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                      <td style="text-align: end;"></td>
+                    </tr>
+                  </ng-template>
+                </p-table>
+              </p-scrollPanel>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 md:col-12 mt-1">
+        <div class="formgrid grid">
+          <div class="col-12 md:col-10">
+            <p-table
+              styleClass="p-datatable-sm"
+              [value]="item()?.products ?? []"
+              [scrollable]="true"
+              scrollHeight="30rem"
+              dataKey="id"
+              [loading]="loading()">
+              <ng-template pTemplate="header">
+                <tr>
+                  <th style="min-width: 3rem">
+                    <div class="flex justify-content-between">#</div>
+                  </th>
+                  <th style="min-width: 7rem">
+                    <div class="flex justify-content-between">QUANTITY</div>
+                  </th>
+                  <th style="min-width: 7rem">
+                    <div class="flex justify-content-between">TYPE</div>
+                  </th>
+                  <th style="min-width: 16rem">
+                    <div class="flex justify-content-between">COMPLIANCE INFO</div>
+                  </th>
+                  <th style="min-width: 30rem">
+                    <div class="flex justify-content-between">DESCRIPTION</div>
+                  </th>
+                  <th style="min-width: 10rem">
+                    <div class="flex justify-content-between">REFERENCE</div>
+                  </th>
+                  <th style="min-width: 8rem">
+                    <div class="flex justify-content-between">LEAD TIME</div>
+                  </th>
+                  <th style="min-width: 13rem">
+                    <div class="flex justify-content-end">UNIT PRICE</div>
+                  </th>
+                  <th style="min-width: 13rem">
+                    <div class="flex justify-content-end">EXTENDED PRICE</div>
+                  </th>
+                  <th style="min-width: 10rem">
+                    <div class="flex justify-content-between"></div>
+                  </th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-product let-index="rowIndex">
+                <tr>
+                  <td>{{product.number}}</td>
+                  <td>{{product.quotationProduct?.quoteRequestProduct?.quantity}}</td>
+                  <td>{{product.quotationProduct?.quoteRequestProduct?.unitType}}</td>
+                  <td>
+                    <div class="formgrid grid">
+                      <div class="field col-12 md:col-5 tittle">
+                        <b>HTS: </b>
+                      </div>
+                      <div class="field col-12 md:col-7">
+                        {{product.quotationProduct?.quoteRequestProduct?.ipProduct?.htsScheduleBNumber}}
+                      </div>
+                      <div class="field col-12 md:col-5 tittle">
+                        <b>DUAL USE: </b>
+                      </div>
+                      <div class="field col-12 md:col-7">
+                        {{product.quotationProduct?.quoteRequestProduct?.ipProduct?.dualUse ? 'YES' : 'NO'}}
+                      </div>
+                      <div class="field col-12 md:col-5 tittle">
+                        <b>ECCN: </b>
+                      </div>
+                      <div class="field col-12 md:col-7">
+                        {{product.quotationProduct?.quoteRequestProduct?.ipProduct?.eccn}}
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="formgrid grid">
+                      <div class="field col-12 md:col-3 tittle">
+                        <b>SUPPLIER: </b>
+                      </div>
+                      <div class="field col-12 md:col-9">
+                        {{product.quotationProduct?.quoteRequestProduct?.ipProduct?.description}}
+                      </div>
+                      <div class="field col-12 md:col-3 tittle">
+                        <b>CLIENT: </b>
+                      </div>
+                      <div class="field col-12 md:col-9">
+                        {{product.quotationProduct?.quoteRequestProduct?.ipProduct?.clientDescription}}
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="formgrid grid">
+                      <div class="field col-12">
+                        {{product.quotationProduct?.quoteRequestProduct?.ipProduct?.mfrReference}}
+                      </div>
+                      <div class="field col-12">
+                        {{product.quotationProduct?.quoteRequestProduct?.ipProduct?.clientReference}}
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    {{product.quotationProduct?.quoteRequestProduct?.leadTime + ' ' + product.quotationProduct?.quoteRequestProduct?.leadTimeType}}
+                  </td>
+                  <td style="text-align: end;">
+                    {{ product.quotationProduct?.sellingUnitPrice | customCurrency:getCurrency():'1.2-5' }}
+                  </td>
+                  <td style="text-align: end;">
+                    {{product.quotationProduct?.sellingExtendedPrice | customCurrency:getCurrency():'1.2-2'}}
+                  </td>
+                  <td style="text-align: end;">
+                    <button
+                      pButton
+                      type="button"
+                      icon="pi pi-box"
+                      class="p-button-rounded p-button-text"
+                      pTooltip="Open Product"
+                      severity="secondary"
+                      (click)="openProduct(product.quotationProduct?.quoteRequestProduct?.ipProduct?.id)"
+                      tooltipPosition="bottom">
+                    </button>
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+          <div class="col-12 md:col-2">
+            <div class="formgrid grid">
+              <div class="field col-12 md:col-6 mt-3" >
+                <button pButton
+                  label="Add Product"
+                  icon="pi pi-plus"
+                  severity="success"
+                  [outlined]="true"
+                  (click)="openModalProduct('create')"
+                  [disabled]="tabItem.type !== 'edit'"
+                  type="button">
+                </button>
+              </div>
+              <div class="field col-12 md:col-6 mt-3" >
+                <button pButton
+                  label="Clone PO"
+                  icon="pi pi-copy"
+                  severity="secondary"
+                  [outlined]="true"
+                  [disabled]="!(permissions().clonePurchaseOrder && tabItem.type !== 'create')"
+                  (click)="clonePO()"
+                  type="button">
+                </button>
+              </div>
+            </div>
+            <div class="formgrid grid">
+              <div class="field col-12 md:col-6 mt-1" >
+                <button pButton
+                  label="Print"
+                  icon="pi pi-print"
+                  severity="help"
+                  [outlined]="true"
+                  (click)="printPO()"
+                  [loading]="loadingDownload()"
+                  [disabled]="!(permissions().clonePurchaseOrder && tabItem.type !== 'create') || item()?.products?.length === 0 || !tabItem.pristine"
+                  type="button">
+                </button>
+              </div>
+              <div class="field col-12 md:col-6 mt-1" >
+                <button pButton
+                  label="Print & Send"
+                  icon="pi pi-send"
+                  severity="info"
+                  [outlined]="true"
+                  [disabled]="tabItem.type !== 'edit' || item()?.products?.length === 0 || !tabItem.pristine"
+                  (click)="printAndSendPO()"
+                  [loading]="loadingPrintAndSent()"
+                  type="button">
+                </button>
+              </div>
+            </div>
+            <div class="formgrid grid">
+              <div class="field col-12 md:col-12 mt-3">
+                <p-floatLabel>
+                  <p-inputNumber
+                    [inputStyle]="{ 'text-align': 'right' }"
+                    mode="currency"
+                    [currency]="getCurrency()"
+                    currencyDisplay="code"
+                    [max]="999999999999"
+                    formControlName="subTotal" />
+                  <label>
+                    SubTotal
+                  </label>
+                </p-floatLabel>
+              </div>
+              <div class="field col-12 md:col-12 mt-3" >
+                <p-floatLabel>
+                  <p-inputNumber
+                    [inputStyle]="{ 'text-align': 'right' }"
+                    mode="currency"
+                    [currency]="getCurrency()"
+                    currencyDisplay="code"
+                    [minFractionDigits]="5"
+                    [maxFractionDigits]="5"
+                    [max]="999999999999"
+                    formControlName="freightCharges" />
+                  <label>
+                    Freight Charges
+                  </label>
+                </p-floatLabel>
+              </div>
+              <div class="field col-12 md:col-10 mt-3" >
+                <p-floatLabel>
+                  <p-inputNumber
+                    [inputStyle]="{ 'text-align': 'right' }"
+                    mode="currency"
+                    [currency]="getCurrency()"
+                    currencyDisplay="code"
+                    [max]="999999999999"
+                    formControlName="otherCharges" />
+                  <label>
+                    Other Charges
+                  </label>
+                </p-floatLabel>
+              </div>
+              <div class="field col-12 md:col-2 mt-3" style="margin-left: -1rem;">
+                <button pButton
+                  icon="pi pi-pencil"
+                  severity="warning"
+                  [outlined]="true"
+                  (click)="openModalListOtherCharges()"
+                  [disabled]="tabItem.type === 'create'"
+                  type="button">
+                </button>
+              </div>
+              <div class="field col-12 md:col-12 mt-3" >
+                <p-floatLabel>
+                  <p-inputNumber
+                    [inputStyle]="{ 'text-align': 'right' }"
+                    mode="currency"
+                    [currency]="getCurrency()"
+                    currencyDisplay="code"
+                    [max]="999999999999"
+                    formControlName="total" />
+                  <label>
+                    Total
+                  </label>
+                </p-floatLabel>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -253,7 +672,56 @@
               </div>
             </p-chip>
           }
+          @if(item() && item()?.sentAt) {
+            <p-chip class="date">
+              <div class="p-2">
+                <b>Send: </b>
+                {{item()?.sentAt | date:'MMM dd, yyyy hh:mm a'}}
+              </div>
+            </p-chip>
+          }
+          @if(item() && item()?.answeredAt) {
+            <p-chip class="date">
+              <div class="p-2">
+                <b>Answered: </b>
+                {{item()?.answeredAt | date:'MMM dd, yyyy hh:mm a'}}
+              </div>
+            </p-chip>
+          }
+          @if(item() && item()?.completeAt) {
+            <p-chip class="date">
+              <div class="p-2">
+                <b>Complete: </b>
+                {{item()?.completeAt | date:'MMM dd, yyyy hh:mm a'}}
+              </div>
+            </p-chip>
+          }
+          @if(item() && item()?.rejectAt) {
+            <p-chip class="date">
+              <div class="p-2">
+                <b>Rejected: </b>
+                {{item()?.rejectAt | date:'MMM dd, yyyy hh:mm a'}}
+              </div>
+            </p-chip>
+          }
         </div>
+        @if(item() && item()?.clonedByPO && item()?.clonedByPO?.number) {
+          <div class="field col-12 md:col-1 lg:col-1 xl:col-1" style="text-align: end !important; margin-top: 2.3rem !important; margin-right: -3rem !important;">
+            <b>Cloned By PO# </b>
+          </div>
+          <div class="field col-12 md:col-1 lg:col-1 xl:col-1 md:mt-5 lg:mt-4 xl:mt-4">
+            <p-button
+              [label]="item()!.clonedByPO!.number"
+              [link]="true"
+              severity="primary"
+              (click)="openPurchaseOrder({ id: item()!.clonedByPO!.id, name: item()!.clonedByPO!.number, client: null!, status: null!, salesRep: null!, createdAt: null!, number: item()!.clonedByPO!.number })"
+              type="button">
+            </p-button>
+          </div>
+          <div style="margin-right: 3rem !important;"></div>
+        } @else {
+          <div class="field col-12 md:col-2 lg:col-2 xl:col-2"></div>
+        }
         @if (permissions().viewHistoryPurchaseOrder && tabItem.type !== 'create') {
           <div class="field col-12 md:col-2 lg:col-2 xl:col-1 md:mt-5 lg:mt-5 xl:mt-5">
             <button pButton

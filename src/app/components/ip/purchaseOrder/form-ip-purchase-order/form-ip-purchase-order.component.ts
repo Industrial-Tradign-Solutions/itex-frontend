@@ -12,11 +12,11 @@ import { DropdownChangeEvent } from 'primeng/dropdown';
 import { ClientsService, SuppliersService } from '@services/partners';
 import { UsersService } from '@services/admin';
 import { BasicUser, UserInfo } from '@interfaces/administration/user';
-import { StorageService } from '@services/util';
-import { storageKeys } from '../../../../../environments';
-import { ClientBasic } from '@interfaces/partners/clients';
+import { EmailService, NavigateTabsService, StorageService } from '@services/util';
+import { constants, emailBodyTemplates, storageKeys } from '../../../../../environments';
+import { ClientBasic, ClientContact, ClientInfoDep } from '@interfaces/partners/clients';
 import { AutoCompleteCompleteEvent, AutoCompleteSelectEvent } from 'primeng/autocomplete';
-import { SupplierBasic } from '@interfaces/partners/suppliers';
+import { SupplierBasic, SupplierContact, SupplierInfoDep } from '@interfaces/partners/suppliers';
 import { finalize, Observable } from 'rxjs';
 import { MessageResponse } from '@interfaces/message-response';
 
@@ -38,6 +38,8 @@ export class FormIpPurchaseOrderComponent extends CommonPageTab<ListIpPurchaseOr
   private supplierSV = inject(SuppliersService);
   private userSV = inject(UsersService);
   private storageSV = inject(StorageService);
+  private navigateSV = inject(NavigateTabsService);
+  private emailSV = inject(EmailService);
 
   listIpPurchaseOrderStatus = computed<StaticListItem[]>(() => this.staticListSV.getListIpPurchaseOrderStatus());
   listCurrency = computed<StaticListItem[]>(() => this.staticListSV.getListCurrency());
@@ -46,6 +48,11 @@ export class FormIpPurchaseOrderComponent extends CommonPageTab<ListIpPurchaseOr
 
   private _listEmployees = signal<BasicUser[]>([]);
   listEmployees = computed<BasicUser[]>(() => this._listEmployees());
+
+  private _listSupplierContact = signal<SupplierContact[]>([]);
+  listSupplierContact = computed<SupplierContact[]>(() => this._listSupplierContact());
+  private _listClientContact = signal<ClientContact[]>([]);
+  listClientContact = computed<ClientContact[]>(() => this._listClientContact());
 
   private userData = computed<UserInfo | null>(() => this.storageSV.getPlain<UserInfo>(storageKeys.user_data.info))
 
@@ -85,6 +92,9 @@ export class FormIpPurchaseOrderComponent extends CommonPageTab<ListIpPurchaseOr
           )
           .subscribe({
             next: (resp) => {
+              if (this._item()) {
+                this._item()!.clonedPOs = [...this._item()!.clonedPOs, resp.data];
+              }
               this.utilSV.setMessage(resp.title, resp.message, 'success');
               this.opened.emit({
                 type: this.permissions().updatePurchaseOrder ? 'edit' : 'view',
@@ -100,11 +110,47 @@ export class FormIpPurchaseOrderComponent extends CommonPageTab<ListIpPurchaseOr
   }
 
   printPO() {
-    throw new Error('TODO: implement printPO');
+    this.downloadFile(this.ipPurchaseOrderSV.printPurchaseOrder(this.item()!.id), this.item()!.number);
   }
 
   printAndSendPO() {
-    throw new Error('TODO: implement printAndSendPO');
+    if (this.item()!.products.length <= 0) {
+      this.formTab.patchValue({ status: this.item()!.status });
+      return;
+    }
+    this._loadingPrintAndSent.set(true);
+    this.ipPurchaseOrderSV.printPurchaseOrder(this.item()!.id)
+      .pipe(finalize(() => {
+        setTimeout(() => {
+          this._loadingPrintAndSent.set(false);
+        }, TIMEOUT);
+      }))
+      .subscribe({
+        next: (file) => {
+          this.emailSV.openModalEmail({
+            tittle: `SEND PURCHASE ORDER ${this.item()!.number}`,
+            subjectTemplate: `Purchase Order`,
+            bodyTemplate: emailBodyTemplates.ip_purchase_order(this.item()!.supplierContact?.name),
+            toTemplate: [this.item()?.supplierContact?.email].filter((e): e is string => !!e),
+            attachmentsTemplate: [
+              {
+                name: `${this.item()!.number}.pdf`,
+                data: file
+              }
+            ]
+          }).onClose.subscribe({
+            next: (modal) => {
+              if (modal.valid && this.item()?.status === 'CREATED') {
+                this.executeChangeStatus(this.ipPurchaseOrderSV.changeStatusPurchaseOrder(this.item()!.id, 'SENT'), 'SENT');
+                this.formTab.patchValue({ status: 'SENT' });
+              }
+            }
+          });
+        },
+        error: (err) => {
+          this.utilSV.setMessage('Error', 'Error printing the document', 'error');
+        }
+      });
   }
 
   changeStatus(event: DropdownChangeEvent) {
@@ -198,7 +244,26 @@ export class FormIpPurchaseOrderComponent extends CommonPageTab<ListIpPurchaseOr
   }
 
   protected override getRequest() {
-    return {};
+    const raw = this.formTab.getRawValue();
+    return {
+      clientId: raw.clientId,
+      supplierId: raw.supplierId,
+      currency: raw.currency,
+      paymentTerms: raw.paymentTerms,
+      leadTime: raw.leadTime,
+      leadTimeType: raw.leadTimeType,
+      salesRepId: raw.salesRepId,
+      shipToName: raw.shipToName,
+      shipToAddress: raw.shipToAddress,
+      shipToCity: raw.shipToCity,
+      shipToPhone: raw.shipToPhone,
+      shipToContactName: raw.shipToContactName,
+      shipToEmail: raw.shipToEmail,
+      salesTax: raw.salesTax,
+      status: raw.status,
+      remarks: raw.remarks,
+      internalRemarks: raw.internalRemarks
+    };
   }
 
   protected override buildFormAction(): void {
@@ -211,9 +276,33 @@ export class FormIpPurchaseOrderComponent extends CommonPageTab<ListIpPurchaseOr
         this.item()?.client?.id ?? null,
         [Validators.required]
       ],
+      clientContactId: [
+        this.item()?.clientContact?.id ?? null,
+        []
+      ],
+      clientAddress: [
+        this.item()?.client?.address ?? null,
+        []
+      ],
+      clientPoNumber: [
+        this.item()?.clientPoNumber ?? null,
+        []
+      ],
       supplierId: [
         this.item()?.supplier?.id ?? null,
         [Validators.required]
+      ],
+      supplierContactId: [
+        this.item()?.supplierContact?.id ?? null,
+        []
+      ],
+      supplierAddress: [
+        this.item()?.supplier?.address ?? null,
+        []
+      ],
+      supplierPoNumber: [
+        this.item()?.supplierPoNumber ?? null,
+        []
       ],
       salesRepId: [
         this.item()?.salesRep?.id ?? this.userData()?.id,
@@ -229,6 +318,10 @@ export class FormIpPurchaseOrderComponent extends CommonPageTab<ListIpPurchaseOr
       ],
       leadTimeType: [
         this.item()?.leadTimeType ?? 'WEEKS',
+        []
+      ],
+      shippingMethod: [
+        this.item()?.shippingMethod ?? null,
         []
       ],
       shipToName: [
@@ -270,6 +363,22 @@ export class FormIpPurchaseOrderComponent extends CommonPageTab<ListIpPurchaseOr
       internalRemarks: [
         this.item()?.internalRemarks ?? null,
         []
+      ],
+      subTotal: [
+        0,
+        []
+      ],
+      freightCharges: [
+        0,
+        []
+      ],
+      otherCharges: [
+        0,
+        []
+      ],
+      total: [
+        0,
+        []
       ]
     });
   }
@@ -301,6 +410,19 @@ export class FormIpPurchaseOrderComponent extends CommonPageTab<ListIpPurchaseOr
       controls['paymentTerms'].disable();
     }
 
+    ['clientContactId', 'supplierContactId'].forEach(id => controls[id].disable());
+
+    if (type !== 'create' && item) {
+      if (item.supplier) {
+        controls['supplierContactId'].enable();
+        this.assignListSupplierContact(item.supplier.infoByDepartment);
+      }
+      if (item.client) {
+        controls['clientContactId'].enable();
+        this.assignListClientContact(item.client.infoByDepartment);
+      }
+    }
+
     [
       'leadTime',
       'salesTax',
@@ -309,7 +431,14 @@ export class FormIpPurchaseOrderComponent extends CommonPageTab<ListIpPurchaseOr
       'shipToCity',
       'shipToPhone',
       'shipToContactName',
-      'shipToEmail'
+      'shipToEmail',
+      'clientAddress',
+      'supplierAddress',
+      'shippingMethod',
+      'subTotal',
+      'freightCharges',
+      'otherCharges',
+      'total'
     ].forEach(field => controls[field].disable());
 
     this.showForm = true;
@@ -349,15 +478,32 @@ export class FormIpPurchaseOrderComponent extends CommonPageTab<ListIpPurchaseOr
   }
 
   changeClient(event: AutoCompleteSelectEvent) {
+    this.formTab.controls['clientContactId'].enable();
     this.formTab.patchValue({
-      clientId: event.value.id
+      clientContactId: null,
+      clientAddress: event.value.address
     });
+    this.assignListClientContact(event.value.infoByDepartment);
   }
 
-  clearClient(event: any) {
-    this.formTab.patchValue({
-      clientId: null
+  clearClient() {
+    this.formTab.patchValue({ clientId: null, clientContactId: null, clientAddress: null });
+    this._listClientContact.set([]);
+    this.formTab.controls['clientContactId'].disable();
+  }
+
+  private assignListClientContact(infoByDepartment: ClientInfoDep[]) {
+    const cloneDepInfo = this.clone<ClientInfoDep[]>(infoByDepartment);
+    let listContacts: ClientContact[] = [];
+    cloneDepInfo.forEach(dep => {
+      if (dep.department.id === constants.ip_department_id) {
+        dep.listContacts.map(contact => {
+          contact.name = `${contact.name}  ${contact.active ? '' : '(DISABLED)'}`;
+        });
+        listContacts = listContacts.concat(dep.listContacts);
+      }
     });
+    this._listClientContact.set(listContacts);
   }
 
   get filteredSupplier(): SupplierBasic[] {
@@ -369,19 +515,69 @@ export class FormIpPurchaseOrderComponent extends CommonPageTab<ListIpPurchaseOr
   }
 
   changeSupplier(event: AutoCompleteSelectEvent) {
+    this.formTab.controls['supplierContactId'].enable();
     this.formTab.patchValue({
-      supplierId: event.value.id,
+      supplierContactId: null,
+      supplierAddress: event.value.address,
       paymentTerms: event.value.paymentTerms
     });
+    this.assignListSupplierContact(event.value.infoByDepartment);
     if (!this.permissions().editPaymentTermsPurchaseOrder) {
       this.formTab.controls['paymentTerms'].disable();
     }
   }
 
-  clearSupplier(event: any) {
-    this.formTab.patchValue({
-      supplierId: null,
-      paymentTerms: null
+  clearSupplier() {
+    this.formTab.patchValue({ supplierId: null, supplierContactId: null, paymentTerms: null, supplierAddress: null });
+    this._listSupplierContact.set([]);
+    this.formTab.controls['supplierContactId'].disable();
+  }
+
+  openPurchaseOrder(purchaseOrder: ListIpPurchaseOrder) {
+    this.opened.emit({
+      type: this.permissions().updatePurchaseOrder ? 'edit' : 'view',
+      item: purchaseOrder,
+      pristine: true
     });
+  }
+
+  openQuotation(quotation: { id: string; number: string }) {
+    this.navigateSV.openModuleNewTabAndOpenItem('Quotations', quotation.id);
+  }
+
+  openProduct(productId: string) {
+    this.navigateSV.openModuleNewTabAndOpenItem('Products', productId);
+  }
+
+  openModalProduct(type: 'create' | 'edit', productId?: string) {
+    if (this.tabItem.type !== 'edit') return;
+    // TODO: implement product modal
+  }
+
+  openModalListOtherCharges() {
+    if (this.tabItem.type === 'create') return;
+    // TODO: implement list other charges modal
+  }
+
+  getRemarksSize(): number {
+    let resp = 4;
+    if (!this.item()?.clonedPOs || this.item()!.clonedPOs.length === 0) {
+      resp = resp + 4;
+    }
+    return resp;
+  }
+
+  private assignListSupplierContact(infoByDepartment: SupplierInfoDep[]) {
+    const cloneDepInfo = this.clone<SupplierInfoDep[]>(infoByDepartment);
+    let listContacts: SupplierContact[] = [];
+    cloneDepInfo.forEach(dep => {
+      if (dep.department.id === constants.ip_department_id) {
+        dep.listContacts.map(contact => {
+          contact.name = `${contact.name}  ${contact.active ? '' : '(DISABLED)'}`;
+        });
+        listContacts = listContacts.concat(dep.listContacts);
+      }
+    });
+    this._listSupplierContact.set(listContacts);
   }
 }

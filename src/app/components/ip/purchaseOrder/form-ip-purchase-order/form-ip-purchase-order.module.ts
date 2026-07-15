@@ -17,6 +17,7 @@ import { AutoCompleteModule } from 'primeng/autocomplete';
 import { TabViewModule } from 'primeng/tabview';
 import { TableModule } from 'primeng/table';
 import { PipesModule } from '@pipes/pipes.module';
+import { SendEmailModalModule } from '@modals/util/email/send-email-modal/send-email-modal.module';
 
 @NgModule({
   declarations: [
@@ -40,7 +41,8 @@ import { PipesModule } from '@pipes/pipes.module';
     AutoCompleteModule,
     TabViewModule,
     TableModule,
-    PipesModule
+    PipesModule,
+    SendEmailModalModule
   ],
   exports: [
     FormIpPurchaseOrderComponent

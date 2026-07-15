@@ -6,6 +6,7 @@ import { IpPurchaseOrderOtherCharge } from "./ipPurchaseOrderOtherCharge.type";
 import { IpPurchaseOrderOtherChargesQuotation } from "./ipPurchaseOrderOtherChargesQuotation.type";
 import { IpPurchaseOrderOtherChargesQuotationQr } from "./ipPurchaseOrderOtherChargesQuotationQr.type";
 import { IpPurchaseOrderStatus, Currency, PaymentTerms, LeadTimeType } from "./ipPurchaseOrderEnums.type";
+import { ListIpPurchaseOrder } from "./listIpPurchaseOrder.type";
 
 export type IpPurchaseOrder = {
   id: string;
@@ -46,4 +47,6 @@ export type IpPurchaseOrder = {
   otherCharges: IpPurchaseOrderOtherCharge[];
   importedQuotationCharges: IpPurchaseOrderOtherChargesQuotation[];
   importedQuoteRequestCharges: IpPurchaseOrderOtherChargesQuotationQr[];
+  clonedPOs: ListIpPurchaseOrder[];
+  clonedByPO: ListIpPurchaseOrder | null;
 }
