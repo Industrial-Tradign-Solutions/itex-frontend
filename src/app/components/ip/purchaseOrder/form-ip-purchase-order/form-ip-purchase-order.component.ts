@@ -19,6 +19,7 @@ import { AutoCompleteCompleteEvent, AutoCompleteSelectEvent } from 'primeng/auto
 import { SupplierBasic, SupplierContact, SupplierInfoDep } from '@interfaces/partners/suppliers';
 import { finalize, Observable } from 'rxjs';
 import { MessageResponse } from '@interfaces/message-response';
+import { ChangeQuotationModalComponent } from '@modals/ip/po/change-quotation-modal/change-quotation-modal.component';
 
 const MESSAGES = Messages.pages.ip.purchaseOrder;
 const TITLES = TitlesMessages;
@@ -78,6 +79,7 @@ export class FormIpPurchaseOrderComponent extends CommonPageTab<ListIpPurchaseOr
     if (this.tabItem.type === 'create') return;
     this.utilSV.confirm({
       message: MESSAGES.clone(this.item()!.number),
+      header: TITLES.confirmation,
       accept: () => {
         this._loading.set(true);
         this.showForm = false;
@@ -86,15 +88,13 @@ export class FormIpPurchaseOrderComponent extends CommonPageTab<ListIpPurchaseOr
             finalize(() => {
               setTimeout(() => {
                 this._loading.set(false);
-                this.showForm = true;
+                this.enableForm();
               }, TIMEOUT);
             })
           )
           .subscribe({
             next: (resp) => {
-              if (this._item()) {
-                this._item()!.clonedPOs = [...this._item()!.clonedPOs, resp.data];
-              }
+              this._item.update(item => item ? { ...item, clonedPOs: [...(item.clonedPOs ?? []), resp.data] } : item);
               this.utilSV.setMessage(resp.title, resp.message, 'success');
               this.opened.emit({
                 type: this.permissions().updatePurchaseOrder ? 'edit' : 'view',
@@ -368,10 +368,6 @@ export class FormIpPurchaseOrderComponent extends CommonPageTab<ListIpPurchaseOr
         0,
         []
       ],
-      freightCharges: [
-        0,
-        []
-      ],
       otherCharges: [
         0,
         []
@@ -425,7 +421,6 @@ export class FormIpPurchaseOrderComponent extends CommonPageTab<ListIpPurchaseOr
 
     [
       'leadTime',
-      'salesTax',
       'shipToName',
       'shipToAddress',
       'shipToCity',
@@ -436,7 +431,6 @@ export class FormIpPurchaseOrderComponent extends CommonPageTab<ListIpPurchaseOr
       'supplierAddress',
       'shippingMethod',
       'subTotal',
-      'freightCharges',
       'otherCharges',
       'total'
     ].forEach(field => controls[field].disable());
@@ -533,16 +527,40 @@ export class FormIpPurchaseOrderComponent extends CommonPageTab<ListIpPurchaseOr
     this.formTab.controls['supplierContactId'].disable();
   }
 
-  openPurchaseOrder(purchaseOrder: ListIpPurchaseOrder) {
+  openPurchaseOrder(purchaseOrder: Pick<ListIpPurchaseOrder, 'id' | 'number'>) {
     this.opened.emit({
       type: this.permissions().updatePurchaseOrder ? 'edit' : 'view',
-      item: purchaseOrder,
+      item: purchaseOrder as ListIpPurchaseOrder,
       pristine: true
     });
   }
 
   openQuotation(quotation: { id: string; number: string }) {
     this.navigateSV.openModuleNewTabAndOpenItem('Quotations', quotation.id);
+  }
+
+  openChangeQuotationModal() {
+    if (this.tabItem.type !== 'edit' || !this.item()) return;
+    const modal = this.dialogSV.open(ChangeQuotationModalComponent, {
+      header: 'CHANGE QUOTATION',
+      width: '60rem',
+      closable: false,
+      closeOnEscape: false,
+      data: {
+        poId: this.item()!.id,
+        clientId: this.item()!.client.id,
+        currency: this.item()!.currency,
+        currentQuotationId: this.item()?.quotation?.id ?? null
+      }
+    });
+    modal.onClose.subscribe({
+      next: (resp: { valid: boolean; data?: { id: string; number: string } }) => {
+        if (resp?.valid && resp.data && this._item()) {
+          this._item()!.quotation = resp.data;
+          this.tabItem.pristine = false;
+        }
+      }
+    });
   }
 
   openProduct(productId: string) {

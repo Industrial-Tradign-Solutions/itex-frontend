@@ -10,3 +10,24 @@
 .date {
     margin-left: 1rem;
 }
+
+// Micro-ajustes de ancho: reducción relativa sobre las clases PrimeFlex md/lg/xl
+// col-2 (16.667%) -> ~5% menos ; col-3 (25%) -> ~3% menos.
+// Se conserva col-12 en mobile para no romper el stack responsivo.
+@media (min-width: 768px) {
+  .po-col-client,
+  .po-col-supplier {
+    flex: 0 0 15.83%;
+    max-width: 15.83%;
+  }
+
+  .po-col-currency-block {
+    flex: 0 0 24.25%;
+    max-width: 24.25%;
+  }
+
+  .po-col-subtables {
+    flex: 0 0 27.42%;
+    max-width: 27.42%;
+  }
+}

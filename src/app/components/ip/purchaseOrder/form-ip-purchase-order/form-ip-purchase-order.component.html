@@ -2,7 +2,7 @@
   <div [class]="'p-fluid w-full animate__animated animate__' + animation" >
     <form [formGroup]="formTab" (ngSubmit)="onSubmit()">
       <div class="formgrid grid mt-1">
-        <div class="field col-12 md:col-2 lg:col-2 xl:col-2" >
+        <div class="field col-12 md:col-2 lg:col-2 xl:col-2 po-col-client" >
           <div class="formgrid grid">
             <div class="field col-12 md:col-12 mt-3" >
               <p-floatLabel>
@@ -62,7 +62,7 @@
             </div>
           </div>
         </div>
-        <div class="field col-12 md:col-2 lg:col-2 xl:col-2" >
+        <div class="field col-12 md:col-2 lg:col-2 xl:col-2 po-col-supplier" >
           <div class="formgrid grid">
             <div class="field col-12 md:col-12 mt-3" >
               <p-floatLabel>
@@ -121,7 +121,7 @@
             </div>
           </div>
         </div>
-        <div class="field col-12 md:col-3 lg:col-3 xl:col-3" >
+        <div class="field col-12 md:col-3 lg:col-3 xl:col-3 po-col-currency-block" >
           <div class="formgrid grid">
             <div class="field col-12 md:col-6 mt-3" >
               <p-floatLabel>
@@ -199,18 +199,31 @@
                 </label>
               </p-floatLabel>
             </div>
-            <div class="field col-12 md:col-6 mt-3" >
-              <p-floatLabel>
-                <p-inputNumber
-                  mode="decimal"
-                  [useGrouping]="false"
-                  suffix=" %"
-                  [max]="100"
-                  formControlName="salesTax" />
-                <label>
-                  Sales Tax
-                </label>
-              </p-floatLabel>
+            <div class="col-12 md:col-6" >
+              <div class="formgrid grid">
+                <div class="field col-12 md:col-9 mt-3" >
+                  <p-floatLabel>
+                    <input
+                      pInputText
+                      [value]="item()?.quotation?.number ?? ''"
+                      readonly
+                      type="text"/>
+                    <label>
+                      Quotation #
+                    </label>
+                  </p-floatLabel>
+                </div>
+                <div class="field col-12 md:col-3 mt-3">
+                  <button pButton
+                    icon="pi pi-pencil"
+                    severity="warning"
+                    [outlined]="true"
+                    (click)="openChangeQuotationModal()"
+                    [disabled]="tabItem.type !== 'edit'"
+                    type="button">
+                  </button>
+                </div>
+              </div>
             </div>
             <div class="field col-12 md:col-6 mt-3" >
               <p-floatLabel>
@@ -226,7 +239,6 @@
                 </label>
               </p-floatLabel>
             </div>
-            <div class="field col-12 md:col-6 mt-3" ></div>
             <div class="field col-12 md:col-3 mt-3" >
               @if (tabItem.type !== 'view') {
                 <button pButton
@@ -240,9 +252,9 @@
             </div>
           </div>
         </div>
-        <div class="field col-12 md:col-5 lg:col-5 xl:col-5" >
+        <div class="field col-12 md:col-2 lg:col-2 xl:col-2" >
           <div class="formgrid grid">
-            <div [class]="'field col-12 md:col-12 mt-1'" >
+            <div class="field col-12 md:col-12 mt-1" >
               <p-tabView>
                 <p-tabPanel header="Remarks">
                   <textarea
@@ -264,7 +276,7 @@
                 </p-tabPanel>
                 <p-tabPanel header="Ship To">
                   <div class="formgrid grid">
-                    <div class="field col-12 md:col-12 mt-1">
+                    <div class="field col-12 md:col-12 mt-3">
                       <p-floatLabel>
                         <input
                           pInputText
@@ -274,7 +286,7 @@
                         <label>Ship To Name</label>
                       </p-floatLabel>
                     </div>
-                    <div class="field col-12 md:col-12 mt-1">
+                    <div class="field col-12 md:col-12 mt-3">
                       <p-floatLabel>
                         <input
                           pInputText
@@ -284,7 +296,7 @@
                         <label>Ship To Address</label>
                       </p-floatLabel>
                     </div>
-                    <div class="field col-12 md:col-6 mt-1">
+                    <div class="field col-12 md:col-12 mt-3">
                       <p-floatLabel>
                         <input
                           pInputText
@@ -294,7 +306,7 @@
                         <label>Ship To City</label>
                       </p-floatLabel>
                     </div>
-                    <div class="field col-12 md:col-6 mt-1">
+                    <div class="field col-12 md:col-12 mt-3">
                       <p-floatLabel>
                         <input
                           pInputText
@@ -304,7 +316,7 @@
                         <label>Ship To Phone</label>
                       </p-floatLabel>
                     </div>
-                    <div class="field col-12 md:col-6 mt-1">
+                    <div class="field col-12 md:col-12 mt-3">
                       <p-floatLabel>
                         <input
                           pInputText
@@ -314,7 +326,7 @@
                         <label>Ship To Contact Name</label>
                       </p-floatLabel>
                     </div>
-                    <div class="field col-12 md:col-6 mt-1">
+                    <div class="field col-12 md:col-12 mt-3">
                       <p-floatLabel>
                         <input
                           pInputText
@@ -328,8 +340,12 @@
                 </p-tabPanel>
               </p-tabView>
             </div>
+          </div>
+        </div>
+        <div class="field col-12 md:col-3 lg:col-3 xl:col-3 po-col-subtables" >
+          <div class="formgrid grid">
             <div class="field col-12 md:col-6 mt-1" >
-              <p-scrollPanel [style]="{ width: '100%', height: '20rem' }">
+              <p-scrollPanel [style]="{ width: '100%', height: '19.05rem' }">
                 <p-table
                   styleClass="p-datatable-sm"
                   [value]="item()?.clonedPOs ?? []"
@@ -371,7 +387,7 @@
               </p-scrollPanel>
             </div>
             <div class="field col-12 md:col-6 mt-1" >
-              <p-scrollPanel [style]="{ width: '100%', height: '20rem' }">
+              <p-scrollPanel [style]="{ width: '100%', height: '19.05rem' }">
                 <p-table
                   styleClass="p-datatable-sm"
                   [value]="[]"
@@ -387,27 +403,11 @@
                       <th>
                         <div class="flex justify-content-between">#</div>
                       </th>
-                      <th>
-                        <div class="flex justify-content-between">Date</div>
-                      </th>
-                      <th>
-                        <div class="flex justify-content-between">Amount</div>
-                      </th>
-                      <th>
-                        <div class="flex justify-content-between">Status</div>
-                      </th>
-                      <th>
-                        <div class="flex justify-content-between"></div>
-                      </th>
                     </tr>
                   </ng-template>
                   <ng-template pTemplate="body" let-invoice>
                     <tr>
-                      <td></td>
-                      <td></td>
-                      <td></td>
-                      <td></td>
-                      <td style="text-align: end;"></td>
+                      <td>{{invoice.number}}</td>
                     </tr>
                   </ng-template>
                 </p-table>
@@ -611,12 +611,10 @@
                     mode="currency"
                     [currency]="getCurrency()"
                     currencyDisplay="code"
-                    [minFractionDigits]="5"
-                    [maxFractionDigits]="5"
                     [max]="999999999999"
-                    formControlName="freightCharges" />
+                    formControlName="salesTax" />
                   <label>
-                    Freight Charges
+                    Sales Tax
                   </label>
                 </p-floatLabel>
               </div>
@@ -714,7 +712,7 @@
               [label]="item()!.clonedByPO!.number"
               [link]="true"
               severity="primary"
-              (click)="openPurchaseOrder({ id: item()!.clonedByPO!.id, name: item()!.clonedByPO!.number, client: null!, status: null!, salesRep: null!, createdAt: null!, number: item()!.clonedByPO!.number })"
+              (click)="openPurchaseOrder({ id: item()!.clonedByPO!.id, number: item()!.clonedByPO!.number })"
               type="button">
             </p-button>
           </div>

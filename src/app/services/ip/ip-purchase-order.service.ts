@@ -142,6 +142,14 @@ export class IpPurchaseOrderService extends BaseAutoCompleteService<any> {
       );
   }
 
+  changeQuotationPurchaseOrder(purchaseOrderId: string, quotationId: string): Observable<MessageResponse<IpPurchaseOrder>> {
+    const url = `${URL_SERVICES}/quotation/${purchaseOrderId}`;
+    return this.http.patch<MessageResponse<IpPurchaseOrder>>(url, { quotationId }, { headers: this.authSV.headers() })
+      .pipe(
+        catchError(err => throwError(() => err.error.errorMessage))
+      );
+  }
+
   getPurchaseOrderHistory(poId: string): Observable<IpPurchaseOrderHistoryResponse[]> {
     const url = `${URL_SERVICES}/history/${poId}`;
     return this.http.get<IpPurchaseOrderHistoryResponse[]>(url, { headers: this.authSV.headers() })

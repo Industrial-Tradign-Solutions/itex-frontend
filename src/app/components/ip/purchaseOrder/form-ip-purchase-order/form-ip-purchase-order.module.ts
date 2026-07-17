@@ -18,6 +18,7 @@ import { TabViewModule } from 'primeng/tabview';
 import { TableModule } from 'primeng/table';
 import { PipesModule } from '@pipes/pipes.module';
 import { SendEmailModalModule } from '@modals/util/email/send-email-modal/send-email-modal.module';
+import { ChangeQuotationModalModule } from '@modals/ip/po/change-quotation-modal/change-quotation-modal.module';
 
 @NgModule({
   declarations: [
@@ -42,7 +43,8 @@ import { SendEmailModalModule } from '@modals/util/email/send-email-modal/send-e
     TabViewModule,
     TableModule,
     PipesModule,
-    SendEmailModalModule
+    SendEmailModalModule,
+    ChangeQuotationModalModule
   ],
   exports: [
     FormIpPurchaseOrderComponent
