@@ -66,15 +66,15 @@
           <div class="formgrid grid">
             <div class="field col-12 md:col-12 mt-3" >
               <p-floatLabel>
-                <p-autoComplete
+                <p-dropdown
                   formControlName="supplierId"
-                  [suggestions]="filteredSupplier"
-                  (completeMethod)="searchSupplier($event)"
-                  (onSelect)="changeSupplier($event)"
-                  (onClear)="clearSupplier()"
+                  [options]="filteredSupplier"
                   optionValue="id"
+                  optionLabel="name"
+                  (onChange)="changeSupplier($event)"
                   [showClear]="true"
-                  optionLabel="name"/>
+                  [filter]="true"
+                  filterBy="name"/>
                 <label>
                   Supplier
                   <span class="required">*</span>
@@ -207,6 +207,7 @@
                       pInputText
                       [value]="item()?.quotation?.number ?? ''"
                       readonly
+                      disabled
                       type="text"/>
                     <label>
                       Quotation #
@@ -298,11 +299,13 @@
                     </div>
                     <div class="field col-12 md:col-12 mt-3">
                       <p-floatLabel>
-                        <input
-                          pInputText
-                          formControlName="shipToCity"
-                          maxlength="100"
-                          type="text"/>
+                        <p-autoComplete
+                          formControlName="shipToCityId"
+                          [suggestions]="filteredCities"
+                          (completeMethod)="searchCity($event)"
+                          optionValue="id"
+                          optionLabel="fullName"
+                          [showClear]="true"/>
                         <label>Ship To City</label>
                       </p-floatLabel>
                     </div>
@@ -517,10 +520,10 @@
                     {{product.quotationProduct?.quoteRequestProduct?.leadTime + ' ' + product.quotationProduct?.quoteRequestProduct?.leadTimeType}}
                   </td>
                   <td style="text-align: end;">
-                    {{ product.quotationProduct?.sellingUnitPrice | customCurrency:getCurrency():'1.2-5' }}
+                    {{ product.quotationProduct?.quoteRequestProduct?.unitPrice | customCurrency:getCurrency():'1.2-5' }}
                   </td>
                   <td style="text-align: end;">
-                    {{product.quotationProduct?.sellingExtendedPrice | customCurrency:getCurrency():'1.2-2'}}
+                    {{product.quotationProduct?.quoteRequestProduct?.extendedPrice | customCurrency:getCurrency():'1.2-2'}}
                   </td>
                   <td style="text-align: end;">
                     <button
@@ -533,6 +536,18 @@
                       (click)="openProduct(product.quotationProduct?.quoteRequestProduct?.ipProduct?.id)"
                       tooltipPosition="bottom">
                     </button>
+                    @if (tabItem.type === 'edit') {
+                      <button
+                        pButton
+                        type="button"
+                        icon="pi pi-trash"
+                        class="p-button-rounded p-button-text"
+                        pTooltip="Remove"
+                        severity="danger"
+                        (click)="removeProduct(product)"
+                        tooltipPosition="right">
+                      </button>
+                    }
                   </td>
                 </tr>
               </ng-template>
@@ -546,8 +561,11 @@
                   icon="pi pi-plus"
                   severity="success"
                   [outlined]="true"
-                  (click)="openModalProduct('create')"
-                  [disabled]="tabItem.type !== 'edit'"
+                  (click)="openModalProduct()"
+                  [disabled]="!canAddProducts()"
+                  pTooltip="A quotation and a supplier are required"
+                  [tooltipDisabled]="canAddProducts()"
+                  tooltipPosition="bottom"
                   type="button">
                 </button>
               </div>

@@ -19,6 +19,8 @@ import { TableModule } from 'primeng/table';
 import { PipesModule } from '@pipes/pipes.module';
 import { SendEmailModalModule } from '@modals/util/email/send-email-modal/send-email-modal.module';
 import { ChangeQuotationModalModule } from '@modals/ip/po/change-quotation-modal/change-quotation-modal.module';
+import { AddPoProductModalModule } from '@modals/ip/po/add-po-product-modal/add-po-product-modal.module';
+import { PoOtherChargesModule } from '@modals/ip/po/po-other-charges/po-other-charges.module';
 
 @NgModule({
   declarations: [
@@ -44,7 +46,9 @@ import { ChangeQuotationModalModule } from '@modals/ip/po/change-quotation-modal
     TableModule,
     PipesModule,
     SendEmailModalModule,
-    ChangeQuotationModalModule
+    ChangeQuotationModalModule,
+    AddPoProductModalModule,
+    PoOtherChargesModule
   ],
   exports: [
     FormIpPurchaseOrderComponent

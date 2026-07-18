@@ -5,7 +5,10 @@ import { EmitedTab } from '@config/types/tabs';
 import { ListIpPurchaseOrder, IpPurchaseOrder } from '@interfaces/ip/purchaseOrder';
 import { IpPurchaseOrderPermissions } from '@pages/principal/ip/purchase-order/purchase-order.component';
 import { environment } from '../../../../../environments/environment';
-import { IpPurchaseOrderService } from '@services/ip';
+import { IpPurchaseOrderService, IpQuotationService } from '@services/ip';
+import { CityService } from '@services/masters';
+import { BasicCity } from '@interfaces/masters/locations/cities';
+import { UpdatePurchaseOrderRequest } from '@interfaces/ip/purchaseOrder';
 import { StaticListItem } from '@interfaces/static-list.model';
 import { FormGroup, Validators } from '@angular/forms';
 import { DropdownChangeEvent } from 'primeng/dropdown';
@@ -20,6 +23,9 @@ import { SupplierBasic, SupplierContact, SupplierInfoDep } from '@interfaces/par
 import { finalize, Observable } from 'rxjs';
 import { MessageResponse } from '@interfaces/message-response';
 import { ChangeQuotationModalComponent } from '@modals/ip/po/change-quotation-modal/change-quotation-modal.component';
+import { AddPoProductModalComponent } from '@modals/ip/po/add-po-product-modal/add-po-product-modal.component';
+import { PoListOtherChargesModalComponent } from '@modals/ip/po/po-list-other-charges-modal/po-list-other-charges-modal.component';
+import { IpPurchaseOrderProduct } from '@interfaces/ip/purchaseOrder';
 
 const MESSAGES = Messages.pages.ip.purchaseOrder;
 const TITLES = TitlesMessages;
@@ -35,12 +41,22 @@ export class FormIpPurchaseOrderComponent extends CommonPageTab<ListIpPurchaseOr
   @Output() opened = new EventEmitter<EmitedTab<ListIpPurchaseOrder>>();
 
   private ipPurchaseOrderSV = inject(IpPurchaseOrderService);
+  private ipQuotationSV = inject(IpQuotationService);
   private clientSV = inject(ClientsService);
   private supplierSV = inject(SuppliersService);
+  private citySV = inject(CityService);
   private userSV = inject(UsersService);
   private storageSV = inject(StorageService);
   private navigateSV = inject(NavigateTabsService);
   private emailSV = inject(EmailService);
+
+  // Rule 2B: when the PO has a quotation, suppliers must come from that Q's
+  // supplier set (reachable through its Quote Requests) — not the general catalog.
+  // Only the ids are kept here; the getter below cross-references them against
+  // supplierSV.list() (the full catalog, loaded with infoByDepartment) so the
+  // Supplier Contact dropdown always has data, regardless of load order.
+  private _quotationSupplierIds = signal<Set<string>>(new Set());
+  private _suppliersLoadedForQ: string | null = null;
 
   listIpPurchaseOrderStatus = computed<StaticListItem[]>(() => this.staticListSV.getListIpPurchaseOrderStatus());
   listCurrency = computed<StaticListItem[]>(() => this.staticListSV.getListCurrency());
@@ -62,6 +78,7 @@ export class FormIpPurchaseOrderComponent extends CommonPageTab<ListIpPurchaseOr
     this.userSV.loadEmployees(false);
     this.supplierSV.loadAllBasic();
     this.clientSV.loadAllBasic();
+    this.citySV.loadCities();
   }
 
   ngOnInit(): void {
@@ -157,6 +174,13 @@ export class FormIpPurchaseOrderComponent extends CommonPageTab<ListIpPurchaseOr
     const poId = this.tabItem.item.id;
     const poNumber = this.tabItem.item.name;
 
+    // RBAC 4004004: rejecting requires the dedicated permission.
+    if (event.value === 'REJECTED' && !this.permissions().rejectPurchaseOrder) {
+      this.resetFormStatus();
+      this.utilSV.setMessage(TITLES.warning, 'You do not have permission to reject this Purchase Order.', 'warn');
+      return;
+    }
+
     const actions: Record<string, () => void> = {
       CREATED: () => this.handleChangeStatus(
         MESSAGES.changeStatus(poNumber, 'CREATED'),
@@ -206,23 +230,16 @@ export class FormIpPurchaseOrderComponent extends CommonPageTab<ListIpPurchaseOr
   }
 
   private resetFormStatus() {
-    this.formTab.patchValue({ status: this.item()?.status ?? 'ACTIVE' });
+    this.formTab.patchValue({ status: this.item()?.status ?? 'CREATED' });
   }
 
   private executeChangeStatus(action: Observable<MessageResponse<ListIpPurchaseOrder>>, newStatus: 'CREATED' | 'ANSWERED' | 'SENT' | 'COMPLETE' | 'REJECTED') {
     this._loading.set(true);
     this.showForm = false;
     action
-      .pipe(finalize(() => {
-        setTimeout(() => {
-          this._loading.set(false);
-          this.enableForm();
-        }, TIMEOUT);
-      }))
       .subscribe({
         next: (resp) => {
           this.utilSV.setMessage(resp.title, resp.message, 'success');
-          this._item()!.status = newStatus;
           this.tabItem.item.status = newStatus;
           if (newStatus === 'COMPLETE' || newStatus === 'REJECTED') {
             this.tabItem.type = 'view';
@@ -232,8 +249,14 @@ export class FormIpPurchaseOrderComponent extends CommonPageTab<ListIpPurchaseOr
           if (newStatus !== 'SENT') {
             this.tabItem.pristine = true;
           }
+          // The change-status endpoint only returns a lightweight response
+          // (no sentAt/answeredAt/completeAt/rejectAt) — reload the full PO
+          // so the new status date shows up immediately.
+          this.reloadPurchaseOrder();
         },
         error: (err) => {
+          this._loading.set(false);
+          this.showForm = true;
           this.rejectStatusChange(err);
         }
       });
@@ -243,26 +266,31 @@ export class FormIpPurchaseOrderComponent extends CommonPageTab<ListIpPurchaseOr
     // TODO: implement history modal
   }
 
-  protected override getRequest() {
+  protected override getRequest(): UpdatePurchaseOrderRequest {
     const raw = this.formTab.getRawValue();
     return {
       clientId: raw.clientId,
-      supplierId: raw.supplierId,
+      clientContactId: raw.clientContactId ?? null,
+      clientPoNumber: raw.clientPoNumber ?? null,
       currency: raw.currency,
-      paymentTerms: raw.paymentTerms,
+      supplierId: raw.supplierId,
+      supplierContactId: raw.supplierContactId ?? null,
+      supplierPoNumber: raw.supplierPoNumber ?? null,
+      paymentTerms: raw.paymentTerms ?? null,
+      shippingMethod: raw.shippingMethod ?? null,
+      salesRepId: raw.salesRepId,
       leadTime: raw.leadTime,
       leadTimeType: raw.leadTimeType,
-      salesRepId: raw.salesRepId,
+      salesTax: raw.salesTax,
       shipToName: raw.shipToName,
       shipToAddress: raw.shipToAddress,
-      shipToCity: raw.shipToCity,
+      shipToCityId: raw.shipToCityId,
       shipToPhone: raw.shipToPhone,
       shipToContactName: raw.shipToContactName,
       shipToEmail: raw.shipToEmail,
-      salesTax: raw.salesTax,
       status: raw.status,
-      remarks: raw.remarks,
-      internalRemarks: raw.internalRemarks
+      remarks: raw.remarks ?? null,
+      internalRemarks: raw.internalRemarks ?? null
     };
   }
 
@@ -290,7 +318,7 @@ export class FormIpPurchaseOrderComponent extends CommonPageTab<ListIpPurchaseOr
       ],
       supplierId: [
         this.item()?.supplier?.id ?? null,
-        [Validators.required]
+        []
       ],
       supplierContactId: [
         this.item()?.supplierContact?.id ?? null,
@@ -332,8 +360,8 @@ export class FormIpPurchaseOrderComponent extends CommonPageTab<ListIpPurchaseOr
         this.item()?.shipToAddress ?? null,
         []
       ],
-      shipToCity: [
-        this.item()?.shipToCity?.name ?? null,
+      shipToCityId: [
+        this.item()?.shipToCity?.id ?? null,
         []
       ],
       shipToPhone: [
@@ -365,15 +393,15 @@ export class FormIpPurchaseOrderComponent extends CommonPageTab<ListIpPurchaseOr
         []
       ],
       subTotal: [
-        0,
+        this.item()?.subTotal ?? 0,
         []
       ],
       otherCharges: [
-        0,
+        this.item()?.totalOtherCharges ?? 0,
         []
       ],
       total: [
-        0,
+        this.item()?.total ?? 0,
         []
       ]
     });
@@ -402,6 +430,7 @@ export class FormIpPurchaseOrderComponent extends CommonPageTab<ListIpPurchaseOr
       controls['salesRepId'].disable();
     }
 
+    // Rule 2E: payment terms only editable with the dedicated permission (4004005).
     if (!perms.editPaymentTermsPurchaseOrder) {
       controls['paymentTerms'].disable();
     }
@@ -419,29 +448,85 @@ export class FormIpPurchaseOrderComponent extends CommonPageTab<ListIpPurchaseOr
       }
     }
 
+    // Display-only fields (kept read-only). Ship To*, leadTime and shippingMethod
+    // are intentionally NOT here — rules 2D and 2F make them freely editable.
     [
-      'leadTime',
-      'shipToName',
-      'shipToAddress',
-      'shipToCity',
-      'shipToPhone',
-      'shipToContactName',
-      'shipToEmail',
       'clientAddress',
       'supplierAddress',
-      'shippingMethod',
       'subTotal',
       'otherCharges',
       'total'
     ].forEach(field => controls[field].disable());
 
+    // Rule 2A: a PO with an attached quotation locks Client and Currency
+    // (the backend ignores changes to them anyway — §1.3).
+    if (item?.quotation) {
+      controls['clientId'].disable();
+      controls['currency'].disable();
+    }
+
+    // Rule 2C: once ANSWERED the supplier is frozen (§1.4).
+    if (item?.status === 'ANSWERED') {
+      controls['supplierId'].disable();
+    }
+
+    // No Q attached: supplier isn't required and its whole block stays disabled
+    // (there's no Q-scoped supplier set to pick from — Rule 2B).
+    if (!item?.quotation) {
+      ['supplierId', 'supplierContactId', 'supplierPoNumber'].forEach(id => controls[id].disable());
+    }
+
+    this.loadQuotationSuppliers();
+
+    // Pre-load current client into filtered list so autocomplete shows name, not id
+    if (item?.client && !this.clientSV.filteredList.some(c => c.id === item.client!.id)) {
+      const clientBasic: ClientBasic = {
+        id: item.client.id,
+        name: item.client.name,
+        code: item.client.code,
+        address: item.client.address,
+        showName: `${item.client.code} - ${item.client.name}`,
+        paymentTerms: item.client.paymentTerms,
+        infoByDepartment: item.client.infoByDepartment
+      };
+      this.clientSV.filteredList = [clientBasic, ...this.clientSV.filteredList];
+    }
+
     this.showForm = true;
-    this.searchSupplier({ query: '', originalEvent: new Event('') });
     this.searchClient({ query: '', originalEvent: new Event('') });
+    this.searchCity({ query: '', originalEvent: new Event('') });
 
     if (type === 'view') {
       this.formTab.disable();
     }
+  }
+
+  // Rule 2B — pull the associated Quotation's supplier set (reachable via its
+  // Quote Requests) so the Supplier autocomplete never offers the general catalog.
+  private loadQuotationSuppliers(): void {
+    const item = this.item();
+    const quotationId = item?.quotation?.id;
+
+    if (!quotationId) {
+      this._quotationSupplierIds.set(new Set());
+      this._suppliersLoadedForQ = null;
+      return;
+    }
+    if (this._suppliersLoadedForQ === quotationId) return;
+    this._suppliersLoadedForQ = quotationId;
+
+    // This endpoint returns lightweight suppliers (id/name only, no
+    // infoByDepartment) — it only exists to list/label suppliers in the
+    // create-PO modal. Only the ids are kept; filteredSupplier cross-references
+    // them against the full supplier catalog for infoByDepartment.
+    this.ipQuotationSV.getQuotationsAvailableForPurchaseOrder(item!.client.id, true, item!.currency)
+      .subscribe({
+        next: list => {
+          const ids = (list.find(q => q.id === quotationId)?.suppliers ?? []).map(s => s.id);
+          this._quotationSupplierIds.set(new Set(ids));
+        },
+        error: () => this._quotationSupplierIds.set(new Set())
+      });
   }
 
   override onSubmit(): void {
@@ -457,7 +542,7 @@ export class FormIpPurchaseOrderComponent extends CommonPageTab<ListIpPurchaseOr
     if (this.tabItem.type === 'create') {
       return this.ipPurchaseOrderSV.createPurchaseOrder({ clientId: this.formTab.getRawValue().clientId });
     } else if (this.tabItem.type === 'edit') {
-      return this.ipPurchaseOrderSV.updatePurchaseOrder(this.tabItem.item.id, this.formTab.getRawValue());
+      return this.ipPurchaseOrderSV.updatePurchaseOrder(this.tabItem.item.id, this.getRequest());
     } else {
       throw new Error('Invalid tab type for submit');
     }
@@ -501,21 +586,36 @@ export class FormIpPurchaseOrderComponent extends CommonPageTab<ListIpPurchaseOr
   }
 
   get filteredSupplier(): SupplierBasic[] {
-    return this.supplierSV.filteredList;
+    // Rule 2B: restrict to the quotation's supplier set when a Q is attached.
+    // Cross-referencing against supplierSV.list() (full catalog with
+    // infoByDepartment) instead of the lightweight Q-suppliers response.
+    if (this.item()?.quotation) {
+      const ids = this._quotationSupplierIds();
+      return this.supplierSV.list().filter(s => ids.has(s.id));
+    }
+    return this.supplierSV.list();
   }
 
-  searchSupplier(event: AutoCompleteCompleteEvent) {
-    this.supplierSV.searchAutoComplete(event);
+
+  get filteredCities(): BasicCity[] {
+    return this.citySV.filteredCities;
   }
 
-  changeSupplier(event: AutoCompleteSelectEvent) {
+  searchCity(event: AutoCompleteCompleteEvent) {
+    this.citySV.searchAutoComplete(event);
+  }
+
+  changeSupplier(event: any) {
+    const supplierId = event?.value ?? event;
+    const supplier = this.filteredSupplier.find(s => s.id === supplierId);
+    if (!supplier) return;
     this.formTab.controls['supplierContactId'].enable();
     this.formTab.patchValue({
       supplierContactId: null,
-      supplierAddress: event.value.address,
-      paymentTerms: event.value.paymentTerms
+      supplierAddress: supplier.address,
+      paymentTerms: supplier.paymentTerms
     });
-    this.assignListSupplierContact(event.value.infoByDepartment);
+    this.assignListSupplierContact(supplier.infoByDepartment);
     if (!this.permissions().editPaymentTermsPurchaseOrder) {
       this.formTab.controls['paymentTerms'].disable();
     }
@@ -554,10 +654,11 @@ export class FormIpPurchaseOrderComponent extends CommonPageTab<ListIpPurchaseOr
       }
     });
     modal.onClose.subscribe({
-      next: (resp: { valid: boolean; data?: { id: string; number: string } }) => {
-        if (resp?.valid && resp.data && this._item()) {
-          this._item()!.quotation = resp.data;
-          this.tabItem.pristine = false;
+      next: (resp: { valid: boolean; reload?: boolean }) => {
+        // Rule 8E: changing/removing a Q purges data server-side — always full-reload.
+        if (resp?.valid && resp.reload) {
+          this.tabItem.pristine = true;
+          this.reloadPurchaseOrder();
         }
       }
     });
@@ -567,14 +668,95 @@ export class FormIpPurchaseOrderComponent extends CommonPageTab<ListIpPurchaseOr
     this.navigateSV.openModuleNewTabAndOpenItem('Products', productId);
   }
 
-  openModalProduct(type: 'create' | 'edit', productId?: string) {
+  // 10A: only openable on an editable PO that already has a quotation and a supplier.
+  canAddProducts(): boolean {
+    return this.tabItem.type === 'edit' && !!this.item()?.quotation && !!this.item()?.supplier;
+  }
+
+  openModalProduct() {
+    if (!this.canAddProducts()) return;
+    const modal = this.dialogSV.open(AddPoProductModalComponent, {
+      header: 'ADD PRODUCTS',
+      width: '68vw',
+      closable: false,
+      closeOnEscape: false,
+      data: {
+        poId: this.item()!.id,
+        currency: this.item()!.currency
+      }
+    });
+    modal.onClose.subscribe({
+      next: (resp: { valid: boolean }) => {
+        if (resp?.valid) this.reloadPurchaseOrder();
+      }
+    });
+  }
+
+  removeProduct(product: IpPurchaseOrderProduct) {
     if (this.tabItem.type !== 'edit') return;
-    // TODO: implement product modal
+    this.utilSV.confirm({
+      message: MESSAGES.removeProduct(product.quotationProduct?.quoteRequestProduct?.ipProduct?.description ?? ''),
+      header: TITLES.confirmation,
+      accept: () => {
+        this._loading.set(true);
+        this.showForm = false;
+        this.ipPurchaseOrderSV.removeProduct(this.item()!.id, product.id)
+          .pipe(finalize(() => this.reloadPurchaseOrder()))
+          .subscribe({
+            next: resp => this.utilSV.setMessage(resp.title, resp.message, 'success'),
+            error: err => this.utilSV.setMessage(TITLES.error, err, 'error')
+          });
+      }
+    });
+  }
+
+  // Re-fetches the full PO (products/charges/totals/supplier/etc) after a
+  // sub-resource change and fully rebuilds the form from the fresh data —
+  // a partial patchValue would leave stale supplier/contact/address fields
+  // behind when a Q change/removal purges them server-side (Rule 8E).
+  private reloadPurchaseOrder(): void {
+    this._loading.set(true);
+    this.showForm = false;
+    this.ipPurchaseOrderSV.openAndLockPurchaseOrder(this.tabItem.item.id, this.tabItem.type)
+      .subscribe({
+        next: resp => {
+          setTimeout(() => {
+            this._item.set(resp.data);
+            this._isValidOpen.set(resp.isValidOpen);
+            this.rebuildForm();
+            this._loading.set(false);
+          }, TIMEOUT);
+        },
+        error: err => {
+          this.utilSV.setMessage(TITLES.warning, err, 'warn');
+          this._loading.set(false);
+        }
+      });
   }
 
   openModalListOtherCharges() {
-    if (this.tabItem.type === 'create') return;
-    // TODO: implement list other charges modal
+    if (this.tabItem.type === 'create' || !this.item()) return;
+    const modal = this.dialogSV.open(PoListOtherChargesModalComponent, {
+      header: 'OTHER CHARGES',
+      width: '49vw',
+      closable: false,
+      closeOnEscape: false,
+      data: {
+        poId: this.item()!.id,
+        type: this.tabItem.type,
+        poStatus: this.item()!.status,
+        currency: this.item()!.currency,
+        hasQuotation: !!this.item()!.quotation,
+        otherCharges: this.item()!.otherCharges,
+        importedQuotationCharges: this.item()!.importedQuotationCharges,
+        importedQuoteRequestCharges: this.item()!.importedQuoteRequestCharges
+      }
+    });
+    modal.onClose.subscribe({
+      next: (resp: { valid: boolean }) => {
+        if (resp?.valid) this.reloadPurchaseOrder();
+      }
+    });
   }
 
   getRemarksSize(): number {
