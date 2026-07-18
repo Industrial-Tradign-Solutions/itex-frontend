@@ -41,7 +41,6 @@
                     name="selectedQuotation"
                     [(ngModel)]="selectedQ"
                     [ngModelOptions]="{standalone: true}"
-                    (click)="toggleQSelection(q)"
                     [disabled]="q.id === currentQuotationId()"
                     [inputId]="'cq-' + q.id"/>
                 </td>
@@ -63,6 +62,17 @@
     </div>
   </div>
   <div class="mt-3 flex justify-content-end column-gap-4">
+    @if(hasQuotation()) {
+      <button
+        type="button"
+        pButton
+        icon="pi pi-unlink"
+        class="p-button-sm p-button-warning"
+        label="Remove Q"
+        [loading]="saving()"
+        (click)="removeQuotation()">
+      </button>
+    }
     <button
       type="button"
       pButton

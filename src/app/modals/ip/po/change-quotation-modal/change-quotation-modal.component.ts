@@ -46,10 +46,6 @@ export class ChangeQuotationModalComponent implements OnInit {
     this.loadQuotations();
   }
 
-  toggleQSelection(q: AvailableForPurchaseOrder): void {
-    this.selectedQ = this.selectedQ?.id === q.id ? null : q;
-  }
-
   private loadQuotations(): void {
     this._loading.set(true);
     this.ipQuotationSV.getQuotationsAvailableForPurchaseOrder(this.clientId(), this.viewCompleted, this.currency())
@@ -77,15 +73,49 @@ export class ChangeQuotationModalComponent implements OnInit {
     return `Multiple (${q.suppliers.length})`;
   }
 
+  // §1.3/§2.6: attaching a different quotation purges products and imported charges.
   changeQuotation(): void {
     if (!this.selectedQ) return;
+    this.utilSV.confirm({
+      message: 'Changing the quotation will remove all current products and imported charges. Continue?',
+      header: TITLES.confirmation,
+      accept: () => this.executeChangeQuotation()
+    });
+  }
+
+  private executeChangeQuotation(): void {
     this._saving.set(true);
-    this.ipPurchaseOrderSV.changeQuotationPurchaseOrder(this.poId(), this.selectedQ.id)
+    this.ipPurchaseOrderSV.changeQuotationPurchaseOrder(this.poId(), this.selectedQ!.id)
       .pipe(finalize(() => this._saving.set(false)))
       .subscribe({
         next: resp => {
           this.utilSV.setMessage(resp.title, resp.message, 'success');
-          this.ref.close({ valid: true, data: { id: this.selectedQ!.id, number: this.selectedQ!.number } });
+          this.ref.close({ valid: true, reload: true, data: { id: this.selectedQ!.id, number: this.selectedQ!.number } });
+        },
+        error: err => this.utilSV.setMessage(TITLES.error, err, 'error')
+      });
+  }
+
+  hasQuotation = computed<boolean>(() => !!this.currentQuotationId());
+
+  // §2.5: detaches the quotation — purges products, supplier and imported charges.
+  removeQuotation(): void {
+    if (!this.hasQuotation()) return;
+    this.utilSV.confirm({
+      message: 'Removing the quotation will purge all products, supplier and imported charges. Continue?',
+      header: TITLES.confirmation,
+      accept: () => this.executeRemoveQuotation()
+    });
+  }
+
+  private executeRemoveQuotation(): void {
+    this._saving.set(true);
+    this.ipPurchaseOrderSV.removeQuotationPurchaseOrder(this.poId())
+      .pipe(finalize(() => this._saving.set(false)))
+      .subscribe({
+        next: resp => {
+          this.utilSV.setMessage(resp.title, resp.message, 'success');
+          this.ref.close({ valid: true, reload: true, removed: true });
         },
         error: err => this.utilSV.setMessage(TITLES.error, err, 'error')
       });
