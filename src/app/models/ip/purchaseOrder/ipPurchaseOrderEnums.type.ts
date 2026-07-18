@@ -1,14 +1,16 @@
 export type IpPurchaseOrderStatus = 'CREATED' | 'SENT' | 'ANSWERED' | 'COMPLETE' | 'REJECTED';
 
-export type Currency = 'USD' | 'EUR' | 'GBP' | 'CAD' | 'MXN';
+// Values are driven by StaticListsService; kept as `string` so the model
+// doesn't have to enumerate every backend value (Currency/PaymentTerms/LeadTimeType).
+export type Currency = string;
 
-export type PaymentTerms = 'NET_30' | 'NET_45' | 'NET_60' | 'NET_90' | 'IMMEDIATE';
+export type PaymentTerms = string;
 
-export type LeadTimeType = 'DAYS' | 'WEEKS';
+export type LeadTimeType = string;
 
 export type FilterDate = 'DAY' | 'MONTH' | 'YEAR' | 'ALL';
 
-export type OpenAndLockType = 'EDIT' | 'VIEW' | 'CREATE';
+export type OpenAndLockType = 'EDIT' | 'VIEW';
 
 export type IpPurchaseOrderHistoryAction =
   | 'CREATE'
@@ -25,4 +27,6 @@ export type IpPurchaseOrderHistoryAction =
   | 'ADD_IMPORTED_Q_CHARGE'
   | 'REMOVE_IMPORTED_Q_CHARGE'
   | 'ADD_IMPORTED_QR_CHARGE'
-  | 'REMOVE_IMPORTED_QR_CHARGE';
+  | 'REMOVE_IMPORTED_QR_CHARGE'
+  | 'REMOVE_QUOTATION'
+  | 'CHANGE_QUOTATION';

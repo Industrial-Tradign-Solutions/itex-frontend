@@ -37,6 +37,9 @@ export type IpPurchaseOrder = {
   shipToContactName: string;
   shipToEmail: string;
   salesTax: number;
+  subTotal: number;
+  totalOtherCharges: number;
+  total: number;
   pdfUrl: string | null;
   openAt: string;
   sentAt: string | null;
