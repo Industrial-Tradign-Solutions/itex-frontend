@@ -25,6 +25,7 @@ import { MessageResponse } from '@interfaces/message-response';
 import { ChangeQuotationModalComponent } from '@modals/ip/po/change-quotation-modal/change-quotation-modal.component';
 import { AddPoProductModalComponent } from '@modals/ip/po/add-po-product-modal/add-po-product-modal.component';
 import { PoListOtherChargesModalComponent } from '@modals/ip/po/po-list-other-charges-modal/po-list-other-charges-modal.component';
+import { HistoryPurchaseOrderModalComponent } from '@modals/ip/po/history-purchase-order-modal/history-purchase-order-modal.component';
 import { IpPurchaseOrderProduct } from '@interfaces/ip/purchaseOrder';
 
 const MESSAGES = Messages.pages.ip.purchaseOrder;
@@ -263,7 +264,15 @@ export class FormIpPurchaseOrderComponent extends CommonPageTab<ListIpPurchaseOr
   }
 
   openHistory(purchaseOrder: IpPurchaseOrder) {
-    // TODO: implement history modal
+    this.dialogSV.open(HistoryPurchaseOrderModalComponent, {
+      header: `HISTORY OF ${purchaseOrder.number}`,
+      width: '70rem',
+      closable: true,
+      closeOnEscape: true,
+      data: {
+        purchaseOrderId: purchaseOrder.id
+      }
+    }).onClose.subscribe();
   }
 
   protected override getRequest(): UpdatePurchaseOrderRequest {

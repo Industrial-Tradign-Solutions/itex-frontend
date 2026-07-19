@@ -20,6 +20,7 @@ import { PipesModule } from '@pipes/pipes.module';
 import { QuoteRequestProductModalModule } from '@modals/ip/qr/quote-request-product-modal/quote-request-product-modal.module';
 import { ListOtherChargesModalModule } from '@modals/ip/qr/list-other-charges-modal/list-other-charges-modal.module';
 import { SendEmailModalModule } from '@modals/util/email/send-email-modal/send-email-modal.module';
+import { HistoryQuoteRequestModalModule } from '@modals/ip/qr/history-quote-request-modal/history-quote-request-modal.module';
 
 
 
@@ -48,7 +49,8 @@ import { SendEmailModalModule } from '@modals/util/email/send-email-modal/send-e
     PipesModule,
     QuoteRequestProductModalModule,
     ListOtherChargesModalModule,
-    SendEmailModalModule
+    SendEmailModalModule,
+    HistoryQuoteRequestModalModule
   ],
   exports: [
     FormIpQuoteRequestComponent

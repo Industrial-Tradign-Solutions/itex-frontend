@@ -21,6 +21,7 @@ import { SendEmailModalModule } from '@modals/util/email/send-email-modal/send-e
 import { ChangeQuotationModalModule } from '@modals/ip/po/change-quotation-modal/change-quotation-modal.module';
 import { AddPoProductModalModule } from '@modals/ip/po/add-po-product-modal/add-po-product-modal.module';
 import { PoOtherChargesModule } from '@modals/ip/po/po-other-charges/po-other-charges.module';
+import { HistoryPurchaseOrderModalModule } from '@modals/ip/po/history-purchase-order-modal/history-purchase-order-modal.module';
 
 @NgModule({
   declarations: [
@@ -48,7 +49,8 @@ import { PoOtherChargesModule } from '@modals/ip/po/po-other-charges/po-other-ch
     SendEmailModalModule,
     ChangeQuotationModalModule,
     AddPoProductModalModule,
-    PoOtherChargesModule
+    PoOtherChargesModule,
+    HistoryPurchaseOrderModalModule
   ],
   exports: [
     FormIpPurchaseOrderComponent
