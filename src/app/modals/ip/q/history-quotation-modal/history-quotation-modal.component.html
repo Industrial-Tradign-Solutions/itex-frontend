@@ -1,0 +1,143 @@
+<p-table
+  [value]="historyItems"
+  [loading]="loading"
+  styleClass="p-datatable-sm"
+  [scrollable]="true"
+  scrollHeight="50rem">
+  <ng-template pTemplate="header">
+    <tr>
+      <th style="width: 12rem; text-align: center;">USER</th>
+      <th style="width: 12rem; text-align: center;">ACTION</th>
+      <th style="width: 12rem; text-align: center;">DATE</th>
+      <th style="text-align: center;">CHANGES</th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-item>
+    <tr>
+      <td style="text-align: center;">
+        {{ item.employee }}
+      </td>
+      <td style="text-align: center;">
+        <span [class]="'customer-badge status-' + getStatusColor(item.action)">
+          {{ getActionDescription(item.action) }}
+        </span>
+      </td>
+      <td style="text-align: center;">
+        {{ item.createdAt | date:'MMM dd, yyyy hh:mm a' }}
+      </td>
+      <td>
+        @if (item.action === 'CREATE') {
+          <li>
+            <b>Number: </b> <i class="new">{{ item.data?.number }}</i>
+          </li>
+          <li>
+            <b>Client: </b> <i class="new">{{ item.data?.client?.new ?? item.data?.client }}</i>
+          </li>
+          <li>
+            <b>Sales Rep: </b> <i class="new">{{ item.data?.salesRep?.new ?? item.data?.salesRep }}</i>
+          </li>
+          <li>
+            <b>Currency: </b> <i class="new">{{ item.data?.currency }}</i>
+          </li>
+          <li>
+            <b>Status: </b> <i class="new">{{ item.data?.status }}</i>
+          </li>
+        } @else if (item.action === 'UPDATE') {
+          @for (data of item.data; track $index) {
+            @if (data.key !== 'id') {
+              <li style="font-size: 13px;">
+                <b>{{ getData(data.key) }}:</b>
+                <ul style="font-size: 11px;">
+                  <b>Old: </b>
+                  <span class="old">{{ data.old }}</span>
+                </ul>
+                <ul style="font-size: 11px;">
+                  <b>New: </b>
+                  <span class="new">{{ data.new }}</span>
+                </ul>
+              </li>
+            }
+          }
+        } @else if (item.action === 'STATUS_CHANGE') {
+          <li>
+            <b>Status: </b>
+            <span class="old">{{ item.data?.oldStatus }}</span> &rarr;
+            <span class="new">{{ item.data?.newStatus }}</span>
+          </li>
+        } @else if (item.action === 'UPDATE_PRODUCT' || item.action === 'UPDATE_OTHER_CHARGE') {
+          @if (item.data?.lineNumber !== undefined) {
+            <li><b>Line #: </b> {{ item.data?.lineNumber }}</li>
+          }
+          @for (entry of item.data | keyvalue; track entry.key) {
+            @if (entry.key !== 'id' && entry.key !== 'lineNumber' && entry.key !== 'createdAt' && $any(entry.value)?.new !== undefined) {
+              <li style="font-size: 13px;">
+                <b>{{ getData($any(entry.key)) }}:</b>
+                <ul style="font-size: 11px;">
+                  <b>Old: </b>
+                  <span class="old">{{ $any(entry.value).old }}</span>
+                </ul>
+                <ul style="font-size: 11px;">
+                  <b>New: </b>
+                  <span class="new">{{ $any(entry.value).new }}</span>
+                </ul>
+              </li>
+            }
+          }
+        } @else if (item.action === 'ADD_PRODUCT') {
+          <li>
+            <b>Line #: </b> <i class="new">{{ item.data?.lineNumber }}</i>
+          </li>
+          <li>
+            <b>Reference: </b> <i class="new">{{ item.data?.productReference }}</i>
+          </li>
+          <li>
+            <b>Description: </b> <i class="new">{{ item.data?.productDescription }}</i>
+          </li>
+          <li>
+            <b>Condition: </b> <i class="new">{{ item.data?.condition }}</i>
+          </li>
+          <li>
+            <b>Profit Margin: </b> <i class="new">{{ item.data?.profitMargin?.new ?? item.data?.profitMargin }}</i>
+          </li>
+        } @else if (item.action === 'REMOVE_PRODUCT') {
+          <li>
+            <b>Line #: </b> <i class="old">{{ item.data?.lineNumber }}</i>
+          </li>
+          <li>
+            <b>Description: </b> <i class="old">{{ item.data?.productDescription }}</i>
+          </li>
+        } @else if (item.action === 'ADD_QR') {
+          <li class="new">
+            Quote requests linked. Total: {{ item.data?.quoteRequestsCount }}
+          </li>
+        } @else if (item.action === 'REMOVE_QR') {
+          <li class="old">
+            Quote request removed. Total: {{ item.data?.quoteRequestsCount }}
+          </li>
+        } @else if (item.action === 'ADD_OTHER_CHARGE') {
+          <li>
+            <b>Description: </b> <i class="new">{{ item.data?.description }}</i>
+          </li>
+          <li>
+            <b>Value: </b> <i class="new">{{ item.data?.value?.new ?? item.data?.value }}</i>
+          </li>
+        } @else if (item.action === 'REMOVE_OTHER_CHARGE') {
+          <li>
+            <b>Description: </b> <i class="old">{{ item.data?.description }}</i>
+          </li>
+          <li>
+            <b>Value: </b> <i class="old">{{ item.data?.value?.old ?? item.data?.value }}</i>
+          </li>
+        } @else if (item.action === 'CLONE') {
+          <li class="new">
+            Cloned from {{ item.data?.clonedBy }}
+          </li>
+        } @else if (item.action === 'REJECTED') {
+          <li class="old">
+            The quotation has been rejected.
+          </li>
+        }
+      </td>
+    </tr>
+  </ng-template>
+</p-table>

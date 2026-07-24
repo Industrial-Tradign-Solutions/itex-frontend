@@ -6,7 +6,7 @@ import { BaseAutoCompleteService } from '@services/base-auto-complete-service.se
 import { AuthService } from '@services/security';
 import { catchError, concatMap, map, Observable, of, Subject, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { CreateIpQuotationRequest, IpQuotation, IpQuotationFilter, ListIpQuotation, IpQuotationOtherCharge, IpQuotationOtherChargeRequest, IpQuotationImportedOtherCharge, IpQuotationOtherChargeAvailableFromQr, IpQuotationOtherChargeImportRequest, IpQuotationAddQrRequest, IpQuotationRequest, IpQuotationProductBulkRequest, IpQuotationProduct } from '@interfaces/ip/quotation';
+import { AvailableForPurchaseOrder, CreateIpQuotationRequest, IpQuotation, IpQuotationFilter, ListIpQuotation, IpQuotationOtherCharge, IpQuotationOtherChargeRequest, IpQuotationImportedOtherCharge, IpQuotationOtherChargeAvailableFromQr, IpQuotationOtherChargeImportRequest, IpQuotationAddQrRequest, IpQuotationRequest, IpQuotationProductBulkRequest, IpQuotationProduct, IpQuotationHistoryResponse } from '@interfaces/ip/quotation';
 import { Page } from '@interfaces/page.model';
 
 const URL_SERVICES = environment.api_url + 'ip/q';
@@ -285,6 +285,22 @@ export class IpQuotationService extends  BaseAutoCompleteService<any>{
     return this.http.get( url, {headers: this.authSV.headersBlob(), responseType: 'blob'} )
       .pipe(
         catchError( err => throwError( () => err.error.errorMessage ))
+      );
+  }
+
+  getQuotationHistory(id: string): Observable<IpQuotationHistoryResponse[]> {
+    const url = `${ URL_SERVICES }/history/${id}`;
+    return this.http.get<IpQuotationHistoryResponse[]>( url, {headers: this.authSV.headers()} )
+      .pipe(
+        catchError( err => throwError( () => err.error.errorMessage ))
+      );
+  }
+
+  getQuotationsAvailableForPurchaseOrder(clientId: string, viewCompleted: boolean = false, currency: string = 'USD'): Observable<AvailableForPurchaseOrder[]> {
+    const url = `${URL_SERVICES}/available-for-purchase-order/${clientId}?viewCompleted=${viewCompleted}&currency=${currency}`;
+    return this.http.get<AvailableForPurchaseOrder[]>(url, { headers: this.authSV.headers() })
+      .pipe(
+        catchError(err => throwError(() => err.error.errorMessage))
       );
   }
 }

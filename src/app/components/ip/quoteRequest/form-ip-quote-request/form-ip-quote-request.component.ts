@@ -21,6 +21,7 @@ import { finalize, Observable } from 'rxjs';
 import { MessageResponse } from '@interfaces/message-response';
 import { QuoteRequestProductModalComponent } from '@modals/ip/qr/quote-request-product-modal/quote-request-product-modal.component';
 import { ListOtherChargesModalComponent } from '@modals/ip/qr/list-other-charges-modal/list-other-charges-modal.component';
+import { HistoryQuoteRequestModalComponent } from '@modals/ip/qr/history-quote-request-modal/history-quote-request-modal.component';
 
 const MESSAGES = Messages.pages.ip.quoteRequest;
 const TITLES = TitlesMessages;
@@ -289,7 +290,15 @@ export class FormIpQuoteRequestComponent extends CommonPageTab<ListIpQuoteReques
   }
 
   openHistory(quoteRequest: IpQuoteRequest) {
-
+    this.dialogSV.open(HistoryQuoteRequestModalComponent, {
+      header: `HISTORY OF ${quoteRequest.number}`,
+      width: '70rem',
+      closable: true,
+      closeOnEscape: true,
+      data: {
+        quoteRequestId: quoteRequest.id
+      }
+    }).onClose.subscribe();
   }
 
   openModalProduct(type: 'create' | 'edit', productId?: string) {

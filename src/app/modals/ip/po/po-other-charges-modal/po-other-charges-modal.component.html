@@ -1,0 +1,47 @@
+@if(!loading()) {
+  <div class="animate__animated animate__fadeIn">
+    <form [formGroup]="formOtherCharge" (ngSubmit)="onSubmit()" class="p-fluid">
+      <div class="field mt-3">
+        <p-floatLabel>
+          <input pInputText formControlName="description" maxlength="150" type="text"/>
+          <label>Description <span class="required">*</span></label>
+        </p-floatLabel>
+      </div>
+      <div class="field mt-4">
+        <p-floatLabel>
+          <p-inputNumber
+            mode="decimal"
+            [minFractionDigits]="2"
+            [maxFractionDigits]="5"
+            [min]="0"
+            formControlName="value"/>
+          <label>Value <span class="required">*</span></label>
+        </p-floatLabel>
+      </div>
+      <div class="mt-3 flex justify-content-end column-gap-4">
+        <button
+          pButton
+          type="button"
+          label="Cancel"
+          icon="pi pi-times-circle"
+          severity="danger"
+          (click)="closeModal()"
+          class="p-button-sm">
+        </button>
+        <button
+          pButton
+          type="submit"
+          label="Save"
+          icon="pi pi-save"
+          [disabled]="formOtherCharge.invalid"
+          severity="success"
+          class="p-button-sm">
+        </button>
+      </div>
+    </form>
+  </div>
+} @else {
+  <div class="field col animate__animated animate__fadeIn">
+    <p-progressBar class="w-20rem animate__animated animate__fadeIn" mode="indeterminate"></p-progressBar>
+  </div>
+}

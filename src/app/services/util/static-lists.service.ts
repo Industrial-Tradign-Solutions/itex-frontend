@@ -83,6 +83,10 @@ export class StaticListsService {
     return this.storageSV.getPlain<StaticListItem[]>(STATIC_LISTS_NAMES.ip_quotation_status) ?? [];
   }
 
+  getListIpPurchaseOrderStatus(): StaticListItem[] {
+    return this.storageSV.getPlain<StaticListItem[]>(STATIC_LISTS_NAMES.ip_purchase_order_status) ?? [];
+  }
+
   getListLeadTimeType(): StaticListItem[] {
     return this.storageSV.getPlain<StaticListItem[]>(STATIC_LISTS_NAMES.lead_time) ?? [];
   }

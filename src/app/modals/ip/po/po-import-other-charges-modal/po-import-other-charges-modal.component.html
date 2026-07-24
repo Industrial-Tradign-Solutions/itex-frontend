@@ -1,0 +1,70 @@
+@if(!loading()) {
+  <div class="animate__animated animate__fadeIn">
+    <div class="p-fluid">
+      <div class="formgrid grid">
+        <div class="field col-12">
+          <p-table
+            styleClass="p-datatable-sm"
+            [value]="available()"
+            [scrollable]="true"
+            scrollHeight="45vh"
+            dataKey="id">
+            <ng-template pTemplate="header">
+              <tr>
+                <th style="min-width: 3rem"></th>
+                <th style="min-width: 9rem">{{ sourceLabel() }}</th>
+                <th>DESCRIPTION</th>
+                <th style="text-align: right;">VALUE</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-charge>
+              <tr [class]="charge.selected ? 'row-selected' : ''">
+                <td>
+                  <p-checkbox
+                    [binary]="true"
+                    [ngModel]="charge.selected"
+                    (onChange)="toggleSelect(charge.id)">
+                  </p-checkbox>
+                </td>
+                <td>{{ charge.sourceNumber }}</td>
+                <td>{{ charge.description }}</td>
+                <td style="text-align: end;">{{ charge.value | customCurrency:currency():'1.2-5' }}</td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="4" class="text-center">No charges available to import.</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </div>
+    </div>
+    <div class="mt-3 flex justify-content-end column-gap-4">
+      <button
+        pButton
+        type="button"
+        label="Cancel"
+        icon="pi pi-times-circle"
+        severity="danger"
+        (click)="closeModal()"
+        class="p-button-sm">
+      </button>
+      <button
+        pButton
+        type="button"
+        label="Import Selected"
+        icon="pi pi-upload"
+        [disabled]="!hasSelection()"
+        [loading]="importing()"
+        severity="success"
+        (click)="importSelected()"
+        class="p-button-sm">
+      </button>
+    </div>
+  </div>
+} @else {
+  <div class="field col animate__animated animate__fadeIn">
+    <p-progressBar class="w-20rem animate__animated animate__fadeIn" mode="indeterminate"></p-progressBar>
+  </div>
+}

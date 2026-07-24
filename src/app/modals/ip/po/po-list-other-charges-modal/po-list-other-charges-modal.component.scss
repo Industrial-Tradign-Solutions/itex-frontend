@@ -1,0 +1,19 @@
+.charge-tag {
+  padding: 0.15rem 0.5rem;
+  border-radius: 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.charge-tag-own {
+  background-color: var(--surface-200);
+  color: var(--text-color);
+}
+.charge-tag-q {
+  background-color: var(--blue-100);
+  color: var(--blue-800);
+}
+.charge-tag-qr {
+  background-color: var(--purple-100);
+  color: var(--purple-800);
+}
