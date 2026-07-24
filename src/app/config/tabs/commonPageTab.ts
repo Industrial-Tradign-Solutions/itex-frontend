@@ -175,6 +175,13 @@ export abstract class CommonPageTab<LIST_ITEM extends ItemTab, PERMISSIONS, ITEM
     }, TIMEOUT / 1.5);
   }
 
+  // Exposed so subclasses can fully rebuild the form (fresh values + pristine
+  // tracking + enableForm) after a sub-resource change purges related fields
+  // server-side (e.g. removing/changing a linked quotation).
+  protected rebuildForm() {
+    this.buildForm();
+  }
+
   private buildForm() {
     this.buildFormAction();
     this.tabItem.pristine = true;

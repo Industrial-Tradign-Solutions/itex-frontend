@@ -39,6 +39,7 @@ export const storageKeys = {
     unit_type: 'static_unit_type',
     lead_time: 'static_lead_time',
     ip_quotation_status: 'static_ip_quotation_status',
+    ip_purchase_order_status: 'static_ip_purchase_order_status',
     incoterms: 'static_incoterms',
     ip_quotation_product_condition: 'static_ip_quotation_product_condition',
   }

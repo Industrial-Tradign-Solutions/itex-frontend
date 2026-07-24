@@ -236,7 +236,8 @@ export class AuthService {
       'Brands',
       'Products',
       'Quote_Requests',
-      'Quotations'
+      'Quotations',
+      'Purchase_Orders'
     ];
   }
 }

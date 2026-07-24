@@ -13,3 +13,5 @@ export { IpQuotationOtherChargeAvailableFromQr } from './IpQuotationOtherChargeA
 export { IpQuotationOtherChargeImportItem, IpQuotationOtherChargeImportRequest } from './IpQuotationOtherChargeImportRequest.type';
 export { DisplayOtherCharge } from './DisplayOtherCharge.type';
 export { IpQuotationAddQrRequest } from './IpQuotationAddQrRequest.type';
+export { AvailableForPurchaseOrder } from './availableForPurchaseOrder.type';
+export { IpQuotationHistoryResponse, IpQuotationHistoryAction } from './ipQuotationHistory.type';

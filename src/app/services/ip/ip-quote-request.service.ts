@@ -5,7 +5,7 @@ import { MessageResponse } from '@interfaces/message-response';
 import { catchError, concatMap, map, Observable, of, Subject, throwError } from 'rxjs';
 import { AuthService } from '@services/security';
 import { HttpClient } from '@angular/common/http';
-import { IpQuoteRequestFilter, IpQuoteRequestOtherChargeRequest, IpQuoteRequestOtherCharges, IpQuoteRequestProduct, IpQuoteRequestProductRequest, IpQuoteRequestRequest, ListIpQuoteRequest } from '@interfaces/ip/quoteRequest';
+import { IpQuoteRequestFilter, IpQuoteRequestOtherChargeRequest, IpQuoteRequestOtherCharges, IpQuoteRequestProduct, IpQuoteRequestProductRequest, IpQuoteRequestRequest, ListIpQuoteRequest, IpQuoteRequestHistoryResponse } from '@interfaces/ip/quoteRequest';
 import { Page } from '@interfaces/page.model';
 import { TypeTab } from '@config/types/tabs';
 import { IpQuoteRequest } from '@interfaces/ip/quoteRequest/ipQuoteRequest.type';
@@ -232,6 +232,14 @@ export class IpQuoteRequestService extends  BaseAutoCompleteService<any> {
   printQuoteRequest(quoteRequestId: string): Observable<Blob> {
     const url  = `${ URL_SERVICES }/print/${quoteRequestId}`;
     return this.http.get( url,  {headers: this.authSV.headersBlob(), responseType: 'blob'} )
+      .pipe(
+        catchError( err => throwError( () => err.error.errorMessage ))
+      );
+  }
+
+  getQuoteRequestHistory(id: string): Observable<IpQuoteRequestHistoryResponse[]> {
+    const url = `${ URL_SERVICES }/history/${id}`;
+    return this.http.get<IpQuoteRequestHistoryResponse[]>( url, {headers: this.authSV.headers()} )
       .pipe(
         catchError( err => throwError( () => err.error.errorMessage ))
       );

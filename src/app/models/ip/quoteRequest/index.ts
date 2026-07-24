@@ -7,3 +7,4 @@ export { IpQuoteRequestFilter } from './ipQuoteRequestFilter.type';
 export { ListIpQuoteRequest } from './listIpQr.type';
 export { IpQuoteRequest } from './ipQuoteRequest.type';
 export { IpQuoteRequestAvailableForQ } from './ipQuoteRequestAvailableForQ.type';
+export { IpQuoteRequestHistoryResponse, IpQuoteRequestHistoryAction } from './ipQuoteRequestHistory.type';

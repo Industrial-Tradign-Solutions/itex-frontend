@@ -16,6 +16,7 @@ export const menuOptionsIds = {
   ip: {
     products: 4001,
     quote_requests: 4002,
-    quotation: 4003
+    quotation: 4003,
+    purchase_orders: 4004
   }
 }

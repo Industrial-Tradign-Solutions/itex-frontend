@@ -24,6 +24,7 @@ import { AddQuotationProductModalComponent } from '@modals/ip/q/add-quotation-pr
 import { EditQuotationProductModalComponent } from '@modals/ip/q/edit-quotation-product-modal/edit-quotation-product-modal.component';
 import { ListOtherChargesModalComponent } from '@modals/ip/q/list-other-charges-modal/list-other-charges-modal.component';
 import { AddQuoteRequestsModalComponent } from '@modals/ip/q/add-quote-requests-modal/add-quote-requests-modal.component';
+import { HistoryQuotationModalComponent } from '@modals/ip/q/history-quotation-modal/history-quotation-modal.component';
 
 const MESSAGES = Messages.pages.ip.quotation;
 const TITLES = TitlesMessages;
@@ -95,10 +96,9 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
   }
 
   openPurchaseOrder(po: {id?: string, number?: string}) {
-    // TODO: Implementar navegación cuando el módulo de Purchase Orders esté disponible
-    // if (po.id) {
-    //   this.navigateSV.openModuleNewTabAndOpenItem('Purchase_Orders', po.id);
-    // }
+    if (po.id) {
+      this.navigateSV.openModuleNewTabAndOpenItem('Purchase_Orders', po.id);
+    }
   }
 
   changeStatus(event: DropdownChangeEvent) {
@@ -752,6 +752,14 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
   }
 
   openHistory(quotation: IpQuotation) {
-
+    this.dialogSV.open(HistoryQuotationModalComponent, {
+      header: `HISTORY OF ${quotation.number}`,
+      width: '70rem',
+      closable: true,
+      closeOnEscape: true,
+      data: {
+        quotationId: quotation.id
+      }
+    }).onClose.subscribe();
   }
 }
