@@ -96,10 +96,9 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
   }
 
   openPurchaseOrder(po: {id?: string, number?: string}) {
-    // TODO: Implementar navegación cuando el módulo de Purchase Orders esté disponible
-    // if (po.id) {
-    //   this.navigateSV.openModuleNewTabAndOpenItem('Purchase_Orders', po.id);
-    // }
+    if (po.id) {
+      this.navigateSV.openModuleNewTabAndOpenItem('Purchase_Orders', po.id);
+    }
   }
 
   changeStatus(event: DropdownChangeEvent) {

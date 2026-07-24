@@ -45,6 +45,8 @@ export class NavigateTabsService {
       return 'ip/q';
     if (module === 'Quote_Requests')
       return 'ip/qr';
+    if (module === 'Purchase_Orders')
+      return 'ip/po';
 
     throw Error('Not Exist Modulo')
   }
