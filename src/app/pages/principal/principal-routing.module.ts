@@ -53,6 +53,14 @@ const routes: Routes = [
         loadChildren: () => import('./ip/ip.module').then(m => m.IpModule)
       },
       {
+        path: 'sales',
+        data: {
+          breadcrumb: 'SALES',
+          fullPath: '/p/sales'
+        },
+        loadChildren: () => import('./sales/sales.module').then(m => m.SalesModule)
+      },
+      {
         path: 'not-found',
         data: {
           breadcrumb: 'Not Found',
