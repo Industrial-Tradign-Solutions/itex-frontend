@@ -18,5 +18,8 @@ export const menuOptionsIds = {
     quote_requests: 4002,
     quotation: 4003,
     purchase_orders: 4004
+  },
+  sales: {
+    invoices: 5001
   }
 }
