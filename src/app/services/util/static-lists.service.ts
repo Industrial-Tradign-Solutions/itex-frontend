@@ -98,6 +98,10 @@ export class StaticListsService {
   getListIpQuotationProductCondition(): StaticListItem[] {
     return this.storageSV.getPlain<StaticListItem[]>(STATIC_LISTS_NAMES.ip_quotation_product_condition) ?? [];
   }
+
+  getListInvoiceStatus(): StaticListItem[] {
+    return this.storageSV.getPlain<StaticListItem[]>(STATIC_LISTS_NAMES.invoice_status) ?? [];
+  }
 }
 
 

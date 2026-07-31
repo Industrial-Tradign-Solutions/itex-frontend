@@ -119,6 +119,11 @@ export const Messages = {
         removeOtherCharge: (description: string, value: number, currency: string) => `Are you sure you want to delete the Other Charge "<b>${description}</b>", which is worth "${currency} ${value}"?`,
         addQuoteRequests: (count: number) => `Are you sure you want to add ${count} Quote Request(s) to this Quotation?`
       }
+    },
+    sales: {
+      invoice: {
+        openBy: (module: Modules, item: string, openBy: String) => openByMessage(module, item, openBy)
+      }
     }
   }
 }
