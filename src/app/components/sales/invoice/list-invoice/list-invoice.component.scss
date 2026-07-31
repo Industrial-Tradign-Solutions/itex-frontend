@@ -1,0 +1,9 @@
+:host ::ng-deep {
+  .p-datatable .p-datatable-tbody > tr > td {
+    transition: background-color 0.2s ease;
+  }
+
+  .customer-badge {
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+}

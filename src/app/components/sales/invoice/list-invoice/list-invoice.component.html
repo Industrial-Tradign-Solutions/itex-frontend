@@ -1,0 +1,412 @@
+<p-fieldset legend="Filters">
+  <div class="p-fluid w-full">
+    <div class="formgrid grid" style="margin-top: -1.5rem; margin-bottom: -1rem;">
+
+      <!-- Primary filters: always visible -->
+      <div class="col-12 md:col-6">
+        <div class="formgrid grid">
+          <div class="field col-12 md:col-3 flex">
+            @if (permissions().createInvoice) {
+              <button
+                pButton
+                label="New Invoice"
+                icon="pi pi-receipt"
+                type="button"
+                [disabled]="true"
+                pTooltip="Available soon"
+                tooltipPosition="bottom">
+              </button>
+            }
+          </div>
+          <div class="field col-12 md:col-2">
+            <p-floatLabel>
+              <input
+                pInputText
+                type="text"
+                [ngModel]="filter().number"
+                [ngModelOptions]="{ standalone: true }"
+                (ngModelChange)="patch({ number: $event })"
+                (keydown.enter)="search(true)"/>
+              <label>Invoice #</label>
+            </p-floatLabel>
+          </div>
+          <div class="field col-12 md:col-2">
+            <p-floatLabel>
+              <input
+                pInputText
+                type="text"
+                [ngModel]="filter().draftNumber"
+                [ngModelOptions]="{ standalone: true }"
+                (ngModelChange)="patch({ draftNumber: $event })"
+                (keydown.enter)="search(true)"/>
+              <label>Draft #</label>
+            </p-floatLabel>
+          </div>
+          <div class="field col-12 md:col-5">
+            <p-floatLabel>
+              <p-autoComplete
+                [suggestions]="filteredClients"
+                (completeMethod)="searchClient($event)"
+                optionValue="id"
+                optionLabel="showName"
+                appendTo="body"
+                [showClear]="true"
+                [ngModel]="filter().clientId"
+                [ngModelOptions]="{ standalone: true }"
+                (ngModelChange)="patch({ clientId: $event })"
+                (keydown.enter)="search(true)"/>
+              <label>Client</label>
+            </p-floatLabel>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 md:col-6">
+        <div class="formgrid grid">
+          <div class="field col-12 md:col-2">
+            <p-floatLabel>
+              <p-dropdown
+                [options]="listEmployees()"
+                optionLabel="fullName"
+                optionValue="id"
+                filterBy="fullName"
+                [filter]="true"
+                appendTo="body"
+                [showClear]="true"
+                [ngModel]="filter().salesRepId"
+                [ngModelOptions]="{ standalone: true }"
+                (ngModelChange)="patch({ salesRepId: $event })"/>
+              <label>Sales Rep</label>
+            </p-floatLabel>
+          </div>
+          <div class="field col-12 md:col-2">
+            <p-floatLabel>
+              <p-dropdown
+                [options]="statusList()"
+                optionLabel="value"
+                optionValue="key"
+                appendTo="body"
+                [showClear]="true"
+                [ngModel]="filter().status"
+                [ngModelOptions]="{ standalone: true }"
+                (ngModelChange)="patch({ status: $event })"/>
+              <label>Status</label>
+            </p-floatLabel>
+          </div>
+          <div class="field col-12 md:col-5">
+            <p-floatLabel>
+              <input pInputText type="hidden"/>
+              <label><b>Date</b></label>
+            </p-floatLabel>
+            <div style="margin-top: 0.5rem;">
+              <p-radioButton
+                inputId="INV_DATE_ALL"
+                value="ALL"
+                [ngModel]="filter().date"
+                [ngModelOptions]="{ standalone: true }"
+                (ngModelChange)="changeDateRange($event)"/>
+              <label class="ml-1 mr-1">ALL</label>
+              <p-radioButton
+                inputId="INV_DATE_YEAR"
+                value="YEAR"
+                [ngModel]="filter().date"
+                [ngModelOptions]="{ standalone: true }"
+                (ngModelChange)="changeDateRange($event)"/>
+              <label class="ml-1 mr-1">YEAR</label>
+              <p-radioButton
+                inputId="INV_DATE_MONTH"
+                value="MONTH"
+                [ngModel]="filter().date"
+                [ngModelOptions]="{ standalone: true }"
+                (ngModelChange)="changeDateRange($event)"/>
+              <label class="ml-1 mr-1">MONTH</label>
+              <p-radioButton
+                inputId="INV_DATE_DAY"
+                value="DAY"
+                [ngModel]="filter().date"
+                [ngModelOptions]="{ standalone: true }"
+                (ngModelChange)="changeDateRange($event)"/>
+              <label class="ml-1 mr-1">TODAY</label>
+            </div>
+          </div>
+          <div class="field col-12 md:col-3 flex">
+            <button
+              pButton
+              icon="pi pi-search"
+              label="Search"
+              type="button"
+              severity="info"
+              pTooltip="Search"
+              [disabled]="loading()"
+              (click)="search(true)"
+              tooltipPosition="bottom">
+            </button>
+            <button
+              pButton
+              style="margin-left: 0.5rem;"
+              [icon]="'pi pi-' + (showFilters() ? 'filter-fill' : 'filter')"
+              type="button"
+              [text]="true"
+              severity="help"
+              [disabled]="loading()"
+              (click)="showFilters.set(!showFilters())"
+              pTooltip="Show Filters"
+              tooltipPosition="bottom">
+            </button>
+            <button
+              pButton
+              style="margin-left: 0.5rem;"
+              icon="pi pi-filter-slash"
+              type="button"
+              [text]="true"
+              severity="danger"
+              [disabled]="loading()"
+              (click)="resetForm(dt)"
+              pTooltip="Clear Filters"
+              tooltipPosition="bottom">
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Advanced filters -->
+      @if (showFilters()) {
+        <div class="col-12" @filtersPanel>
+          <div class="formgrid grid mt-5">
+            <div class="field col-12 md:col-3">
+              <p-floatLabel>
+                <input
+                  pInputText
+                  type="text"
+                  [ngModel]="filter().remarks"
+                  [ngModelOptions]="{ standalone: true }"
+                  (ngModelChange)="patch({ remarks: $event })"
+                  (keydown.enter)="search(true)"/>
+                <label>Remarks</label>
+              </p-floatLabel>
+            </div>
+            <div class="field col-12 md:col-2 flex align-items-center">
+              <p-checkbox
+                inputId="INV_OVERDUE"
+                [binary]="true"
+                [ngModel]="filter().overdue ?? false"
+                [ngModelOptions]="{ standalone: true }"
+                (ngModelChange)="patch({ overdue: $event ? true : undefined })"/>
+              <label for="INV_OVERDUE" class="ml-2">Overdue only</label>
+            </div>
+            <div class="field col-12 md:col-4">
+              <div class="formgrid grid">
+                <div class="field col-12 md:col-6">
+                  <p-floatLabel>
+                    <p-calendar
+                      appendTo="body"
+                      [showClear]="true"
+                      [ngModel]="filter().initDueAt"
+                      [ngModelOptions]="{ standalone: true }"
+                      (ngModelChange)="patch({ initDueAt: $event ?? undefined })"/>
+                    <label>Due from</label>
+                  </p-floatLabel>
+                </div>
+                <div class="field col-12 md:col-6">
+                  <p-floatLabel>
+                    <p-calendar
+                      appendTo="body"
+                      [showClear]="true"
+                      [ngModel]="filter().endDueAt"
+                      [ngModelOptions]="{ standalone: true }"
+                      (ngModelChange)="patch({ endDueAt: $event ?? undefined })"/>
+                    <label>Due to</label>
+                  </p-floatLabel>
+                </div>
+              </div>
+            </div>
+            <div class="field col-12 md:col-3">
+              <div class="formgrid grid">
+                <div class="field col-12 md:col-6">
+                  <p-floatLabel>
+                    <p-calendar
+                      appendTo="body"
+                      [showClear]="true"
+                      [disabled]="!isCustomRange()"
+                      [ngModel]="filter().initDate"
+                      [ngModelOptions]="{ standalone: true }"
+                      (ngModelChange)="patch({ initDate: $event ?? undefined })"/>
+                    <label>From</label>
+                  </p-floatLabel>
+                </div>
+                <div class="field col-12 md:col-6">
+                  <p-floatLabel>
+                    <p-calendar
+                      appendTo="body"
+                      [showClear]="true"
+                      [disabled]="!isCustomRange()"
+                      [ngModel]="filter().endDate"
+                      [ngModelOptions]="{ standalone: true }"
+                      (ngModelChange)="patch({ endDate: $event ?? undefined })"/>
+                    <label>To</label>
+                  </p-floatLabel>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+
+    </div>
+  </div>
+</p-fieldset>
+
+<hr class="mb-1 mt-3" />
+
+<div @stateCross>
+  <p-table
+    #dt1
+    [style]="{ 'margin-bottom': '-1rem' }"
+    styleClass="p-datatable-sm"
+    [value]="page().content"
+    dataKey="id"
+    [rows]="page().page.size"
+    [loading]="loading()"
+    [showLoader]="false"
+    [customSort]="true"
+    (sortFunction)="customSort($event)"
+    responsiveLayout="scroll">
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="min-width: 8rem" pSortableColumn="draftNumber">
+          <div class="flex justify-content-between">
+            DRAFT #
+            <p-sortIcon field="draftNumber" />
+          </div>
+        </th>
+        <th style="min-width: 8rem" pSortableColumn="number">
+          <div class="flex justify-content-between">
+            INVOICE #
+            <p-sortIcon field="number" />
+          </div>
+        </th>
+        <th style="min-width: 12rem">CLIENT</th>
+        <th style="min-width: 10rem">SALES REP</th>
+        <th style="min-width: 10rem" pSortableColumn="createdAt">
+          <div class="flex justify-content-between">
+            CREATED
+            <p-sortIcon field="createdAt" />
+          </div>
+        </th>
+        <th style="min-width: 10rem" pSortableColumn="dueAt">
+          <div class="flex justify-content-between">
+            DUE DATE
+            <p-sortIcon field="dueAt" />
+          </div>
+        </th>
+        <th style="min-width: 9rem" pSortableColumn="totalAmount">
+          <div class="flex justify-content-between">
+            TOTAL
+            <p-sortIcon field="totalAmount" />
+          </div>
+        </th>
+        <th style="min-width: 9rem">BALANCE</th>
+        <th style="min-width: 8rem" pSortableColumn="status">
+          <div class="flex justify-content-between">
+            STATUS
+            <p-sortIcon field="status" />
+          </div>
+        </th>
+        <th style="min-width: 4rem"></th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-invoice let-rowIndex="rowIndex">
+      <tr [pSelectableRow]="invoice" [@rowEnter]="rowEnterParams(rowIndex)">
+        <td>{{ invoice.draftNumber }}</td>
+        <td>{{ invoice.number ?? '-' }}</td>
+        <td>{{ invoice.client?.name }}</td>
+        <td>{{ invoice.salesRep?.fullName }}</td>
+        <td>{{ invoice.createdAt | date:'MMM dd, yyyy hh:mm a' }}</td>
+        <td>
+          @if (invoice.dueAt) {
+            <span [class.text-red-500]="invoice.overdue" [class.font-bold]="invoice.overdue">
+              {{ invoice.dueAt | date:'MMM dd, yyyy' }}
+            </span>
+            @if (invoice.overdue) {
+              <i
+                class="pi pi-exclamation-triangle text-red-500 ml-2"
+                pTooltip="Overdue"
+                tooltipPosition="top"></i>
+            }
+          } @else {
+            -
+          }
+        </td>
+        <td>{{ invoice.totalAmount | customCurrency: invoice.currency }}</td>
+        <td>{{ invoice.balanceDue | customCurrency: invoice.currency }}</td>
+        <td>
+          <span [class]="'customer-badge status-' + statusBadge(invoice.status)">
+            {{ invoice.status }}
+          </span>
+        </td>
+        <td style="text-align: end;">
+          @if (permissions().updateInvoice) {
+            <button
+              pButton
+              type="button"
+              icon="pi pi-pencil"
+              class="p-button-rounded p-button-text"
+              pTooltip="Edit"
+              severity="warning"
+              (click)="openInvoice(invoice, 'edit')"
+              tooltipPosition="left">
+            </button>
+          } @else {
+            <button
+              pButton
+              type="button"
+              icon="pi pi-eye"
+              class="p-button-rounded p-button-text"
+              pTooltip="View"
+              severity="info"
+              (click)="openInvoice(invoice, 'view')"
+              tooltipPosition="left">
+            </button>
+          }
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="10">
+          <div class="flex flex-column align-items-center justify-content-center py-5">
+            <i class="pi pi-receipt" style="font-size: 2rem; opacity: 0.35;"></i>
+            <span class="mt-2">No invoices found</span>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="loadingbody">
+      @for (row of skeletonRows; track $index) {
+        <tr>
+          @for (cell of skeletonCells; track $index) {
+            <td><p-skeleton /></td>
+          }
+        </tr>
+      }
+    </ng-template>
+
+    <ng-template pTemplate="footergrouped">
+      @if (page().page.totalPages > 1) {
+        <tr>
+          <td style="text-align: center !important;" colspan="10">
+            <p-paginator
+              #paginator
+              (onPageChange)="changePage($event)"
+              [first]="0"
+              [rows]="page().page.size"
+              [totalRecords]="page().page.totalElements" />
+          </td>
+        </tr>
+      }
+    </ng-template>
+  </p-table>
+</div>
