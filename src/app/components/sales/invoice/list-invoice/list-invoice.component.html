@@ -1,5 +1,5 @@
 <p-fieldset legend="Filters">
-  <div class="p-fluid w-full">
+  <div class="p-fluid w-full animate__animated animate__fadeIn">
     <div class="formgrid grid" style="margin-top: -1.5rem; margin-bottom: -1rem;">
 
       <!-- Primary filters: always visible -->
@@ -258,155 +258,161 @@
 
 <hr class="mb-1 mt-3" />
 
-<div @stateCross>
-  <p-table
-    #dt1
-    [style]="{ 'margin-bottom': '-1rem' }"
-    styleClass="p-datatable-sm"
-    [value]="page().content"
-    dataKey="id"
-    [rows]="page().page.size"
-    [loading]="loading()"
-    [showLoader]="false"
-    [customSort]="true"
-    (sortFunction)="customSort($event)"
-    responsiveLayout="scroll">
-    <ng-template pTemplate="header">
-      <tr>
-        <th style="min-width: 8rem" pSortableColumn="draftNumber">
-          <div class="flex justify-content-between">
-            DRAFT #
-            <p-sortIcon field="draftNumber" />
-          </div>
-        </th>
-        <th style="min-width: 8rem" pSortableColumn="number">
-          <div class="flex justify-content-between">
-            INVOICE #
+<p-table
+  #dt1
+  [style]="{'margin-bottom': '-1rem'}"
+  styleClass="p-datatable-sm"
+  [value]="page().content"
+  dataKey="id"
+  [rows]="page().page.size"
+  [loading]="loading()"
+  (sortFunction)="customSort($event)"
+  [customSort]="true"
+  responsiveLayout="scroll">
+  <ng-template pTemplate="header">
+    <tr>
+      <th style="min-width: 13rem" pSortableColumn="number">
+        <div class="flex justify-content-between">
+            #
             <p-sortIcon field="number" />
-          </div>
-        </th>
-        <th style="min-width: 12rem">CLIENT</th>
-        <th style="min-width: 10rem">SALES REP</th>
-        <th style="min-width: 10rem" pSortableColumn="createdAt">
-          <div class="flex justify-content-between">
-            CREATED
+        </div>
+      </th>
+      <th style="min-width: 9rem">
+        <div class="flex justify-content-between">
+            CLIENT
+        </div>
+      </th>
+      <th style="min-width: 9rem">
+        <div class="flex justify-content-between">
+            SALES REP
+        </div>
+      </th>
+      <th style="min-width: 8rem" pSortableColumn="createdAt">
+        <div class="flex justify-content-between">
+            DATE OF CREATION
             <p-sortIcon field="createdAt" />
-          </div>
-        </th>
-        <th style="min-width: 10rem" pSortableColumn="dueAt">
-          <div class="flex justify-content-between">
+        </div>
+      </th>
+      <th style="min-width: 8rem" pSortableColumn="dueAt">
+        <div class="flex justify-content-between">
             DUE DATE
             <p-sortIcon field="dueAt" />
-          </div>
-        </th>
-        <th style="min-width: 9rem" pSortableColumn="totalAmount">
-          <div class="flex justify-content-between">
+        </div>
+      </th>
+      <th style="min-width: 7rem" pSortableColumn="totalAmount">
+        <div class="flex justify-content-between">
             TOTAL
             <p-sortIcon field="totalAmount" />
-          </div>
-        </th>
-        <th style="min-width: 9rem">BALANCE</th>
-        <th style="min-width: 8rem" pSortableColumn="status">
-          <div class="flex justify-content-between">
+        </div>
+      </th>
+      <th style="min-width: 7rem">
+        <div class="flex justify-content-between">
+            BALANCE
+        </div>
+      </th>
+      <th style="min-width: 5rem" pSortableColumn="status">
+        <div class="flex justify-content-between">
             STATUS
             <p-sortIcon field="status" />
-          </div>
-        </th>
-        <th style="min-width: 4rem"></th>
-      </tr>
-    </ng-template>
+        </div>
+      </th>
+      <th style="min-width: 5rem" >
+        <div class="flex justify-content-between">
 
-    <ng-template pTemplate="body" let-invoice let-rowIndex="rowIndex">
-      <tr [pSelectableRow]="invoice" [@rowEnter]="rowEnterParams(rowIndex)">
-        <td>{{ invoice.draftNumber }}</td>
-        <td>{{ invoice.number ?? '-' }}</td>
-        <td>{{ invoice.client?.name }}</td>
-        <td>{{ invoice.salesRep?.fullName }}</td>
-        <td>{{ invoice.createdAt | date:'MMM dd, yyyy hh:mm a' }}</td>
-        <td>
-          @if (invoice.dueAt) {
-            <span [class.text-red-500]="invoice.overdue" [class.font-bold]="invoice.overdue">
-              {{ invoice.dueAt | date:'MMM dd, yyyy' }}
-            </span>
-            @if (invoice.overdue) {
-              <i
-                class="pi pi-exclamation-triangle text-red-500 ml-2"
-                pTooltip="Overdue"
-                tooltipPosition="top"></i>
-            }
-          } @else {
-            -
-          }
-        </td>
-        <td>{{ invoice.totalAmount | customCurrency: invoice.currency }}</td>
-        <td>{{ invoice.balanceDue | customCurrency: invoice.currency }}</td>
-        <td>
-          <span [class]="'customer-badge status-' + statusBadge(invoice.status)">
-            {{ invoice.status }}
+        </div>
+      </th>
+    </tr>
+  </ng-template>
+    <ng-template pTemplate="body" let-invoice>
+    <tr [pSelectableRow]="invoice">
+      <td>
+        {{invoice.number ?? invoice.draftNumber}}
+      </td>
+      <td>
+        {{invoice.client?.name}}
+      </td>
+      <td>
+        {{invoice.salesRep?.fullName}}
+      </td>
+      <td>
+        {{invoice.createdAt | date:'MMM dd, yyyy hh:mm a'}}
+      </td>
+      <td>
+        @if (invoice.dueAt) {
+          <span [class.text-red-500]="invoice.overdue" [class.font-bold]="invoice.overdue">
+            {{invoice.dueAt | date:'MMM dd, yyyy'}}
           </span>
-        </td>
-        <td style="text-align: end;">
-          @if (permissions().updateInvoice) {
-            <button
-              pButton
-              type="button"
-              icon="pi pi-pencil"
-              class="p-button-rounded p-button-text"
-              pTooltip="Edit"
-              severity="warning"
-              (click)="openInvoice(invoice, 'edit')"
-              tooltipPosition="left">
-            </button>
-          } @else {
-            <button
-              pButton
-              type="button"
-              icon="pi pi-eye"
-              class="p-button-rounded p-button-text"
-              pTooltip="View"
-              severity="info"
-              (click)="openInvoice(invoice, 'view')"
-              tooltipPosition="left">
-            </button>
+          @if (invoice.overdue) {
+            <i
+              class="pi pi-exclamation-triangle text-red-500 ml-2"
+              pTooltip="Overdue"
+              tooltipPosition="top"></i>
           }
-        </td>
-      </tr>
-    </ng-template>
-
-    <ng-template pTemplate="emptymessage">
+        }
+      </td>
+      <td>
+        {{invoice.totalAmount | customCurrency: invoice.currency}}
+      </td>
+      <td>
+        {{invoice.balanceDue | customCurrency: invoice.currency}}
+      </td>
+      <td>
+        <span [class]="'customer-badge status-' + statusBadge(invoice.status)">
+            {{invoice.status}}
+        </span>
+      </td>
+      <td style="text-align: end;">
+        @if(permissions().updateInvoice) {
+          <button
+            pButton
+            type="button"
+            icon="pi pi-pencil"
+            class="p-button-rounded p-button-text"
+            pTooltip="Edit"
+            severity="warning"
+            (click)="openInvoice(invoice, 'edit')"
+            tooltipPosition="left">
+          </button>
+        } @else {
+          <button
+            pButton
+            type="button"
+            icon="pi pi-eye"
+            class="p-button-rounded p-button-text"
+            pTooltip="View"
+            (click)="openInvoice(invoice, 'view')"
+            severity="info"
+            tooltipPosition="left">
+          </button>
+        }
+      </td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="emptymessage">
+    <tr >
+      <td style="text-align: center !important;" colspan="9">
+        No invoices found
+      </td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="loadingbody">
+    <tr>
+      <td style="text-align: center !important;" colspan="9">
+        Loading invoices, please wait
+      </td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="footergrouped" >
+    @if(page().page.totalPages > 1) {
       <tr>
-        <td colspan="10">
-          <div class="flex flex-column align-items-center justify-content-center py-5">
-            <i class="pi pi-receipt" style="font-size: 2rem; opacity: 0.35;"></i>
-            <span class="mt-2">No invoices found</span>
-          </div>
-        </td>
-      </tr>
-    </ng-template>
-
-    <ng-template pTemplate="loadingbody">
-      @for (row of skeletonRows; track $index) {
-        <tr>
-          @for (cell of skeletonCells; track $index) {
-            <td><p-skeleton /></td>
-          }
-        </tr>
-      }
-    </ng-template>
-
-    <ng-template pTemplate="footergrouped">
-      @if (page().page.totalPages > 1) {
-        <tr>
-          <td style="text-align: center !important;" colspan="10">
-            <p-paginator
-              #paginator
+        <td style="text-align: center !important;" colspan="9">
+            <p-paginator #paginator
               (onPageChange)="changePage($event)"
               [first]="0"
               [rows]="page().page.size"
               [totalRecords]="page().page.totalElements" />
-          </td>
-        </tr>
-      }
-    </ng-template>
-  </p-table>
-</div>
+        </td>
+      </tr>
+    }
+  </ng-template>
+</p-table>

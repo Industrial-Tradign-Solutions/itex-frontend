@@ -11,7 +11,6 @@ import { FloatLabelModule } from 'primeng/floatlabel';
 import { InputTextModule } from 'primeng/inputtext';
 import { PaginatorModule } from 'primeng/paginator';
 import { RadioButtonModule } from 'primeng/radiobutton';
-import { SkeletonModule } from 'primeng/skeleton';
 import { TableModule } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
 import { PipesModule } from '@pipes/pipes.module';
@@ -34,7 +33,6 @@ import { ListInvoiceComponent } from './list-invoice.component';
     InputTextModule,
     PaginatorModule,
     RadioButtonModule,
-    SkeletonModule,
     TableModule,
     TooltipModule,
     PipesModule

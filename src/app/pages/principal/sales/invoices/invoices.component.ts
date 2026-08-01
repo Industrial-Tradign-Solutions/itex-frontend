@@ -1,5 +1,4 @@
 import { afterNextRender, ChangeDetectionStrategy, Component, computed, HostListener, inject, Injector, OnDestroy, OnInit, signal } from '@angular/core';
-import { cardEnter } from '@config/animations/invoice.animations';
 import { Messages, TitlesMessages } from '@config/messages';
 import { CommonTabs } from '@config/tabs/commonTabsOpen';
 import { EmitedTab } from '@config/types/tabs';
@@ -18,8 +17,7 @@ const TITLES             = TitlesMessages;
   selector: 'app-invoices',
   templateUrl: './invoices.component.html',
   styleUrl: './invoices.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  animations: [cardEnter]
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class InvoicesComponent extends CommonTabs<ListInvoice> implements OnInit, OnDestroy {
 

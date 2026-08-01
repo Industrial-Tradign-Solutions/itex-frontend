@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
-import { filtersPanel, rowEnter, rowEnterParams, stateCross } from '@config/animations/invoice.animations';
+import { filtersPanel } from '@config/animations/invoice.animations';
 import { TypeTab } from '@config/types/tabs';
 import { BasicUser, UserInfo } from '@interfaces/administration/user';
 import { ClientBasic } from '@interfaces/partners/clients';
@@ -38,7 +38,7 @@ const DEFAULT_PAGE_SIZE = 10;
   templateUrl: './list-invoice.component.html',
   styleUrl: './list-invoice.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  animations: [filtersPanel, rowEnter, stateCross]
+  animations: [filtersPanel]
 })
 export class ListInvoiceComponent extends CommonListTab<ListInvoice, InvoicePermissions> implements OnInit {
 
@@ -46,10 +46,6 @@ export class ListInvoiceComponent extends CommonListTab<ListInvoice, InvoicePerm
   private storageSV = inject(StorageService);
   private userSV    = inject(UsersService);
   private clientSV  = inject(ClientsService);
-
-  readonly rowEnterParams   = rowEnterParams;
-  readonly skeletonRows     = [1, 2, 3, 4, 5];
-  readonly skeletonCells    = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
   // Whole filter state lives in a single signal — no FormGroup, so the bar is
   // never disabled/re-enabled while a search is in flight.
