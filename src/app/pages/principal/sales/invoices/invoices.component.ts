@@ -46,7 +46,8 @@ export class InvoicesComponent extends CommonTabs<ListInvoice> implements OnInit
     deleteInvoice: false,
     revertInvoiceToDraft: false,
     voidPaymentInvoice: false,
-    viewAllInvoice: false
+    viewAllInvoice: false,
+    changeSalesRepInvoice: false
   });
   invoicePermissions = computed<InvoicePermissions>(() => this._invoicePermissions());
 
@@ -159,7 +160,8 @@ export class InvoicesComponent extends CommonTabs<ListInvoice> implements OnInit
       deleteInvoice: await this.permissionsSV.isValidAction(INVOICE_ACTIONS_ID.DELETE_INVOICE),
       revertInvoiceToDraft: await this.permissionsSV.isValidAction(INVOICE_ACTIONS_ID.REVERT_INVOICE_TO_DRAFT),
       voidPaymentInvoice: await this.permissionsSV.isValidAction(INVOICE_ACTIONS_ID.VOID_PAYMENT_INVOICE),
-      viewAllInvoice: await this.permissionsSV.isValidAction(INVOICE_ACTIONS_ID.VIEW_ALL_INVOICE)
+      viewAllInvoice: await this.permissionsSV.isValidAction(INVOICE_ACTIONS_ID.VIEW_ALL_INVOICE),
+      changeSalesRepInvoice: await this.permissionsSV.isValidAction(INVOICE_ACTIONS_ID.CHANGE_SALES_REP_INVOICE)
     });
   }
 
@@ -179,4 +181,5 @@ export type InvoicePermissions = {
   revertInvoiceToDraft: boolean;
   voidPaymentInvoice: boolean;
   viewAllInvoice: boolean;
+  changeSalesRepInvoice: boolean;
 }
