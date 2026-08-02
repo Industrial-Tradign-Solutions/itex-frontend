@@ -1,0 +1,68 @@
+<ng-container [formGroup]="group">
+  <div class="formgrid grid">
+    <div class="field col-12 md:col-12 mt-3">
+      <p-floatLabel>
+        <p-dropdown
+          [options]="statusList"
+          optionLabel="value"
+          optionValue="key"
+          appendTo="body"
+          formControlName="status" />
+        <label>Status</label>
+      </p-floatLabel>
+    </div>
+    <div class="field col-12 md:col-12 mt-3">
+      <p-floatLabel>
+        <p-inputNumber
+          [inputStyle]="{ 'text-align': 'right' }"
+          mode="currency"
+          [currency]="currency"
+          currencyDisplay="code"
+          [max]="999999999999"
+          formControlName="totalAmount" />
+        <label>Total</label>
+      </p-floatLabel>
+    </div>
+    <div class="field col-12 md:col-12 mt-3">
+      <p-floatLabel>
+        <p-inputNumber
+          [inputStyle]="{ 'text-align': 'right' }"
+          mode="currency"
+          [currency]="currency"
+          currencyDisplay="code"
+          [max]="999999999999"
+          formControlName="paidAmount" />
+        <label>Paid</label>
+      </p-floatLabel>
+    </div>
+    <div class="field col-12 md:col-12 mt-3">
+      <p-floatLabel>
+        <p-inputNumber
+          [inputStyle]="{ 'text-align': 'right' }"
+          mode="currency"
+          [currency]="currency"
+          currencyDisplay="code"
+          [max]="999999999999"
+          formControlName="balanceDue" />
+        <label>Balance Due</label>
+      </p-floatLabel>
+    </div>
+    @if (invoice?.issuedAt || invoice?.dueAt) {
+      <div class="field col-12 md:col-12">
+        @if (invoice?.issuedAt) {
+          <div class="text-sm text-color-secondary">
+            Issued: {{ invoice?.issuedAt | date:'MMM dd, yyyy' }}
+          </div>
+        }
+        @if (invoice?.dueAt) {
+          <div class="text-sm" [class.text-red-500]="invoice?.overdue">
+            Due: {{ invoice?.dueAt | date:'MMM dd, yyyy' }}
+            @if (invoice?.overdue) {
+              <i class="pi pi-exclamation-triangle ml-1"></i>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+</ng-container>

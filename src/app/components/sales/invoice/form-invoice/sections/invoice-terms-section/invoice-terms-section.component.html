@@ -1,0 +1,103 @@
+<ng-container [formGroup]="group">
+  <div class="formgrid grid">
+    <div class="field col-12 md:col-6 mt-3">
+      <p-floatLabel>
+        <p-dropdown
+          [options]="currencyList"
+          optionLabel="value"
+          optionValue="key"
+          appendTo="body"
+          formControlName="currency" />
+        <label>
+          Currency
+          <span class="required">*</span>
+        </label>
+      </p-floatLabel>
+    </div>
+    <div class="field col-12 md:col-6 mt-3">
+      <p-floatLabel>
+        <p-dropdown
+          [options]="incotermsList"
+          optionLabel="value"
+          optionValue="key"
+          [filter]="true"
+          filterBy="value"
+          appendTo="body"
+          formControlName="incoterms" />
+        <label>
+          Incoterms
+          <span class="required">*</span>
+        </label>
+      </p-floatLabel>
+    </div>
+    <div class="field col-12 md:col-6 mt-3">
+      <p-floatLabel>
+        <p-dropdown
+          [options]="paymentTermsList"
+          optionLabel="value"
+          optionValue="key"
+          [filter]="true"
+          filterBy="value"
+          appendTo="body"
+          [showClear]="true"
+          formControlName="paymentTerms" />
+        <label>Payment Terms</label>
+      </p-floatLabel>
+    </div>
+    <div class="field col-12 md:col-6 mt-3">
+      <p-floatLabel>
+        <p-dropdown
+          [options]="employees"
+          optionLabel="fullName"
+          optionValue="id"
+          [filter]="true"
+          filterBy="fullName"
+          appendTo="body"
+          formControlName="salesRepId" />
+        <label>Sales Rep</label>
+      </p-floatLabel>
+    </div>
+    <div class="field col-12 md:col-6 mt-3">
+      <p-floatLabel>
+        <p-dropdown
+          [options]="viaList"
+          optionLabel="value"
+          optionValue="key"
+          appendTo="body"
+          [showClear]="true"
+          formControlName="via" />
+        <label>Via</label>
+      </p-floatLabel>
+    </div>
+    <div class="field col-12 md:col-6 mt-3">
+      <p-floatLabel>
+        <input
+          pInputText
+          formControlName="awbBl"
+          maxlength="100"
+          type="text"/>
+        <label>AWB / BL</label>
+      </p-floatLabel>
+    </div>
+    <div class="field col-12 md:col-6 mt-3">
+      <p-floatLabel>
+        <input
+          pInputText
+          formControlName="orderNumber"
+          maxlength="100"
+          type="text"/>
+        <label>Order #</label>
+      </p-floatLabel>
+    </div>
+    <div class="field col-12 md:col-6 mt-3">
+      <p-floatLabel>
+        <input
+          pInputText
+          formControlName="packingList"
+          maxlength="100"
+          type="text"/>
+        <label>Packing List</label>
+      </p-floatLabel>
+    </div>
+  </div>
+</ng-container>

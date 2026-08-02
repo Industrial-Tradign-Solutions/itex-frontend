@@ -1,0 +1,98 @@
+<ng-container [formGroup]="group">
+  <div class="formgrid grid">
+    <div class="field col-12 md:col-12 mt-3">
+      <p-floatLabel>
+        <input
+          pInputText
+          formControlName="shipToName"
+          maxlength="300"
+          type="text"/>
+        <label>
+          Ship To Name
+          <span class="required">*</span>
+        </label>
+      </p-floatLabel>
+    </div>
+    <div class="field col-12 md:col-12 mt-3">
+      <p-floatLabel>
+        <input
+          pInputText
+          formControlName="shipToAddress"
+          maxlength="500"
+          type="text"/>
+        <label>
+          Ship To Address
+          <span class="required">*</span>
+        </label>
+      </p-floatLabel>
+    </div>
+    <div class="field col-12 md:col-12 mt-3">
+      <p-floatLabel>
+        <p-autoComplete
+          formControlName="shipToCityId"
+          [suggestions]="cities"
+          (completeMethod)="searchCity.emit($event)"
+          optionValue="id"
+          optionLabel="fullName"
+          [showClear]="true"/>
+        <label>
+          Ship To City
+          <span class="required">*</span>
+        </label>
+      </p-floatLabel>
+    </div>
+    <div class="field col-12 md:col-12 mt-3">
+      <p-floatLabel>
+        <input
+          pInputText
+          formControlName="shipToContactName"
+          maxlength="255"
+          type="text"/>
+        <label>
+          Ship To Contact
+          <span class="required">*</span>
+        </label>
+      </p-floatLabel>
+    </div>
+    <div class="field col-12 md:col-12 mt-3">
+      <p-floatLabel>
+        <input
+          pInputText
+          formControlName="shipToPhone"
+          maxlength="50"
+          type="text"/>
+        <label>
+          Ship To Phone
+          <span class="required">*</span>
+        </label>
+      </p-floatLabel>
+    </div>
+    <div class="field col-12 md:col-12 mt-3">
+      <p-floatLabel>
+        <input
+          pInputText
+          formControlName="shipToEmail"
+          maxlength="150"
+          type="text"/>
+        <label>
+          Ship To Email
+          <span class="required">*</span>
+        </label>
+      </p-floatLabel>
+    </div>
+    @if (canCopyFromClient) {
+      <div class="field col-12 md:col-12">
+        <button
+          pButton
+          type="button"
+          label="Copy from client"
+          icon="pi pi-copy"
+          class="p-button-text p-button-sm"
+          (click)="copyFromClient.emit()"
+          pTooltip="Fills name and address from the client, and contact, phone and email from the selected contact"
+          tooltipPosition="top">
+        </button>
+      </div>
+    }
+  </div>
+</ng-container>

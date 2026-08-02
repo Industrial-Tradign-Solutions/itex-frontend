@@ -1,0 +1,46 @@
+<ng-container [formGroup]="group">
+  <div class="formgrid grid">
+    <div class="field col-12 md:col-12 mt-3">
+      <p-floatLabel>
+        <p-autoComplete
+          [autofocus]="true"
+          formControlName="clientId"
+          [suggestions]="clients"
+          (completeMethod)="searchClient.emit($event)"
+          (onSelect)="clientSelected.emit($event)"
+          (onClear)="clientCleared.emit()"
+          optionValue="id"
+          [showClear]="true"
+          optionLabel="showName"/>
+        <label>
+          Client
+          <span class="required">*</span>
+        </label>
+      </p-floatLabel>
+    </div>
+    <div class="field col-12 md:col-12 mt-3">
+      <p-floatLabel>
+        <p-dropdown
+          [options]="contacts"
+          optionLabel="name"
+          optionValue="id"
+          [filter]="true"
+          filterBy="name"
+          appendTo="body"
+          [showClear]="true"
+          formControlName="clientContactId" />
+        <label>Client Contact</label>
+      </p-floatLabel>
+    </div>
+    <div class="field col-12 md:col-12 mt-3">
+      <p-floatLabel>
+        <input
+          pInputText
+          formControlName="clientAddress"
+          maxlength="150"
+          type="text"/>
+        <label>Client Address</label>
+      </p-floatLabel>
+    </div>
+  </div>
+</ng-container>
