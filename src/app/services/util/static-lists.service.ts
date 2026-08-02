@@ -102,6 +102,10 @@ export class StaticListsService {
   getListInvoiceStatus(): StaticListItem[] {
     return this.storageSV.getPlain<StaticListItem[]>(STATIC_LISTS_NAMES.invoice_status) ?? [];
   }
+
+  getListInvoiceVia(): StaticListItem[] {
+    return this.storageSV.getPlain<StaticListItem[]>(STATIC_LISTS_NAMES.invoice_via) ?? [];
+  }
 }
 
 

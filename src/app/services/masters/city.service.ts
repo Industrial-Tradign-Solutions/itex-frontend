@@ -30,6 +30,10 @@ export class CityService extends BaseService<City, CityRequest, City, BasicCity,
     return this.filteredList;
   }
 
+  set filteredCities(cities: BasicCity[]) {
+    this.filteredList = cities;
+  }
+
   override disable(id: string): Observable<MessageResponse<string>> {
     throw Error("This function cannot be used");
   }
