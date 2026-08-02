@@ -3,7 +3,7 @@ import { filtersPanel } from '@config/animations/invoice.animations';
 import { TypeTab } from '@config/types/tabs';
 import { BasicUser, UserInfo } from '@interfaces/administration/user';
 import { ClientBasic } from '@interfaces/partners/clients';
-import { InvoiceFilter, InvoiceFilterDate, InvoiceStatus, ListInvoice } from '@interfaces/sales/invoice';
+import { emptyListInvoice, InvoiceFilter, InvoiceFilterDate, InvoiceStatus, invoiceTabName, ListInvoice } from '@interfaces/sales/invoice';
 import { StaticListItem } from '@interfaces/static-list.model';
 import { InvoicePermissions } from '@pages/principal/sales/invoices/invoices.component';
 import { UsersService } from '@services/admin';
@@ -115,8 +115,17 @@ export class ListInvoiceComponent extends CommonListTab<ListInvoice, InvoicePerm
     this.search(true);
   }
 
+  // Copy instead of the row itself: the tab renames its item and that would
+  // otherwise rewrite the listed record.
   openInvoice(invoice: ListInvoice, type: TypeTab): void {
-    this.open({ item: invoice, type, pristine: true });
+    this.open({ item: { ...invoice, name: invoiceTabName(invoice) }, type, pristine: true });
+  }
+
+  // The draft only exists after the first save, so the tab carries a stub with
+  // an empty id. As in QR, a second click focuses the tab already open instead
+  // of duplicating it (the page matches tabs by `item.id`).
+  newInvoice(): void {
+    this.new(emptyListInvoice());
   }
 
   statusBadge(status: InvoiceStatus): string {
