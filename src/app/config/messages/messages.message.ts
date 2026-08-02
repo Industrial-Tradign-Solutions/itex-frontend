@@ -122,7 +122,11 @@ export const Messages = {
     },
     sales: {
       invoice: {
-        openBy: (module: Modules, item: string, openBy: String) => openByMessage(module, item, openBy)
+        openBy: (module: Modules, item: string, openBy: String) => openByMessage(module, item, openBy),
+        changeClient: (clientName: string) => `The invoice will be re-issued to "<b>${clientName}</b>".
+                                              <br><br>
+                                              Please review the Ship To block before saving: it is not
+                                              refreshed automatically.`
       }
     }
   }
