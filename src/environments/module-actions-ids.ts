@@ -109,6 +109,7 @@ export const moduleActionsId = {
         REVERT_INVOICE_TO_DRAFT: 5001011,
         VOID_PAYMENT_INVOICE: 5001012,
         VIEW_ALL_INVOICE: 5001013,
+        CHANGE_SALES_REP_INVOICE: 5001014,
       }
     }
 }

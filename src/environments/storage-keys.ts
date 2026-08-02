@@ -43,5 +43,6 @@ export const storageKeys = {
     incoterms: 'static_incoterms',
     ip_quotation_product_condition: 'static_ip_quotation_product_condition',
     invoice_status: 'static_invoice_status',
+    invoice_via: 'static_invoice_via',
   }
 }
