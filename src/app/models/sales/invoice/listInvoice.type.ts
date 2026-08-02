@@ -30,3 +30,32 @@ export type ListInvoice = {
   overdue: boolean;
   createdAt: string;
 }
+
+// Label of a tab. The `name` built by the backend is not zero-padded, while
+// `draftNumber` and `number` are — the tab has to read exactly like the number
+// field of the form. Once the draft is issued and receives its final number,
+// that one replaces the draft number.
+export const invoiceTabName = (
+  invoice: { number?: string | null; draftNumber?: string | null } | undefined,
+  fallback = 'New Invoice'
+): string => invoice?.number || invoice?.draftNumber || fallback;
+
+// Placeholder item of a "create" tab. Every field of ListInvoice is mandatory,
+// so a partial object (what QR/PO pass) does not compile here; the real values
+// arrive from the server once the draft is saved.
+export const emptyListInvoice = (): ListInvoice => ({
+  id: '',
+  draftNumber: '',
+  number: null,
+  name: 'New Invoice',
+  client: { id: '', code: '', name: '' },
+  salesRep: { id: '', fullName: '', user: '' },
+  status: 'DRAFT',
+  currency: 'USD',
+  totalAmount: 0,
+  paidAmount: 0,
+  balanceDue: 0,
+  dueAt: null,
+  overdue: false,
+  createdAt: ''
+});

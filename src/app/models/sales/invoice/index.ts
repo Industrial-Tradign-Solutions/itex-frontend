@@ -1,6 +1,12 @@
 export { Invoice, InvoiceOpenAndLock } from './invoice.type';
 export { InvoiceFilter } from './invoiceFilter.type';
-export { ListInvoice, InvoiceClientRef, InvoiceUserRef } from './listInvoice.type';
+export { ListInvoice, InvoiceClientRef, InvoiceUserRef, emptyListInvoice, invoiceTabName } from './listInvoice.type';
+export {
+  InvoiceCreateRequest,
+  InvoiceUpdateRequest,
+  mapToInvoiceCreateRequest,
+  mapToInvoiceUpdateRequest
+} from './invoiceRequest.type';
 export {
   InvoiceStatus,
   InvoiceFilterDate,
