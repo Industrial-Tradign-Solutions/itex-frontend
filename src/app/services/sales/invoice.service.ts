@@ -3,9 +3,16 @@ import { inject, Injectable } from '@angular/core';
 import { TypeTab } from '@config/types/tabs';
 import { MessageResponse } from '@interfaces/message-response';
 import { Page } from '@interfaces/page.model';
-import { InvoiceFilter, InvoiceOpenAndLock, ListInvoice } from '@interfaces/sales/invoice';
+import {
+  Invoice,
+  InvoiceCreateRequest,
+  InvoiceFilter,
+  InvoiceOpenAndLock,
+  InvoiceUpdateRequest,
+  ListInvoice
+} from '@interfaces/sales/invoice';
 import { AuthService } from '@services/security';
-import { catchError, concatMap, Observable, of, Subject, throwError } from 'rxjs';
+import { catchError, concatMap, map, Observable, of, Subject, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 const URL_SERVICES = environment.api_url + 'sales/invoice';
@@ -24,6 +31,9 @@ export class InvoiceService {
     this.openAndLockProcessQueue();
   }
 
+  // Collapses the error to its message. Not usable by create/update: those two
+  // need the whole `err.error` because the 400 of a @Valid failure carries a
+  // `formErrors` map that CommonPageTab renders field by field.
   private unwrap<T>(source: Observable<T>): Observable<T> {
     return source.pipe(catchError(err => throwError(() => err.error.errorMessage)));
   }
@@ -108,6 +118,28 @@ export class InvoiceService {
   closeInvoice(id: string): Observable<MessageResponse<string>> {
     const url = `${URL_SERVICES}/close/${id}`;
     return this.unwrap(this.http.patch<MessageResponse<string>>(url, {}, { headers: this.authSV.headers() }));
+  }
+
+  // §9 answers with the open-lock envelope { data: Invoice, isValidOpen } nested
+  // inside the MessageResponse — flattened here so the caller gets the persisted
+  // id straight away (the tab would keep `id: ''` otherwise). `isValidOpen` is
+  // always true on create: the invoice is born locked by its creator.
+  createInvoice(request: InvoiceCreateRequest): Observable<MessageResponse<Invoice>> {
+    return this.http.post<MessageResponse<InvoiceOpenAndLock>>(URL_SERVICES, request, { headers: this.authSV.headers() })
+      .pipe(
+        map(response => ({
+          title: response.title,
+          message: response.message,
+          data: response.data.data
+        }) as MessageResponse<Invoice>),
+        catchError(err => throwError(() => err.error))
+      );
+  }
+
+  updateInvoice(id: string, request: InvoiceUpdateRequest): Observable<MessageResponse<Invoice>> {
+    const url = `${URL_SERVICES}/${id}`;
+    return this.http.put<MessageResponse<Invoice>>(url, request, { headers: this.authSV.headers() })
+      .pipe(catchError(err => throwError(() => err.error)));
   }
 
   //#endregion
