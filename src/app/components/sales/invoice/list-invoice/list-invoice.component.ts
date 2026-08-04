@@ -26,9 +26,16 @@ const STATUS_BADGE: Record<InvoiceStatus, string> = {
 };
 
 const DEFAULT_FILTER: InvoiceFilter = {
-  date: 'MONTH',
+  date: 'DAY',
   shortBy: 'createdAt',
   shortOrder: 0
+};
+
+// Clearing widens the search instead of restoring the opening one: the user is
+// asking to stop filtering, and `ALL` is also what unlocks the custom range.
+const CLEARED_FILTER: InvoiceFilter = {
+  ...DEFAULT_FILTER,
+  date: 'ALL'
 };
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -141,7 +148,7 @@ export class ListInvoiceComponent extends CommonListTab<ListInvoice, InvoicePerm
   }
 
   override resetForm(dt: Table): void {
-    this._filter.set({ ...DEFAULT_FILTER });
+    this._filter.set({ ...CLEARED_FILTER });
     this.pageSize.set(DEFAULT_PAGE_SIZE);
     dt.reset();
   }
