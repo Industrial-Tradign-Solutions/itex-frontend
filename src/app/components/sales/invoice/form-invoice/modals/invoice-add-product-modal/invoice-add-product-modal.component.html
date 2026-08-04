@@ -1,0 +1,65 @@
+<form [formGroup]="form" (ngSubmit)="save()" class="p-fluid">
+  <div class="formgrid grid">
+    <div class="field col-12">
+      <p-floatLabel>
+        <p-autoComplete
+          [autofocus]="true"
+          [suggestions]="filteredProducts"
+          (completeMethod)="searchProduct($event)"
+          (onSelect)="selectProduct($event)"
+          optionLabel="name"
+          [showClear]="true"/>
+        <label>
+          Product
+          <span class="required">*</span>
+        </label>
+      </p-floatLabel>
+    </div>
+    <div class="field col-6">
+      <p-floatLabel>
+        <input pInputText type="number" formControlName="quantity" min="0"/>
+        <label>Quantity</label>
+      </p-floatLabel>
+    </div>
+    <div class="field col-6">
+      <p-floatLabel>
+        <input pInputText type="text" formControlName="unitType"/>
+        <label>Unit Type</label>
+      </p-floatLabel>
+    </div>
+    <div class="field col-6">
+      <p-floatLabel>
+        <input pInputText type="number" formControlName="leadTime" min="0"/>
+        <label>Lead Time</label>
+      </p-floatLabel>
+    </div>
+    <div class="field col-6">
+      <p-floatLabel>
+        <input pInputText type="text" formControlName="leadTimeType"/>
+        <label>Lead Time Type</label>
+      </p-floatLabel>
+    </div>
+    <div class="field col-6">
+      <p-floatLabel>
+        <input pInputText type="number" formControlName="unitPrice" min="0"/>
+        <label>Unit Price</label>
+      </p-floatLabel>
+    </div>
+    <div class="field col-6">
+      <p-floatLabel>
+        <input pInputText type="number" formControlName="profitMargin" min="0"/>
+        <label>Profit Margin</label>
+      </p-floatLabel>
+    </div>
+    <div class="field col-12">
+      <p-floatLabel>
+        <input pInputText type="text" formControlName="condition"/>
+        <label>Condition</label>
+      </p-floatLabel>
+    </div>
+    <div class="field col-12 flex justify-content-end gap-2">
+      <button pButton type="button" label="Cancel" class="p-button-text" (click)="cancel()"></button>
+      <button pButton type="submit" label="Add" icon="pi pi-plus" [disabled]="form.invalid"></button>
+    </div>
+  </div>
+</form>

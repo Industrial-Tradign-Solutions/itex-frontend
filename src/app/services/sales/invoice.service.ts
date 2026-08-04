@@ -8,6 +8,8 @@ import {
   InvoiceCreateRequest,
   InvoiceFilter,
   InvoiceOpenAndLock,
+  InvoiceProductBulkRequest,
+  InvoiceProductUpdateRequest,
   InvoiceUpdateRequest,
   ListInvoice
 } from '@interfaces/sales/invoice';
@@ -139,6 +141,37 @@ export class InvoiceService {
   updateInvoice(id: string, request: InvoiceUpdateRequest): Observable<MessageResponse<Invoice>> {
     const url = `${URL_SERVICES}/${id}`;
     return this.http.put<MessageResponse<Invoice>>(url, request, { headers: this.authSV.headers() })
+      .pipe(catchError(err => throwError(() => err.error)));
+  }
+
+  // §11 (itex-invoices-api.md): endpoint proposed, not yet confirmed by backend.
+  createInvoiceProductsBulk(invoiceId: string, request: InvoiceProductBulkRequest): Observable<MessageResponse<Invoice>> {
+    const url = `${URL_SERVICES}/${invoiceId}/product`;
+    return this.http.post<MessageResponse<Invoice>>(url, request, { headers: this.authSV.headers() })
+      .pipe(catchError(err => throwError(() => err.error)));
+  }
+
+  updateInvoiceProduct(invoiceId: string, invoiceProductId: string, request: InvoiceProductUpdateRequest): Observable<MessageResponse<Invoice>> {
+    const url = `${URL_SERVICES}/${invoiceId}/product/${invoiceProductId}`;
+    return this.http.put<MessageResponse<Invoice>>(url, request, { headers: this.authSV.headers() })
+      .pipe(catchError(err => throwError(() => err.error)));
+  }
+
+  removeInvoiceProduct(invoiceId: string, invoiceProductId: string): Observable<MessageResponse<Invoice>> {
+    const url = `${URL_SERVICES}/${invoiceId}/product/${invoiceProductId}`;
+    return this.http.delete<MessageResponse<Invoice>>(url, { headers: this.authSV.headers() })
+      .pipe(catchError(err => throwError(() => err.error)));
+  }
+
+  associateInvoicePo(invoiceId: string, poId: string): Observable<MessageResponse<Invoice>> {
+    const url = `${URL_SERVICES}/${invoiceId}/po/${poId}`;
+    return this.http.post<MessageResponse<Invoice>>(url, null, { headers: this.authSV.headers() })
+      .pipe(catchError(err => throwError(() => err.error)));
+  }
+
+  removeInvoicePo(invoiceId: string, poId: string): Observable<MessageResponse<Invoice>> {
+    const url = `${URL_SERVICES}/${invoiceId}/po/${poId}`;
+    return this.http.delete<MessageResponse<Invoice>>(url, { headers: this.authSV.headers() })
       .pipe(catchError(err => throwError(() => err.error)));
   }
 

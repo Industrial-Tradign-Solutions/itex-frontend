@@ -9,10 +9,12 @@ import { MessageResponse } from '@interfaces/message-response';
 import { ClientBasic, ClientContact, ClientInfoDep } from '@interfaces/partners/clients';
 import {
   Invoice,
+  InvoiceAssociatedPo,
   invoiceTabName,
   ListInvoice,
   mapToInvoiceCreateRequest,
-  mapToInvoiceUpdateRequest
+  mapToInvoiceUpdateRequest,
+  InvoiceProduct
 } from '@interfaces/sales/invoice';
 import { StaticListItem } from '@interfaces/static-list.model';
 import { InvoicePermissions } from '@pages/principal/sales/invoices/invoices.component';
@@ -20,10 +22,11 @@ import { UsersService } from '@services/admin';
 import { CityService } from '@services/masters';
 import { ClientsService } from '@services/partners';
 import { InvoiceService } from '@services/sales';
-import { StorageService } from '@services/util';
+import { NavigateTabsService, StorageService } from '@services/util';
 import { AutoCompleteCompleteEvent, AutoCompleteSelectEvent } from 'primeng/autocomplete';
 import { Observable } from 'rxjs';
 import { constants, storageKeys } from '../../../../../environments';
+import { InvoiceAddProductModalComponent } from './modals/invoice-add-product-modal/invoice-add-product-modal.component';
 
 const MESSAGES = Messages.pages.sales.invoice;
 const TITLES   = TitlesMessages;
@@ -57,11 +60,12 @@ const SHIP_TO_FIELDS = [
 })
 export class FormInvoiceComponent extends CommonPageTab<ListInvoice, InvoicePermissions, Invoice> implements OnInit {
 
-  private invoiceSV = inject(InvoiceService);
-  private clientSV  = inject(ClientsService);
-  private citySV    = inject(CityService);
-  private userSV    = inject(UsersService);
-  private storageSV = inject(StorageService);
+  private invoiceSV  = inject(InvoiceService);
+  private clientSV   = inject(ClientsService);
+  private citySV     = inject(CityService);
+  private userSV     = inject(UsersService);
+  private storageSV  = inject(StorageService);
+  private navigateSV = inject(NavigateTabsService);
 
   // `tabItem.type` is a plain property that the base class mutates (onInitAction
   // downgrades it to 'view' when the update permission is missing or the lock
@@ -94,6 +98,13 @@ export class FormInvoiceComponent extends CommonPageTab<ListInvoice, InvoicePerm
 
   private _listClientContact = signal<ClientContact[]>([]);
   listClientContact = computed<ClientContact[]>(() => this._listClientContact());
+
+  // Only IP exists today; the gate is isolated here so a future department
+  // (RM/IF/LO) only needs its own `@if` in the template, nothing else.
+  department          = computed<string | undefined>(() => this.item()?.department);
+  listProducts        = computed<InvoiceProduct[]>(() => this.item()?.products ?? []);
+  linkedPurchaseOrders = computed<InvoiceAssociatedPo[]>(() => this.item()?.linkedPurchaseOrders ?? []);
+  canEditProducts      = computed<boolean>(() => this.canEdit());
 
   // Kept apart from the form because "Copy from client" needs the client record,
   // not just the id held by the control.
@@ -374,5 +385,125 @@ export class FormInvoiceComponent extends CommonPageTab<ListInvoice, InvoicePerm
 
     this._listClientContact.set(contacts);
   }
+
+  //#region Products / Purchase orders
+  // Endpoints proposed in itex-invoices-api.md §11, not yet confirmed by
+  // backend. Every mutation swaps the whole `item()` signal for the response
+  // — never a partial/direct write — so products, totals and every read-only
+  // field stay consistent with what the server actually persisted.
+
+  viewProduct(product: InvoiceProduct): void {
+    this.navigateSV.openModuleNewTabAndOpenItem('Products', product.ipProduct.id);
+  }
+
+  openAddProductModal(): void {
+    if (!this.canEditProducts()) return;
+
+    const modal = this.dialogSV.open(InvoiceAddProductModalComponent, {
+      header: 'ADD PRODUCT',
+      width: '40rem'
+    });
+
+    modal.onClose.subscribe(request => {
+      if (!request) return;
+      this.invoiceSV.createInvoiceProductsBulk(this.tabItem.item.id, request).subscribe({
+        next: resp => this.applyMutation(resp)
+      });
+    });
+  }
+
+  removeProduct(product: InvoiceProduct): void {
+    if (!this.canEditProducts()) return;
+
+    this.utilSV.confirm({
+      message: `Are you sure to remove the product ${product.ipProduct.name}?`,
+      header: TITLES.confirmation,
+      accept: () => {
+        this.invoiceSV.removeInvoiceProduct(this.tabItem.item.id, product.id).subscribe({
+          next: resp => this.applyMutation(resp)
+        });
+      }
+    });
+  }
+
+  openPo(po: InvoiceAssociatedPo): void {
+    this.navigateSV.openModuleNewTabAndOpenItem('Purchase_Orders', po.id);
+  }
+
+  removePo(po: InvoiceAssociatedPo): void {
+    if (!this.canEditProducts()) return;
+
+    this.utilSV.confirm({
+      message: `Are you sure to remove PO ${po.number} from this invoice?`,
+      header: TITLES.confirmation,
+      accept: () => {
+        this.invoiceSV.removeInvoicePo(this.tabItem.item.id, po.id).subscribe({
+          next: resp => this.applyMutation(resp)
+        });
+      }
+    });
+  }
+
+  // No search-by-client endpoint exists yet for available PO's (documented gap
+  // alongside §11), so association is entered by id through a tiny inline
+  // dialog until that lookup exists.
+  showAssociatePoDialog = signal(false);
+  associatePoId = signal('');
+
+  associatePo(): void {
+    if (!this.canEditProducts()) return;
+    this.associatePoId.set('');
+    this.showAssociatePoDialog.set(true);
+  }
+
+  confirmAssociatePo(): void {
+    const poId = this.associatePoId().trim();
+    this.showAssociatePoDialog.set(false);
+    if (!poId) return;
+
+    this.invoiceSV.associateInvoicePo(this.tabItem.item.id, poId).subscribe({
+      next: resp => this.applyMutation(resp)
+    });
+  }
+
+  showEditProductDialog = signal(false);
+  editProductQuantity = signal(0);
+  editProductMargin = signal(0);
+  editProductCondition = signal('');
+  private editProductTarget?: InvoiceProduct;
+
+  openEditProductDialog(product: InvoiceProduct): void {
+    if (!this.canEditProducts()) return;
+    this.editProductTarget = product;
+    this.editProductQuantity.set(product.quantity);
+    this.editProductMargin.set(product.profitMargin);
+    this.editProductCondition.set(product.condition);
+    this.showEditProductDialog.set(true);
+  }
+
+  confirmEditProduct(): void {
+    const target = this.editProductTarget;
+    this.showEditProductDialog.set(false);
+    if (!target) return;
+
+    this.invoiceSV.updateInvoiceProduct(this.tabItem.item.id, target.id, {
+      quantity: this.editProductQuantity(),
+      profitMargin: this.editProductMargin(),
+      condition: this.editProductCondition()
+    }).subscribe({
+      next: resp => this.applyMutation(resp)
+    });
+  }
+
+  // Products/POs live outside the header FormGroup, so a full rebuildForm()
+  // (not a raw `_item.set`) is what keeps the read-only totals controls and
+  // the products/PO signals in sync with the same server response.
+  private applyMutation(resp: MessageResponse<Invoice>): void {
+    this.utilSV.setMessage(resp.title, resp.message, 'success');
+    this._item.set(resp.data);
+    this.rebuildForm();
+  }
+
+  //#endregion
 
 }

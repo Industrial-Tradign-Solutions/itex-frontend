@@ -1,0 +1,145 @@
+<p-table
+  styleClass="p-datatable-sm"
+  [value]="products"
+  [scrollable]="true"
+  scrollHeight="30rem"
+  dataKey="id"
+  [loading]="loading">
+  <ng-template pTemplate="header">
+    <tr>
+      <th style="min-width: 3rem">
+        <div class="flex justify-content-between">#</div>
+      </th>
+      <th style="min-width: 7rem">
+        <div class="flex justify-content-between">QUANTITY</div>
+      </th>
+      <th style="min-width: 7rem">
+        <div class="flex justify-content-between">TYPE</div>
+      </th>
+      <th style="min-width: 30rem">
+        <div class="flex justify-content-between">DESCRIPTION</div>
+      </th>
+      <th style="min-width: 10rem">
+        <div class="flex justify-content-between">REFERENCE</div>
+      </th>
+      <th style="min-width: 8rem">
+        <div class="flex justify-content-between">LEAD TIME</div>
+      </th>
+      <th style="min-width: 8rem" pFrozenColumn alignFrozen="right">
+        <div class="flex justify-content-center">MARGIN</div>
+      </th>
+      <th style="min-width: 4rem" pFrozenColumn alignFrozen="right">
+        <div class="flex justify-content-end">PRICE</div>
+      </th>
+      <th style="min-width: 13rem" pFrozenColumn alignFrozen="right">
+        <div class="flex justify-content-end">EXTENDED</div>
+      </th>
+      <th style="min-width: 10rem; text-align: end;" pFrozenColumn alignFrozen="right">
+        <div class="flex justify-content-end"></div>
+      </th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-product let-index="rowIndex">
+    <tr>
+      <td>{{ index + 1 }}</td>
+      <td>{{ product.quantity }}</td>
+      <td>{{ product.unitType ? product.unitType.replace('_', ' ') : '-' }}</td>
+      <td>
+        <div class="formgrid grid">
+          <div class="field col-12 md:col-3 tittle">
+            <b>SUPPLIER: </b>
+          </div>
+          <div class="field col-12 md:col-9">
+            {{ product.ipProduct.description }}
+          </div>
+          <div class="field col-12 md:col-3 tittle">
+            <b>CLIENT: </b>
+          </div>
+          <div class="field col-12 md:col-9">
+            {{ product.ipProduct.clientDescription }}
+          </div>
+        </div>
+      </td>
+      <td>
+        <div class="formgrid grid">
+          <div class="field col-12">{{ product.ipProduct.mfrReference || '-' }}</div>
+          <div class="field col-12">{{ product.ipProduct.clientReference || '-' }}</div>
+        </div>
+      </td>
+      <td>{{ product.leadTime + ' ' + product.leadTimeType }}</td>
+      <td style="text-align: center !important;" pFrozenColumn alignFrozen="right">
+        {{ product.profitMargin | percent:'1.0-2' }}
+      </td>
+      <td style="text-align: end;" pFrozenColumn alignFrozen="right">
+        <div class="formgrid grid">
+          <div class="field col-12 md:col-12 tittle">
+            <b>UNIT: </b>
+          </div>
+          <div class="field col-12 md:col-12 tittle">
+            <b>EXTENDED: </b>
+          </div>
+        </div>
+      </td>
+      <td style="text-align: end;" pFrozenColumn alignFrozen="right">
+        <div class="formgrid grid">
+          <div class="field col-12 md:col-12" style="text-align: right;">
+            {{ product.unitPrice | number:'1.5-5' }}
+          </div>
+          <div class="field col-12 md:col-12" style="text-align: right;">
+            {{ product.extendedPrice | number:'1.5-5' }}
+          </div>
+        </div>
+      </td>
+      <td style="text-align: end;" pFrozenColumn alignFrozen="right">
+        @if (canEdit) {
+          <button
+            pButton
+            type="button"
+            icon="pi pi-pencil"
+            class="p-button-rounded p-button-text"
+            pTooltip="Edit"
+            severity="warning"
+            (click)="editProduct.emit(product)"
+            tooltipPosition="left">
+          </button>
+          <button
+            pButton
+            type="button"
+            icon="pi pi-box"
+            class="p-button-rounded p-button-text"
+            pTooltip="Open Product"
+            severity="secondary"
+            (click)="viewProduct.emit(product)"
+            tooltipPosition="bottom">
+          </button>
+          <button
+            pButton
+            type="button"
+            icon="pi pi-trash"
+            class="p-button-rounded p-button-text"
+            pTooltip="Remove"
+            severity="danger"
+            (click)="removeProduct.emit(product)"
+            tooltipPosition="right">
+          </button>
+        } @else {
+          <button
+            pButton
+            type="button"
+            icon="pi pi-box"
+            class="p-button-rounded p-button-text"
+            pTooltip="Open Product"
+            severity="secondary"
+            (click)="viewProduct.emit(product)"
+            tooltipPosition="bottom">
+          </button>
+        }
+      </td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="emptymessage">
+    <tr>
+      <td colspan="9" class="text-center text-color-secondary">No products added</td>
+    </tr>
+  </ng-template>
+</p-table>

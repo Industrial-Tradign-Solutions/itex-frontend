@@ -1,0 +1,62 @@
+<div class="formgrid grid">
+  <div class="field col-12 md:col-12 mt-3">
+    <p-floatLabel>
+      <p-inputNumber
+        [inputStyle]="{ 'text-align': 'right' }"
+        mode="currency"
+        [currency]="currency"
+        currencyDisplay="code"
+        [minFractionDigits]="5"
+        [maxFractionDigits]="5"
+        [max]="999999999999"
+        [disabled]="true"
+        [ngModel]="productsTotal" />
+      <label>Products</label>
+    </p-floatLabel>
+  </div>
+  <div class="field col-12 md:col-12 mt-3">
+    <p-floatLabel>
+      <p-inputNumber
+        [inputStyle]="{ 'text-align': 'right' }"
+        mode="currency"
+        [currency]="currency"
+        currencyDisplay="code"
+        [minFractionDigits]="5"
+        [maxFractionDigits]="5"
+        [max]="999999999999"
+        [disabled]="true"
+        [ngModel]="chargesTotal" />
+      <label>Charges</label>
+    </p-floatLabel>
+  </div>
+  <div class="field col-12 md:col-12 mt-3">
+    <p-floatLabel>
+      <p-inputNumber
+        [inputStyle]="{ 'text-align': 'right' }"
+        mode="currency"
+        [currency]="currency"
+        currencyDisplay="code"
+        [minFractionDigits]="5"
+        [maxFractionDigits]="5"
+        [max]="999999999999"
+        [disabled]="true"
+        [ngModel]="taxesTotal" />
+      <label>Taxes</label>
+    </p-floatLabel>
+  </div>
+  <div class="field col-12 md:col-12 mt-3">
+    <p-floatLabel>
+      <p-inputNumber
+        [inputStyle]="{ 'text-align': 'right' }"
+        mode="currency"
+        [currency]="currency"
+        currencyDisplay="code"
+        [minFractionDigits]="5"
+        [maxFractionDigits]="5"
+        [max]="999999999999"
+        [disabled]="true"
+        [ngModel]="totalAmount" />
+      <label>Total</label>
+    </p-floatLabel>
+  </div>
+</div>

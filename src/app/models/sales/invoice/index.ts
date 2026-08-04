@@ -16,3 +16,12 @@ export {
   InvoiceVia,
   InvoiceIncoterms
 } from './invoiceEnums.type';
+export {
+  InvoiceProduct,
+  InvoiceProductIp,
+  InvoiceProductBulkRequest,
+  InvoiceProductUpdateRequest
+} from './invoiceProduct.type';
+export { InvoiceCharge } from './invoiceCharge.type';
+export { InvoiceTax } from './invoiceTax.type';
+export { InvoiceAssociatedPo } from './invoicePo.type';

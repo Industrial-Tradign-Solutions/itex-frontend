@@ -8,6 +8,10 @@ import {
   InvoiceStatus,
   InvoiceVia
 } from "./invoiceEnums.type";
+import { InvoiceProduct } from "./invoiceProduct.type";
+import { InvoiceCharge } from "./invoiceCharge.type";
+import { InvoiceTax } from "./invoiceTax.type";
+import { InvoiceAssociatedPo } from "./invoicePo.type";
 
 // Full invoice returned by `PATCH /sales/invoice/open-lock/{id}`.
 // `openBy` is typed as BasicUser to satisfy the generic constraint of
@@ -52,6 +56,13 @@ export type Invoice = {
   pdfUrl: string | null;
   openAt: string | null;
   openBy: BasicUser;
+  products: InvoiceProduct[];
+  charges: InvoiceCharge[];
+  taxes: InvoiceTax[];
+  linkedPurchaseOrders: InvoiceAssociatedPo[];
+  productsTotal: number;
+  chargesTotal: number;
+  taxesTotal: number;
 }
 
 // Envelope of the open-lock endpoint: `isValidOpen = false` means the invoice
