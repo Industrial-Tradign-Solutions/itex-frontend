@@ -1,0 +1,81 @@
+<div class="p-fluid">
+  <div class="formgrid grid">
+    <div class="field col-12 md:col-8">
+      <label>PO Number</label>
+      <input pInputText type="text" [(ngModel)]="number" (keyup.enter)="search()" placeholder="Search by number" />
+    </div>
+    <div class="field col-12 md:col-4 flex align-items-end">
+      <button
+        pButton
+        type="button"
+        label="Search"
+        icon="pi pi-search"
+        [disabled]="loading()"
+        (click)="search()"
+        class="p-button-sm">
+      </button>
+    </div>
+  </div>
+</div>
+
+@if (!loading()) {
+  <div class="animate__animated animate__fadeIn">
+    <p-table
+      [value]="results()"
+      [(selection)]="selected"
+      dataKey="id"
+      styleClass="p-datatable-sm"
+      [scrollable]="true"
+      scrollHeight="25rem">
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 4rem"></th>
+          <th>PO #</th>
+          <th>STATUS</th>
+          <th>SALES REP</th>
+          <th>DATE OF CREATED</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-po>
+        <tr>
+          <td><p-tableCheckbox [value]="po" /></td>
+          <td>{{ po.name }}</td>
+          <td>{{ po.status }}</td>
+          <td>{{ po.salesRep?.fullName }}</td>
+          <td>{{ po.createdAt | date:'MMM dd, yyyy hh:mm a' }}</td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="5" class="text-center">No Purchase Orders available to link</td>
+        </tr>
+      </ng-template>
+    </p-table>
+
+    <div class="mt-3 flex justify-content-end column-gap-4">
+      <button
+        pButton
+        type="button"
+        label="Cancel"
+        icon="pi pi-times-circle"
+        severity="danger"
+        (click)="closeModal()"
+        class="p-button-sm">
+      </button>
+      <button
+        pButton
+        type="button"
+        label="Link Selected PO's"
+        icon="pi pi-link"
+        [disabled]="selected.length === 0"
+        severity="success"
+        (click)="onSubmit()"
+        class="p-button-sm">
+      </button>
+    </div>
+  </div>
+} @else {
+  <div class="field col animate__animated animate__fadeIn">
+    <p-progressBar class="w-20rem animate__animated animate__fadeIn" mode="indeterminate"></p-progressBar>
+  </div>
+}

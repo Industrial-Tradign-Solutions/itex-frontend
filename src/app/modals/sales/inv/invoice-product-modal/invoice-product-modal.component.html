@@ -1,0 +1,160 @@
+@if (formProduct && !loading()) {
+  <div class="animate__animated animate__fadeIn">
+    <form [formGroup]="formProduct" (ngSubmit)="onSubmit()">
+      <div class="p-fluid">
+        <div class="formgrid grid">
+
+          <div class="field col-12 md:col-6">
+            <label>
+              Product
+              <span class="required">*</span>
+            </label>
+            @if (isCreate()) {
+              <p-autoComplete
+                formControlName="productId"
+                [suggestions]="filteredProducts"
+                (completeMethod)="searchProduct($event)"
+                (onSelect)="changeProduct($event)"
+                (onClear)="clearProduct()"
+                optionValue="id"
+                appendTo="body"
+                [showClear]="true"
+                optionLabel="name" />
+            } @else {
+              <input pInputText formControlName="productDescription" type="text" />
+            }
+          </div>
+
+          <div class="field col-12 md:col-6">
+            <label>MFR Reference</label>
+            <input pInputText formControlName="productRef" type="text" />
+          </div>
+
+          <div class="field col-12 md:col-6">
+            <label>Client Description</label>
+            <input pInputText formControlName="productClientDesc" type="text" />
+          </div>
+
+          <div class="field col-12 md:col-6">
+            <label>Client Reference</label>
+            <input pInputText formControlName="productClientRef" type="text" />
+          </div>
+
+          <div class="field col-12 md:col-3">
+            <label>
+              Quantity
+              <span class="required">*</span>
+            </label>
+            <p-inputNumber
+              mode="decimal"
+              [useGrouping]="true"
+              [minFractionDigits]="5"
+              [maxFractionDigits]="5"
+              [max]="999999999999"
+              formControlName="quantity" />
+          </div>
+
+          <div class="field col-12 md:col-2">
+            <label>
+              Unit Type
+              <span class="required">*</span>
+            </label>
+            <p-dropdown
+              [options]="listUnitType()"
+              optionLabel="value"
+              optionValue="key"
+              appendTo="body"
+              formControlName="unitType" />
+          </div>
+
+          <div class="field col-12 md:col-3">
+            <label>
+              Unit Price
+              <span class="required">*</span>
+            </label>
+            <p-inputNumber
+              [inputStyle]="{ 'text-align': 'right' }"
+              mode="currency"
+              [currency]="currency()"
+              currencyDisplay="code"
+              [minFractionDigits]="5"
+              [maxFractionDigits]="5"
+              [max]="999999999999"
+              formControlName="unitPrice" />
+          </div>
+
+          <div class="field col-12 md:col-2">
+            <label>Lead Time</label>
+            <p-inputNumber
+              mode="decimal"
+              [useGrouping]="true"
+              [max]="999999999999"
+              formControlName="leadTime" />
+          </div>
+
+          <div class="field col-12 md:col-2">
+            <label>Lead Time Type</label>
+            <p-dropdown
+              [options]="listLeadTimeType()"
+              optionLabel="value"
+              optionValue="key"
+              appendTo="body"
+              formControlName="leadTimeType" />
+          </div>
+
+          <div class="field col-12 md:col-3">
+            <label>
+              Profit Margin
+              <span class="required">*</span>
+            </label>
+            <p-inputNumber
+              formControlName="profitMargin"
+              mode="decimal"
+              [min]="0"
+              [max]="100"
+              [minFractionDigits]="2"
+              [maxFractionDigits]="2"
+              suffix="%" />
+          </div>
+
+          <div class="field col-12 md:col-3">
+            <label>
+              Condition
+              <span class="required">*</span>
+            </label>
+            <p-dropdown
+              formControlName="condition"
+              [options]="listCondition()"
+              optionLabel="value"
+              optionValue="key"
+              appendTo="body"
+              placeholder="Select Condition" />
+          </div>
+
+        </div>
+      </div>
+
+      <div class="mt-3 flex justify-content-end column-gap-4">
+        <p-button
+          icon="pi pi-times-circle"
+          styleClass="p-button-sm p-button-danger"
+          label="Cancel"
+          (onClick)="closeModal()">
+        </p-button>
+        <button
+          pButton
+          type="submit"
+          label="Save"
+          icon="pi pi-save"
+          [disabled]="formProduct.invalid"
+          class="p-button-sm p-button-success">
+        </button>
+      </div>
+    </form>
+  </div>
+}
+@if (loading()) {
+  <div class="field col animate__animated animate__fadeIn">
+    <p-progressBar class="w-20rem animate__animated animate__fadeIn" mode="indeterminate"></p-progressBar>
+  </div>
+}

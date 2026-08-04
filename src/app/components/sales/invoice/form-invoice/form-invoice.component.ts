@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Validators } from '@angular/forms';
 import { Messages, TitlesMessages } from '@config/messages';
 import { CommonPageTab } from '@config/tabs/commonPageTab';
@@ -10,11 +11,13 @@ import { ClientBasic, ClientContact, ClientInfoDep } from '@interfaces/partners/
 import {
   Invoice,
   InvoiceAssociatedPo,
+  InvoiceCharge,
+  InvoiceProduct,
+  InvoiceTax,
   invoiceTabName,
   ListInvoice,
   mapToInvoiceCreateRequest,
-  mapToInvoiceUpdateRequest,
-  InvoiceProduct
+  mapToInvoiceUpdateRequest
 } from '@interfaces/sales/invoice';
 import { StaticListItem } from '@interfaces/static-list.model';
 import { InvoicePermissions } from '@pages/principal/sales/invoices/invoices.component';
@@ -24,9 +27,13 @@ import { ClientsService } from '@services/partners';
 import { InvoiceService } from '@services/sales';
 import { NavigateTabsService, StorageService } from '@services/util';
 import { AutoCompleteCompleteEvent, AutoCompleteSelectEvent } from 'primeng/autocomplete';
-import { Observable } from 'rxjs';
+import { ImportProductsFromPoModalComponent } from '@modals/sales/inv/import-products-from-po-modal/import-products-from-po-modal.component';
+import { InvoiceProductModalComponent } from '@modals/sales/inv/invoice-product-modal/invoice-product-modal.component';
+import { LinkPurchaseOrdersModalComponent } from '@modals/sales/inv/link-purchase-orders-modal/link-purchase-orders-modal.component';
+import { ListInvoiceChargesModalComponent } from '@modals/sales/inv/list-invoice-charges-modal/list-invoice-charges-modal.component';
+import { ListInvoiceTaxesModalComponent } from '@modals/sales/inv/list-invoice-taxes-modal/list-invoice-taxes-modal.component';
+import { finalize, Observable } from 'rxjs';
 import { constants, storageKeys } from '../../../../../environments';
-import { InvoiceAddProductModalComponent } from './modals/invoice-add-product-modal/invoice-add-product-modal.component';
 
 const MESSAGES = Messages.pages.sales.invoice;
 const TITLES   = TitlesMessages;
@@ -66,6 +73,7 @@ export class FormInvoiceComponent extends CommonPageTab<ListInvoice, InvoicePerm
   private userSV     = inject(UsersService);
   private storageSV  = inject(StorageService);
   private navigateSV = inject(NavigateTabsService);
+  private destroyRef = inject(DestroyRef);
 
   // `tabItem.type` is a plain property that the base class mutates (onInitAction
   // downgrades it to 'view' when the update permission is missing or the lock
@@ -101,8 +109,10 @@ export class FormInvoiceComponent extends CommonPageTab<ListInvoice, InvoicePerm
 
   // Only IP exists today; the gate is isolated here so a future department
   // (RM/IF/LO) only needs its own `@if` in the template, nothing else.
-  department          = computed<string | undefined>(() => this.item()?.department);
-  listProducts        = computed<InvoiceProduct[]>(() => this.item()?.products ?? []);
+  department           = computed<string | undefined>(() => this.item()?.department);
+  listProducts         = computed<InvoiceProduct[]>(() => this.item()?.products ?? []);
+  listCharges          = computed<InvoiceCharge[]>(() => this.item()?.charges ?? []);
+  listTaxes            = computed<InvoiceTax[]>(() => this.item()?.taxes ?? []);
   linkedPurchaseOrders = computed<InvoiceAssociatedPo[]>(() => this.item()?.linkedPurchaseOrders ?? []);
   canEditProducts      = computed<boolean>(() => this.canEdit());
 
@@ -386,29 +396,57 @@ export class FormInvoiceComponent extends CommonPageTab<ListInvoice, InvoicePerm
     this._listClientContact.set(contacts);
   }
 
-  //#region Products / Purchase orders
-  // Endpoints proposed in itex-invoices-api.md §11, not yet confirmed by
-  // backend. Every mutation swaps the whole `item()` signal for the response
-  // — never a partial/direct write — so products, totals and every read-only
-  // field stay consistent with what the server actually persisted.
+  //#region Products / Charges / Taxes / Purchase orders
+  // Every sub-resource (§11-§14) is mutated from its own modal. None of those
+  // endpoints answers with the invoice — they return the affected line — while
+  // the server recalculates and persists the totals, so the only correct move
+  // afterwards is to re-read the detail.
 
   viewProduct(product: InvoiceProduct): void {
     this.navigateSV.openModuleNewTabAndOpenItem('Products', product.ipProduct.id);
   }
 
-  openAddProductModal(): void {
+  openProductModal(type: 'create' | 'edit', product?: InvoiceProduct): void {
     if (!this.canEditProducts()) return;
 
-    const modal = this.dialogSV.open(InvoiceAddProductModalComponent, {
-      header: 'ADD PRODUCT',
-      width: '40rem'
+    const modal = this.dialogSV.open(InvoiceProductModalComponent, {
+      header: type === 'edit' ? 'UPDATE PRODUCT' : 'ADD PRODUCT',
+      width: '70rem',
+      closable: false,
+      closeOnEscape: false,
+      data: {
+        type,
+        product,
+        invoiceId: this.tabItem.item.id,
+        currency: this.invoiceCurrency()
+      }
     });
 
-    modal.onClose.subscribe(request => {
-      if (!request) return;
-      this.invoiceSV.createInvoiceProductsBulk(this.tabItem.item.id, request).subscribe({
-        next: resp => this.applyMutation(resp)
-      });
+    modal.onClose.subscribe({
+      next: (resp: { valid: boolean }) => {
+        if (resp?.valid) this.reloadInvoice();
+      }
+    });
+  }
+
+  openImportProductsModal(): void {
+    if (!this.canEditProducts()) return;
+
+    const modal = this.dialogSV.open(ImportProductsFromPoModalComponent, {
+      header: 'IMPORT PRODUCTS FROM PO',
+      width: '90vw',
+      closable: false,
+      closeOnEscape: false,
+      data: {
+        invoiceId: this.tabItem.item.id,
+        currency: this.invoiceCurrency()
+      }
+    });
+
+    modal.onClose.subscribe({
+      next: (resp: { valid: boolean }) => {
+        if (resp?.valid) this.reloadInvoice();
+      }
     });
   }
 
@@ -416,18 +454,88 @@ export class FormInvoiceComponent extends CommonPageTab<ListInvoice, InvoicePerm
     if (!this.canEditProducts()) return;
 
     this.utilSV.confirm({
-      message: `Are you sure to remove the product ${product.ipProduct.name}?`,
+      message: `Are you sure to remove the product ${product.ipProduct.description}?`,
       header: TITLES.confirmation,
       accept: () => {
         this.invoiceSV.removeInvoiceProduct(this.tabItem.item.id, product.id).subscribe({
-          next: resp => this.applyMutation(resp)
+          next: resp => {
+            this.utilSV.setMessage(resp.title, resp.message, 'success');
+            this.reloadInvoice();
+          },
+          error: err => this.utilSV.setMessage(TITLES.error, err?.errorMessage ?? err, 'error')
         });
+      }
+    });
+  }
+
+  openChargesModal(): void {
+    const modal = this.dialogSV.open(ListInvoiceChargesModalComponent, {
+      header: 'CHARGES',
+      width: '60rem',
+      closable: false,
+      closeOnEscape: false,
+      data: {
+        invoiceId: this.tabItem.item.id,
+        currency: this.invoiceCurrency(),
+        canEdit: this.canEditProducts(),
+        charges: this.listCharges(),
+        purchaseOrders: this.linkedPurchaseOrders()
+      }
+    });
+
+    modal.onClose.subscribe({
+      next: (resp: { valid: boolean }) => {
+        if (resp?.valid) this.reloadInvoice();
+      }
+    });
+  }
+
+  openTaxesModal(): void {
+    const modal = this.dialogSV.open(ListInvoiceTaxesModalComponent, {
+      header: 'TAXES',
+      width: '60rem',
+      closable: false,
+      closeOnEscape: false,
+      data: {
+        invoiceId: this.tabItem.item.id,
+        currency: this.invoiceCurrency(),
+        canEdit: this.canEditProducts(),
+        taxes: this.listTaxes(),
+        productsTotal: this.item()?.productsTotal ?? 0
+      }
+    });
+
+    modal.onClose.subscribe({
+      next: (resp: { valid: boolean }) => {
+        if (resp?.valid) this.reloadInvoice();
       }
     });
   }
 
   openPo(po: InvoiceAssociatedPo): void {
     this.navigateSV.openModuleNewTabAndOpenItem('Purchase_Orders', po.id);
+  }
+
+  openLinkPoModal(): void {
+    if (!this.canEditProducts()) return;
+
+    const modal = this.dialogSV.open(LinkPurchaseOrdersModalComponent, {
+      header: 'LINK PURCHASE ORDERS',
+      width: '60rem',
+      closable: false,
+      closeOnEscape: false,
+      data: {
+        invoiceId: this.tabItem.item.id,
+        clientId: this.item()?.client?.id,
+        linkedPurchaseOrders: this.linkedPurchaseOrders()
+      }
+    });
+
+    modal.onClose.subscribe({
+      next: (resp: { valid: boolean }) => {
+        if (resp?.valid) this.reloadInvoice();
+      }
+    });
   }
 
   removePo(po: InvoiceAssociatedPo): void {
@@ -437,71 +545,31 @@ export class FormInvoiceComponent extends CommonPageTab<ListInvoice, InvoicePerm
       message: `Are you sure to remove PO ${po.number} from this invoice?`,
       header: TITLES.confirmation,
       accept: () => {
-        this.invoiceSV.removeInvoicePo(this.tabItem.item.id, po.id).subscribe({
-          next: resp => this.applyMutation(resp)
+        this.invoiceSV.unlinkInvoicePurchaseOrder(this.tabItem.item.id, po.id).subscribe({
+          next: resp => {
+            this.utilSV.setMessage(resp.title, resp.message, 'success');
+            this.reloadInvoice();
+          },
+          error: err => this.utilSV.setMessage(TITLES.error, err?.errorMessage ?? err, 'error')
         });
       }
     });
   }
 
-  // No search-by-client endpoint exists yet for available PO's (documented gap
-  // alongside §11), so association is entered by id through a tiny inline
-  // dialog until that lookup exists.
-  showAssociatePoDialog = signal(false);
-  associatePoId = signal('');
-
-  associatePo(): void {
-    if (!this.canEditProducts()) return;
-    this.associatePoId.set('');
-    this.showAssociatePoDialog.set(true);
-  }
-
-  confirmAssociatePo(): void {
-    const poId = this.associatePoId().trim();
-    this.showAssociatePoDialog.set(false);
-    if (!poId) return;
-
-    this.invoiceSV.associateInvoicePo(this.tabItem.item.id, poId).subscribe({
-      next: resp => this.applyMutation(resp)
-    });
-  }
-
-  showEditProductDialog = signal(false);
-  editProductQuantity = signal(0);
-  editProductMargin = signal(0);
-  editProductCondition = signal('');
-  private editProductTarget?: InvoiceProduct;
-
-  openEditProductDialog(product: InvoiceProduct): void {
-    if (!this.canEditProducts()) return;
-    this.editProductTarget = product;
-    this.editProductQuantity.set(product.quantity);
-    this.editProductMargin.set(product.profitMargin);
-    this.editProductCondition.set(product.condition);
-    this.showEditProductDialog.set(true);
-  }
-
-  confirmEditProduct(): void {
-    const target = this.editProductTarget;
-    this.showEditProductDialog.set(false);
-    if (!target) return;
-
-    this.invoiceSV.updateInvoiceProduct(this.tabItem.item.id, target.id, {
-      quantity: this.editProductQuantity(),
-      profitMargin: this.editProductMargin(),
-      condition: this.editProductCondition()
-    }).subscribe({
-      next: resp => this.applyMutation(resp)
-    });
-  }
-
-  // Products/POs live outside the header FormGroup, so a full rebuildForm()
-  // (not a raw `_item.set`) is what keeps the read-only totals controls and
-  // the products/PO signals in sync with the same server response.
-  private applyMutation(resp: MessageResponse<Invoice>): void {
-    this.utilSV.setMessage(resp.title, resp.message, 'success');
-    this._item.set(resp.data);
-    this.rebuildForm();
+  // open-lock is the only endpoint that returns the whole detail, and it is
+  // idempotent for the user who already holds the lock (§4). rebuildForm() runs
+  // too because the read-only totals live in the header FormGroup.
+  private reloadInvoice(): void {
+    this._loading.set(true);
+    this.invoiceSV.openAndLockInvoice(this.tabItem.item.id, this.tabItem.type)
+      .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this._loading.set(false)))
+      .subscribe({
+        next: resp => {
+          this._item.set(resp.data);
+          this.rebuildForm();
+        },
+        error: err => this.utilSV.setMessage(TITLES.error, err, 'error')
+      });
   }
 
   //#endregion

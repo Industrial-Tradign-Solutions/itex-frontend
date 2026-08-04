@@ -8,6 +8,7 @@ export type InvoiceFilter = {
   remarks?: string;
   status?: InvoiceStatus;
   salesRepId?: string;
+  department?: string;
   overdue?: boolean;
   initDueAt?: Date;
   endDueAt?: Date;

@@ -14,14 +14,21 @@ export {
   InvoicePaymentTerms,
   InvoiceDepartment,
   InvoiceVia,
-  InvoiceIncoterms
+  InvoiceIncoterms,
+  InvoiceChargeSource
 } from './invoiceEnums.type';
 export {
   InvoiceProduct,
   InvoiceProductIp,
-  InvoiceProductBulkRequest,
-  InvoiceProductUpdateRequest
+  InvoiceProductRequest,
+  AvailablePoProduct,
+  InvoiceProductImportRequest
 } from './invoiceProduct.type';
-export { InvoiceCharge } from './invoiceCharge.type';
-export { InvoiceTax } from './invoiceTax.type';
-export { InvoiceAssociatedPo } from './invoicePo.type';
+export {
+  InvoiceCharge,
+  InvoiceChargeRequest,
+  AvailablePoCharge,
+  InvoiceChargeImportRequest
+} from './invoiceCharge.type';
+export { InvoiceTax, InvoiceTaxRequest } from './invoiceTax.type';
+export { InvoiceAssociatedPo, InvoicePoLinkRequest } from './invoicePo.type';

@@ -73,10 +73,10 @@
               <div class="field col-12 md:col-2 mt-1">
                 <button pButton
                   label="Associate PO"
-                  icon="pi pi-plus"
+                  icon="pi pi-link"
                   severity="success"
                   [outlined]="true"
-                  (click)="associatePo()"
+                  (click)="openLinkPoModal()"
                   [disabled]="!canEditProducts()"
                   type="button">
                 </button>
@@ -91,7 +91,7 @@
                   [products]="listProducts()"
                   [canEdit]="canEditProducts()"
                   [loading]="loading()"
-                  (editProduct)="openEditProductDialog($event)"
+                  (editProduct)="openProductModal('edit', $event)"
                   (removeProduct)="removeProduct($event)"
                   (viewProduct)="viewProduct($event)" />
               </div>
@@ -103,7 +103,18 @@
                       icon="pi pi-plus"
                       severity="success"
                       [outlined]="true"
-                      (click)="openAddProductModal()"
+                      (click)="openProductModal('create')"
+                      [disabled]="!canEditProducts()"
+                      type="button">
+                    </button>
+                  </div>
+                  <div class="field col-12 md:col-12">
+                    <button pButton
+                      label="Import from PO"
+                      icon="pi pi-upload"
+                      severity="info"
+                      [outlined]="true"
+                      (click)="openImportProductsModal()"
                       [disabled]="!canEditProducts()"
                       type="button">
                     </button>
@@ -114,7 +125,9 @@
                   [chargesTotal]="item()?.chargesTotal ?? 0"
                   [taxesTotal]="item()?.taxesTotal ?? 0"
                   [totalAmount]="item()?.totalAmount ?? 0"
-                  [currency]="invoiceCurrency()" />
+                  [currency]="invoiceCurrency()"
+                  (openCharges)="openChargesModal()"
+                  (openTaxes)="openTaxesModal()" />
               </div>
             </div>
           </div>
@@ -161,42 +174,4 @@
       </div>
     </form>
   </div>
-
-  <p-dialog
-    header="ASSOCIATE PO"
-    [(visible)]="showAssociatePoDialog"
-    [modal]="true"
-    [style]="{ width: '25rem' }">
-    <div class="field">
-      <label>Purchase Order id</label>
-      <input pInputText type="text" [ngModel]="associatePoId()" (ngModelChange)="associatePoId.set($event)" class="w-full"/>
-    </div>
-    <ng-template pTemplate="footer">
-      <button pButton type="button" label="Cancel" class="p-button-text" (click)="showAssociatePoDialog.set(false)"></button>
-      <button pButton type="button" label="Associate" icon="pi pi-link" (click)="confirmAssociatePo()"></button>
-    </ng-template>
-  </p-dialog>
-
-  <p-dialog
-    header="EDIT PRODUCT"
-    [(visible)]="showEditProductDialog"
-    [modal]="true"
-    [style]="{ width: '25rem' }">
-    <div class="field">
-      <label>Quantity</label>
-      <input pInputText type="number" min="0" [ngModel]="editProductQuantity()" (ngModelChange)="editProductQuantity.set($event)" class="w-full"/>
-    </div>
-    <div class="field">
-      <label>Profit Margin</label>
-      <input pInputText type="number" min="0" [ngModel]="editProductMargin()" (ngModelChange)="editProductMargin.set($event)" class="w-full"/>
-    </div>
-    <div class="field">
-      <label>Condition</label>
-      <input pInputText type="text" [ngModel]="editProductCondition()" (ngModelChange)="editProductCondition.set($event)" class="w-full"/>
-    </div>
-    <ng-template pTemplate="footer">
-      <button pButton type="button" label="Cancel" class="p-button-text" (click)="showEditProductDialog.set(false)"></button>
-      <button pButton type="button" label="Save" icon="pi pi-save" (click)="confirmEditProduct()"></button>
-    </ng-template>
-  </p-dialog>
 }

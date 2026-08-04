@@ -4,12 +4,22 @@ import { TypeTab } from '@config/types/tabs';
 import { MessageResponse } from '@interfaces/message-response';
 import { Page } from '@interfaces/page.model';
 import {
+  AvailablePoCharge,
+  AvailablePoProduct,
   Invoice,
+  InvoiceAssociatedPo,
+  InvoiceCharge,
+  InvoiceChargeImportRequest,
+  InvoiceChargeRequest,
   InvoiceCreateRequest,
   InvoiceFilter,
   InvoiceOpenAndLock,
-  InvoiceProductBulkRequest,
-  InvoiceProductUpdateRequest,
+  InvoicePoLinkRequest,
+  InvoiceProduct,
+  InvoiceProductImportRequest,
+  InvoiceProductRequest,
+  InvoiceTax,
+  InvoiceTaxRequest,
   InvoiceUpdateRequest,
   ListInvoice
 } from '@interfaces/sales/invoice';
@@ -67,6 +77,7 @@ export class InvoiceService {
       ['remarks', filter.remarks],
       ['status', filter.status],
       ['salesRepId', filter.salesRepId],
+      ['department', filter.department],
       ['overdue', filter.overdue],
       ['initDueAt', filter.initDueAt],
       ['endDueAt', filter.endDueAt],
@@ -144,34 +155,102 @@ export class InvoiceService {
       .pipe(catchError(err => throwError(() => err.error)));
   }
 
-  // §11 (itex-invoices-api.md): endpoint proposed, not yet confirmed by backend.
-  createInvoiceProductsBulk(invoiceId: string, request: InvoiceProductBulkRequest): Observable<MessageResponse<Invoice>> {
+  //#endregion
+
+  //#region Sub-resources (§11 products, §12 charges, §13 taxes, §14 linked POs)
+  // None of these answers with the whole invoice: they return the created/edited
+  // line, or the id of the deleted one. Totals are recalculated and persisted
+  // server-side, so the caller re-reads the detail (open-lock) afterwards
+  // instead of patching anything locally.
+
+  createInvoiceProduct(invoiceId: string, request: InvoiceProductRequest): Observable<MessageResponse<InvoiceProduct>> {
     const url = `${URL_SERVICES}/${invoiceId}/product`;
-    return this.http.post<MessageResponse<Invoice>>(url, request, { headers: this.authSV.headers() })
+    return this.http.post<MessageResponse<InvoiceProduct>>(url, request, { headers: this.authSV.headers() })
       .pipe(catchError(err => throwError(() => err.error)));
   }
 
-  updateInvoiceProduct(invoiceId: string, invoiceProductId: string, request: InvoiceProductUpdateRequest): Observable<MessageResponse<Invoice>> {
+  updateInvoiceProduct(invoiceId: string, invoiceProductId: string, request: InvoiceProductRequest): Observable<MessageResponse<InvoiceProduct>> {
     const url = `${URL_SERVICES}/${invoiceId}/product/${invoiceProductId}`;
-    return this.http.put<MessageResponse<Invoice>>(url, request, { headers: this.authSV.headers() })
+    return this.http.put<MessageResponse<InvoiceProduct>>(url, request, { headers: this.authSV.headers() })
       .pipe(catchError(err => throwError(() => err.error)));
   }
 
-  removeInvoiceProduct(invoiceId: string, invoiceProductId: string): Observable<MessageResponse<Invoice>> {
+  removeInvoiceProduct(invoiceId: string, invoiceProductId: string): Observable<MessageResponse<string>> {
     const url = `${URL_SERVICES}/${invoiceId}/product/${invoiceProductId}`;
-    return this.http.delete<MessageResponse<Invoice>>(url, { headers: this.authSV.headers() })
+    return this.http.delete<MessageResponse<string>>(url, { headers: this.authSV.headers() })
       .pipe(catchError(err => throwError(() => err.error)));
   }
 
-  associateInvoicePo(invoiceId: string, poId: string): Observable<MessageResponse<Invoice>> {
-    const url = `${URL_SERVICES}/${invoiceId}/po/${poId}`;
-    return this.http.post<MessageResponse<Invoice>>(url, null, { headers: this.authSV.headers() })
+  getAvailablePoProducts(invoiceId: string): Observable<AvailablePoProduct[]> {
+    const url = `${URL_SERVICES}/${invoiceId}/product/available-from-pos`;
+    return this.unwrap(this.http.get<AvailablePoProduct[]>(url, { headers: this.authSV.headers() }));
+  }
+
+  // §11.5 imports one PO per call, so a multi-PO selection means several calls.
+  importProductsFromPo(invoiceId: string, request: InvoiceProductImportRequest): Observable<MessageResponse<InvoiceProduct[]>> {
+    const url = `${URL_SERVICES}/${invoiceId}/product/import-from-po`;
+    return this.http.post<MessageResponse<InvoiceProduct[]>>(url, request, { headers: this.authSV.headers() })
       .pipe(catchError(err => throwError(() => err.error)));
   }
 
-  removeInvoicePo(invoiceId: string, poId: string): Observable<MessageResponse<Invoice>> {
-    const url = `${URL_SERVICES}/${invoiceId}/po/${poId}`;
-    return this.http.delete<MessageResponse<Invoice>>(url, { headers: this.authSV.headers() })
+  createInvoiceCharge(invoiceId: string, request: InvoiceChargeRequest): Observable<MessageResponse<InvoiceCharge>> {
+    const url = `${URL_SERVICES}/${invoiceId}/charge`;
+    return this.http.post<MessageResponse<InvoiceCharge>>(url, request, { headers: this.authSV.headers() })
+      .pipe(catchError(err => throwError(() => err.error)));
+  }
+
+  updateInvoiceCharge(invoiceId: string, chargeId: string, request: InvoiceChargeRequest): Observable<MessageResponse<InvoiceCharge>> {
+    const url = `${URL_SERVICES}/${invoiceId}/charge/${chargeId}`;
+    return this.http.put<MessageResponse<InvoiceCharge>>(url, request, { headers: this.authSV.headers() })
+      .pipe(catchError(err => throwError(() => err.error)));
+  }
+
+  removeInvoiceCharge(invoiceId: string, chargeId: string): Observable<MessageResponse<string>> {
+    const url = `${URL_SERVICES}/${invoiceId}/charge/${chargeId}`;
+    return this.http.delete<MessageResponse<string>>(url, { headers: this.authSV.headers() })
+      .pipe(catchError(err => throwError(() => err.error)));
+  }
+
+  getAvailablePoCharges(invoiceId: string): Observable<AvailablePoCharge[]> {
+    const url = `${URL_SERVICES}/${invoiceId}/charge/available-from-pos`;
+    return this.unwrap(this.http.get<AvailablePoCharge[]>(url, { headers: this.authSV.headers() }));
+  }
+
+  // §12.3 takes the whole PO: every other charge lands as a charge, and the
+  // PO's `salesTax` lands as a tax record that this response does not list.
+  importChargesFromPo(invoiceId: string, request: InvoiceChargeImportRequest): Observable<MessageResponse<InvoiceCharge[]>> {
+    const url = `${URL_SERVICES}/${invoiceId}/charge/import-from-po`;
+    return this.http.post<MessageResponse<InvoiceCharge[]>>(url, request, { headers: this.authSV.headers() })
+      .pipe(catchError(err => throwError(() => err.error)));
+  }
+
+  createInvoiceTax(invoiceId: string, request: InvoiceTaxRequest): Observable<MessageResponse<InvoiceTax>> {
+    const url = `${URL_SERVICES}/${invoiceId}/tax`;
+    return this.http.post<MessageResponse<InvoiceTax>>(url, request, { headers: this.authSV.headers() })
+      .pipe(catchError(err => throwError(() => err.error)));
+  }
+
+  updateInvoiceTax(invoiceId: string, taxId: string, request: InvoiceTaxRequest): Observable<MessageResponse<InvoiceTax>> {
+    const url = `${URL_SERVICES}/${invoiceId}/tax/${taxId}`;
+    return this.http.put<MessageResponse<InvoiceTax>>(url, request, { headers: this.authSV.headers() })
+      .pipe(catchError(err => throwError(() => err.error)));
+  }
+
+  removeInvoiceTax(invoiceId: string, taxId: string): Observable<MessageResponse<string>> {
+    const url = `${URL_SERVICES}/${invoiceId}/tax/${taxId}`;
+    return this.http.delete<MessageResponse<string>>(url, { headers: this.authSV.headers() })
+      .pipe(catchError(err => throwError(() => err.error)));
+  }
+
+  linkInvoicePurchaseOrders(invoiceId: string, request: InvoicePoLinkRequest): Observable<MessageResponse<InvoiceAssociatedPo[]>> {
+    const url = `${URL_SERVICES}/${invoiceId}/purchase-order`;
+    return this.http.post<MessageResponse<InvoiceAssociatedPo[]>>(url, request, { headers: this.authSV.headers() })
+      .pipe(catchError(err => throwError(() => err.error)));
+  }
+
+  unlinkInvoicePurchaseOrder(invoiceId: string, poId: string): Observable<MessageResponse<string>> {
+    const url = `${URL_SERVICES}/${invoiceId}/purchase-order/${poId}`;
+    return this.http.delete<MessageResponse<string>>(url, { headers: this.authSV.headers() })
       .pipe(catchError(err => throwError(() => err.error)));
   }
 

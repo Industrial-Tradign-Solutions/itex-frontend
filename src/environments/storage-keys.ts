@@ -44,5 +44,7 @@ export const storageKeys = {
     ip_quotation_product_condition: 'static_ip_quotation_product_condition',
     invoice_status: 'static_invoice_status',
     invoice_via: 'static_invoice_via',
+    invoice_charge_type: 'static_invoice_charge_type',
+    invoice_tax_type: 'static_invoice_tax_type',
   }
 }

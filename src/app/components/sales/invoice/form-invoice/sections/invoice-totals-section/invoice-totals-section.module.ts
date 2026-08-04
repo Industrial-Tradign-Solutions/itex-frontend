@@ -1,8 +1,10 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ButtonModule } from 'primeng/button';
 import { FloatLabelModule } from 'primeng/floatlabel';
 import { InputNumberModule } from 'primeng/inputnumber';
+import { TooltipModule } from 'primeng/tooltip';
 import { InvoiceTotalsSectionComponent } from './invoice-totals-section.component';
 
 @NgModule({
@@ -13,7 +15,9 @@ import { InvoiceTotalsSectionComponent } from './invoice-totals-section.componen
     CommonModule,
     FormsModule,
     FloatLabelModule,
-    InputNumberModule
+    InputNumberModule,
+    ButtonModule,
+    TooltipModule
   ],
   exports: [
     InvoiceTotalsSectionComponent
