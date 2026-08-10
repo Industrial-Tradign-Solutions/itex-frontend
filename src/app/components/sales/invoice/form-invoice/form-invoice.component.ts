@@ -59,6 +59,11 @@ const SHIP_TO_FIELDS = [
   'shipToEmail'
 ];
 
+// Q/QR/PO relabel the contact in place (`contact.name += ' (DISABLED)'`), which
+// is why that suffix ends up copied into ship-to fields. The flag travels in its
+// own property so `name` stays the value the backend gave.
+export type InvoiceContactOption = ClientContact & { label: string };
+
 @Component({
   selector: 'app-form-invoice',
   templateUrl: './form-invoice.component.html',
@@ -104,8 +109,8 @@ export class FormInvoiceComponent extends CommonPageTab<ListInvoice, InvoicePerm
       : employees;
   });
 
-  private _listClientContact = signal<ClientContact[]>([]);
-  listClientContact = computed<ClientContact[]>(() => this._listClientContact());
+  private _listClientContact = signal<InvoiceContactOption[]>([]);
+  listClientContact = computed<InvoiceContactOption[]>(() => this._listClientContact());
 
   // Only IP exists today; the gate is isolated here so a future department
   // (RM/IF/LO) only needs its own `@if` in the template, nothing else.
@@ -144,20 +149,19 @@ export class FormInvoiceComponent extends CommonPageTab<ListInvoice, InvoicePerm
     return this.formTab?.get('currency')?.value ?? 'USD';
   }
 
-  get filteredClients(): ClientBasic[] {
-    return this.clientSV.filteredList;
-  }
-
-  get filteredCities(): BasicCity[] {
-    return this.citySV.filteredCities;
-  }
+  // Own state instead of reading clientSV/citySV.filteredList: those fields live
+  // on root-provided singletons, shared by every open tab. With several tabs
+  // mounted at once (Open All), each tab's enableForm() overwrote the others'
+  // suggestions as it finished loading in the background.
+  filteredClients: ClientBasic[] = [];
+  filteredCities: BasicCity[] = [];
 
   searchClient(event: AutoCompleteCompleteEvent): void {
-    this.clientSV.searchAutoComplete(event);
+    this.filteredClients = this.clientSV.searchAutoComplete(event);
   }
 
   searchCity(event: AutoCompleteCompleteEvent): void {
-    this.citySV.searchAutoComplete(event);
+    this.filteredCities = this.citySV.searchAutoComplete(event);
   }
 
   // §10.6: changing the client re-derives its data server-side, but the ship-to
@@ -172,18 +176,26 @@ export class FormInvoiceComponent extends CommonPageTab<ListInvoice, InvoicePerm
       return;
     }
 
+    // The autocomplete has already written the new clientId into the control, so
+    // the previous client's contact is dropped now and not when the dialog is
+    // answered: saving while it is still open would send a clientId and a
+    // clientContactId belonging to two different clients, and the backend
+    // resolves the contact against the client (§10.3, step 6).
+    const previousContactId = this.formTab.get('clientContactId')?.value ?? null;
+    this.applyClient(client);
+
     this.utilSV.confirm({
       message: MESSAGES.changeClient(client.name),
       header: TITLES.confirmation,
-      accept: () => this.applyClient(client),
-      reject: () => this.formTab.patchValue({ clientId: previous.id })
+      accept: () => { },
+      reject: () => this.applyClient(previous, previousContactId)
     });
   }
 
   clearClient(): void {
     this._selectedClient.set(undefined);
     this._listClientContact.set([]);
-    this.formTab.patchValue({ clientContactId: null, clientAddress: null });
+    this.formTab.patchValue({ clientId: null, clientContactId: null, clientAddress: null });
     this.formTab.controls['clientContactId'].disable();
   }
 
@@ -219,7 +231,7 @@ export class FormInvoiceComponent extends CommonPageTab<ListInvoice, InvoicePerm
       status: [invoice?.status ?? 'DRAFT', [Validators.required]],
 
       clientId: [invoice?.client?.id ?? null, [Validators.required]],
-      clientContactId: [invoice?.clientContact?.id ?? null],
+      clientContactId: [invoice?.clientContact?.id ?? null, [Validators.required]],
       clientAddress: [invoice?.client?.address ?? null],
 
       currency: [invoice?.currency ?? 'USD', [Validators.required]],
@@ -332,37 +344,47 @@ export class FormInvoiceComponent extends CommonPageTab<ListInvoice, InvoicePerm
     throw new Error('Invalid tab type for submit');
   }
 
-  private applyClient(client: ClientBasic): void {
+  // The contact list is rebuilt before the control is patched: the dropdown has
+  // to already hold the option, otherwise PrimeNG renders the raw uuid.
+  private applyClient(client: ClientBasic, contactId: string | null = null): void {
     this._selectedClient.set(client);
+    this.assignListClientContact(client.infoByDepartment);
     this.formTab.controls['clientContactId'].enable();
     this.formTab.patchValue({
       clientId: client.id,
-      clientContactId: null,
+      clientContactId: contactId,
       clientAddress: client.address
     });
-    this.assignListClientContact(client.infoByDepartment);
   }
 
   // Keeps the autocomplete showing a name instead of a raw uuid when the invoice
   // is opened: the control holds the id and needs its record in the suggestions.
+  //
+  // `invoice.client` (from open-lock) is the light `InvoiceClientResponse` —
+  // itex-invoices-api.md:1310 says it deliberately drops infoByDepartment to
+  // avoid an N+1 over listContacts. The full record (with contacts) lives in
+  // clientSV.list() instead, the same list-active catalog the autocomplete and
+  // changeClient() already use, so it's resolved from there.
   private syncClient(invoice?: Invoice): void {
     if (!invoice?.client) return;
 
-    const client: ClientBasic = {
+    const full = this.clientSV.list().find(item => item.id === invoice.client.id);
+
+    const client: ClientBasic = full ?? {
       id: invoice.client.id,
       name: invoice.client.name,
       code: invoice.client.code,
       address: invoice.client.address,
       showName: `${invoice.client.code} - ${invoice.client.name}`,
       paymentTerms: invoice.client.paymentTerms,
-      infoByDepartment: invoice.client.infoByDepartment
+      infoByDepartment: []
     };
 
     this._selectedClient.set(client);
-    if (!this.clientSV.filteredList.some(item => item.id === client.id)) {
-      this.clientSV.filteredList = [client, ...this.clientSV.filteredList];
+    if (!this.filteredClients.some(item => item.id === client.id)) {
+      this.filteredClients = [client, ...this.filteredClients];
     }
-    this.assignListClientContact(invoice.client.infoByDepartment, invoice.clientContact?.id);
+    this.assignListClientContact(client.infoByDepartment);
   }
 
   // Same problem as syncClient(), for the ship-to city: invoice.shipToCity only
@@ -372,7 +394,7 @@ export class FormInvoiceComponent extends CommonPageTab<ListInvoice, InvoicePerm
   // nothing left to trigger a re-render afterwards.
   private syncCity(invoice?: Invoice): void {
     if (!invoice?.shipToCity) return;
-    if (this.citySV.filteredCities.some(item => item.id === invoice.shipToCity.id)) return;
+    if (this.filteredCities.some(item => item.id === invoice.shipToCity.id)) return;
 
     const city: BasicCity = {
       id: invoice.shipToCity.id,
@@ -381,17 +403,21 @@ export class FormInvoiceComponent extends CommonPageTab<ListInvoice, InvoicePerm
       state: undefined as unknown as BasicCity['state']
     };
 
-    this.citySV.filteredCities = [city, ...this.citySV.filteredCities];
+    this.filteredCities = [city, ...this.filteredCities];
   }
 
-  // Inactive contacts are dropped instead of being relabelled "(DISABLED)" as in
-  // QR/PO — that suffix ends up copied verbatim into shipToContactName. The one
-  // already stored on the invoice is kept so the dropdown can still show it.
-  private assignListClientContact(infoByDepartment: ClientInfoDep[], keepContactId?: string): void {
+  // Same criteria as Q/QR/PO: every contact of the IP department stays in the
+  // list, the inactive ones only get flagged. Filtering them out left the
+  // dropdown empty for clients whose contacts are not marked active, and hid the
+  // contact an already-issued invoice points at.
+  private assignListClientContact(infoByDepartment: ClientInfoDep[]): void {
     const contacts = (infoByDepartment ?? [])
       .filter(department => department.department.id === constants.ip_department_id)
       .flatMap(department => department.listContacts ?? [])
-      .filter(contact => contact.active || contact.id === keepContactId);
+      .map(contact => ({
+        ...contact,
+        label: contact.active ? contact.name : `${contact.name} (DISABLED)`
+      }));
 
     this._listClientContact.set(contacts);
   }

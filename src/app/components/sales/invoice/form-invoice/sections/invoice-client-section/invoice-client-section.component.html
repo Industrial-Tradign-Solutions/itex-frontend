@@ -22,14 +22,17 @@
       <p-floatLabel>
         <p-dropdown
           [options]="contacts"
-          optionLabel="name"
+          optionLabel="label"
           optionValue="id"
           [filter]="true"
-          filterBy="name"
+          filterBy="label"
           appendTo="body"
           [showClear]="true"
           formControlName="clientContactId" />
-        <label>Client Contact</label>
+        <label>
+          Client Contact
+          <span class="required">*</span>
+        </label>
       </p-floatLabel>
     </div>
     <div class="field col-12 md:col-12 mt-3">

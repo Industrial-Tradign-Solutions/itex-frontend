@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { ClientBasic, ClientContact } from '@interfaces/partners/clients';
+import { ClientBasic } from '@interfaces/partners/clients';
 import { AutoCompleteCompleteEvent, AutoCompleteSelectEvent } from 'primeng/autocomplete';
+import { InvoiceContactOption } from '../../form-invoice.component';
 
 /**
  * Client block. Purely presentational: the container owns the client catalog,
@@ -17,7 +18,7 @@ export class InvoiceClientSectionComponent {
 
   @Input({ required: true }) group!: FormGroup;
   @Input({ required: true }) clients: ClientBasic[] = [];
-  @Input({ required: true }) contacts: ClientContact[] = [];
+  @Input({ required: true }) contacts: InvoiceContactOption[] = [];
 
   @Output() searchClient = new EventEmitter<AutoCompleteCompleteEvent>();
   @Output() clientSelected = new EventEmitter<AutoCompleteSelectEvent>();
