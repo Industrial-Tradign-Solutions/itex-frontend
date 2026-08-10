@@ -559,7 +559,7 @@
                     {{product.value.leadTime + ' ' + product.value.leadTimeType}}
                   </td>
                   <td style="text-align: center !important;" pFrozenColumn alignFrozen="right">
-                    {{ product.value.profitMargin }}%
+                    {{ product.value.profitMargin | number:'1.2-2' }}%
                   </td>
                    <td style="text-align: end;" pFrozenColumn alignFrozen="right">
                     <div class="formgrid grid">

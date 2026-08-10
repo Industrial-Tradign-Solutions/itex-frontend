@@ -39,7 +39,9 @@ export class AddQuotationProductModalComponent implements OnInit {
   canSubmit = computed(() => {
     this._version();
     const selected = this._allItems().filter(i => i.selected);
-    return selected.length > 0 && selected.every(i => i.profitMargin != null && i.condition != null);
+    return selected.length > 0 && selected.every(i =>
+      i.profitMargin != null && i.profitMargin >= 0.01 && i.profitMargin <= 100 && i.condition != null
+    );
   });
   listQuoteRequests = computed<{ qqrId?: string; id?: string; number?: string }[]>(() => this.config.data.listQuoteRequests ?? []);
   listExistingProducts = computed<IpQuotationProduct[]>(() => this.config.data.existingProducts ?? []);
@@ -179,7 +181,7 @@ export class AddQuotationProductModalComponent implements OnInit {
       products: selectedItems.map(i => ({
         quotationsQuoteRequestId: i.quotationsQuoteRequestId,
         quoteRequestProductId: i.quoteRequestProductId,
-        profitMargin: (i.profitMargin ?? 0) / 100,
+        profitMargin: i.profitMargin ?? 0,
         condition: i.condition!
       }))
     };

@@ -486,7 +486,7 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
         product?.sellingExtendedPrice ?? 0
       ],
       profitMargin: [
-        (product?.profitMargin ?? 0) * 100
+        product?.profitMargin ?? 0
       ],
       condition: [
         product?.condition ?? ''

@@ -50,7 +50,7 @@
                   {{ currency() }} {{ item.unitPrice | number:'1.5-5' }}
                 </td>
                 <td style="text-align: end;" pFrozenColumn alignFrozen="right">
-                  {{ item.profitMargin | percent:'1.0-2' }}
+                  {{ item.profitMargin | number:'1.2-2' }}%
                 </td>
                 <td pFrozenColumn alignFrozen="right">{{ item.condition }}</td>
               </tr>

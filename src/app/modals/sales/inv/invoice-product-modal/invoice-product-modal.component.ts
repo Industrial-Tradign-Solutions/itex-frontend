@@ -22,8 +22,8 @@ const TITLES  = TitlesMessages;
  * The line comes in through `config.data` instead of being re-fetched with
  * §11.3: the parent already holds it inside `item().products`.
  *
- * `profitMargin` is handled in 0-100 here and divided by 100 on submit — the
- * backend stores it as a fraction (0.30 = 30%), same convention as Quotations.
+ * `profitMargin` is handled in 0-100 here and sent as-is — the backend stores
+ * it verbatim (10.00 = 10%), same convention as Quotations.
  */
 @Component({
   selector: 'app-invoice-product-modal',
@@ -134,7 +134,7 @@ export class InvoiceProductModalComponent implements OnInit {
       leadTime: raw.leadTime ?? 0,
       leadTimeType: raw.leadTimeType,
       unitPrice: raw.unitPrice,
-      profitMargin: raw.profitMargin / 100,
+      profitMargin: raw.profitMargin,
       condition: raw.condition
     };
   }
@@ -157,7 +157,7 @@ export class InvoiceProductModalComponent implements OnInit {
       leadTimeType: [product?.leadTimeType ?? null],
 
       profitMargin: [
-        product ? product.profitMargin * 100 : null,
+        product ? product.profitMargin : null,
         [Validators.required, Validators.min(0.01), Validators.max(100)]
       ],
       condition: [product?.condition ?? 'NEW', [Validators.required]]
