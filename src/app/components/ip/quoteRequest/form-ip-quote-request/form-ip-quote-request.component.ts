@@ -627,12 +627,13 @@ export class FormIpQuoteRequestComponent extends CommonPageTab<ListIpQuoteReques
     }
   }
 
-  get filteredClients(): ClientBasic[] {
-    return this.clientSV.filteredList;
-  }
+  // Own fields instead of reading clientSV/supplierSV.filteredList: those live
+  // on root-provided singletons shared by every open tab, so with several QRs
+  // open at once each tab's search overwrote the others' suggestions.
+  filteredClients: ClientBasic[] = [];
 
   searchClient(event: AutoCompleteCompleteEvent) {
-    this.clientSV.searchAutoComplete(event);
+    this.filteredClients = this.clientSV.searchAutoComplete(event);
   }
 
   changeClient(event: AutoCompleteSelectEvent) {
@@ -667,12 +668,10 @@ export class FormIpQuoteRequestComponent extends CommonPageTab<ListIpQuoteReques
     this._listClientContact.set(listContacts);
   }
 
-  get filteredSupplier(): SupplierBasic[] {
-    return this.supplierSV.filteredList;
-  }
+  filteredSupplier: SupplierBasic[] = [];
 
   searchSupplier(event: AutoCompleteCompleteEvent) {
-    this.supplierSV.searchAutoComplete(event);
+    this.filteredSupplier = this.supplierSV.searchAutoComplete(event);
   }
 
   changeSupplier(event: AutoCompleteSelectEvent) {

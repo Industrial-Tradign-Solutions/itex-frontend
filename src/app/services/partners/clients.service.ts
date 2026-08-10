@@ -45,7 +45,7 @@ export class ClientsService {
       });
   }
 
-  searchAutoComplete(event: AutoCompleteCompleteEvent) {
+  searchAutoComplete(event: AutoCompleteCompleteEvent): ClientBasic[] {
     let filtered: ClientBasic[] = [];
     let query = event.query;
 
@@ -57,6 +57,7 @@ export class ClientsService {
     }
 
     this.filteredList = filtered;
+    return filtered;
   }
 
   listAllClientsPage(filter: ClientFilter, page: number, size: number): Observable<Page<ListClients>> {

@@ -367,12 +367,13 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
     }
   }
 
-  get filteredClients(): ClientBasic[] {
-    return this.clientSV.filteredList;
-  }
+  // Own field instead of reading clientSV.filteredList: that field lives on a
+  // root-provided singleton shared by every open tab, so with several
+  // quotations open at once each tab's search overwrote the others' suggestions.
+  filteredClients: ClientBasic[] = [];
 
   searchClient(event: AutoCompleteCompleteEvent) {
-    this.clientSV.searchAutoComplete(event);
+    this.filteredClients = this.clientSV.searchAutoComplete(event);
   }
 
   changeClient(event: AutoCompleteSelectEvent) {

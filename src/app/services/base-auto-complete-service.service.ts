@@ -11,7 +11,7 @@ export abstract class BaseAutoCompleteService<BASIC> {
 
   protected storageSV  = inject(StorageService);
 
-  searchAutoComplete(event: AutoCompleteCompleteEvent) {
+  searchAutoComplete(event: AutoCompleteCompleteEvent): BASIC[] {
     let filtered: BASIC[] = [];
     let query = event.query;
 
@@ -22,6 +22,7 @@ export abstract class BaseAutoCompleteService<BASIC> {
       }
     }
     this.filteredList = filtered;
+    return filtered;
   }
 
   protected set _listItems(items: BASIC[]) {

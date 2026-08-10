@@ -44,7 +44,7 @@ export class SuppliersService {
       });
   }
 
-  searchAutoComplete(event: AutoCompleteCompleteEvent) {
+  searchAutoComplete(event: AutoCompleteCompleteEvent): SupplierBasic[] {
     let filtered: SupplierBasic[] = [];
     let query = event.query;
 
@@ -55,6 +55,7 @@ export class SuppliersService {
       }
     }
     this.filteredList = filtered;
+    return filtered;
   }
 
   listAllSuppliersPage(filter: SupplierFilter, page: number, size: number): Observable<Page<ListSuppliers>> {

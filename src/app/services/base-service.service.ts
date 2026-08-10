@@ -43,7 +43,7 @@ export abstract class BaseService<ENTITY, REQUEST, LIST_ALL, BASIC, LISTS> {
     this._list().push(item);
   }
 
-  searchAutoComplete(event: AutoCompleteCompleteEvent) {
+  searchAutoComplete(event: AutoCompleteCompleteEvent): BASIC[] {
     let filtered: BASIC[] = [];
     let query = event.query;
 
@@ -54,6 +54,7 @@ export abstract class BaseService<ENTITY, REQUEST, LIST_ALL, BASIC, LISTS> {
       }
     }
     this.filteredList = filtered;
+    return filtered;
   }
 
   create(request: REQUEST): Observable<MessageResponse<ENTITY>> {

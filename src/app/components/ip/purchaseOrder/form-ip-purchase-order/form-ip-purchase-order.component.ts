@@ -488,7 +488,7 @@ export class FormIpPurchaseOrderComponent extends CommonPageTab<ListIpPurchaseOr
     this.loadQuotationSuppliers();
 
     // Pre-load current client into filtered list so autocomplete shows name, not id
-    if (item?.client && !this.clientSV.filteredList.some(c => c.id === item.client!.id)) {
+    if (item?.client && !this.filteredClients.some(c => c.id === item.client!.id)) {
       const clientBasic: ClientBasic = {
         id: item.client.id,
         name: item.client.name,
@@ -498,7 +498,7 @@ export class FormIpPurchaseOrderComponent extends CommonPageTab<ListIpPurchaseOr
         paymentTerms: item.client.paymentTerms,
         infoByDepartment: item.client.infoByDepartment
       };
-      this.clientSV.filteredList = [clientBasic, ...this.clientSV.filteredList];
+      this.filteredClients = [clientBasic, ...this.filteredClients];
     }
 
     this.showForm = true;
@@ -557,12 +557,13 @@ export class FormIpPurchaseOrderComponent extends CommonPageTab<ListIpPurchaseOr
     }
   }
 
-  get filteredClients(): ClientBasic[] {
-    return this.clientSV.filteredList;
-  }
+  // Own fields instead of reading clientSV/citySV.filteredList: those live on
+  // root-provided singletons shared by every open tab, so with several POs open
+  // at once each tab's search overwrote the others' suggestions.
+  filteredClients: ClientBasic[] = [];
 
   searchClient(event: AutoCompleteCompleteEvent) {
-    this.clientSV.searchAutoComplete(event);
+    this.filteredClients = this.clientSV.searchAutoComplete(event);
   }
 
   changeClient(event: AutoCompleteSelectEvent) {
@@ -606,12 +607,10 @@ export class FormIpPurchaseOrderComponent extends CommonPageTab<ListIpPurchaseOr
   }
 
 
-  get filteredCities(): BasicCity[] {
-    return this.citySV.filteredCities;
-  }
+  filteredCities: BasicCity[] = [];
 
   searchCity(event: AutoCompleteCompleteEvent) {
-    this.citySV.searchAutoComplete(event);
+    this.filteredCities = this.citySV.searchAutoComplete(event);
   }
 
   changeSupplier(event: any) {

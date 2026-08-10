@@ -214,7 +214,7 @@ export class IpProductsService extends BaseAutoCompleteService<BasicIpProduct> {
       );
   }
 
-  override searchAutoComplete(event: AutoCompleteCompleteEvent) {
+  override searchAutoComplete(event: AutoCompleteCompleteEvent): BasicIpProduct[] {
     let filtered: BasicIpProduct[] = [];
     let query = event.query;
 
@@ -231,6 +231,7 @@ export class IpProductsService extends BaseAutoCompleteService<BasicIpProduct> {
       }
     }
     this.filteredList = filtered;
+    return filtered;
   }
 
   get listIpProducts(): Signal<BasicIpProduct[]> {

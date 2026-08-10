@@ -440,19 +440,18 @@ export class FormIpProductsComponent extends CommonPageTab<ListIpProduct, IpProd
     }
   }
 
-  get filteredBrands(): BasicBrand[] {
-    return this.brandsSV.filteredBrands;
-  }
+  // Own fields instead of reading brandsSV/countrySV.filteredList: those live
+  // on root-provided singletons shared by every open tab, so with several
+  // products open at once each tab's search overwrote the others' suggestions.
+  filteredBrands: BasicBrand[] = [];
 
   searchBrand(event: AutoCompleteCompleteEvent) {
-    this.brandsSV.searchAutoComplete(event);
+    this.filteredBrands = this.brandsSV.searchAutoComplete(event);
   }
 
-  get filteredCoo(): BasicCountry[] {
-    return this.countrySV.filteredCountries;
-  }
+  filteredCoo: BasicCountry[] = [];
 
   searchCoo(event: AutoCompleteCompleteEvent) {
-    this.countrySV.searchAutoComplete(event);
+    this.filteredCoo = this.countrySV.searchAutoComplete(event);
   }
 }
