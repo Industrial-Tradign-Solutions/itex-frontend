@@ -69,6 +69,7 @@ GET /sales/invoice?page=0&size=10&status=ISSUED
       "balanceDue": 10000.00,
       "dueAt": "2026-08-30T23:59:59-04:00",
       "overdue": false,
+      "paidLate": false,
       "createdAt": "2026-07-15T10:30:00-04:00"
     }
   ],
@@ -237,6 +238,7 @@ PATCH /sales/invoice/open-lock/{invoice_id}?type=EDIT
     "balanceDue": 15000.00,
     "dueAt": null,
     "overdue": false,
+    "paidLate": false,
     "overdueNotifiedAt": null,
     "issuedAt": null,
     "partialPaidAt": null,
@@ -346,6 +348,11 @@ PATCH /sales/invoice/close/{invoice_id}
 
 Sin body. Sin query params.
 
+> **Solo el dueño del lock puede cerrar.** Si la factura está abierta por otro usuario, la petición
+> falla con `sales.invoice.not-block-by` — antes cualquier usuario del módulo podía soltar el lock
+> de un compañero. Cerrar una factura que no está abierta, o que está abierta por uno mismo, sigue
+> siendo idempotente.
+
 ### Response 200 OK
 
 ```json
@@ -360,6 +367,7 @@ Sin body. Sin query params.
 
 | Código | Condición | Cuerpo |
 |---|---|---|
+| `400` | La factura está abierta por otro usuario | `ErrorResponse` — `"sales.invoice.not-block-by"` |
 | `401` | Token ausente/inválido/expirado | `ErrorResponse` |
 | `403` | Sin acceso al módulo `INVOICES` | `ErrorResponse` |
 | `404` | `invoice_id` no existe | `ErrorResponse` — `"sales.invoice.not-exist"` |
@@ -440,7 +448,7 @@ Sin body.
 ## 7. Obtener historial de factura
 
 ```
-GET /sales/invoice/{invoiceId}/history
+GET /sales/invoice/{invoice_id}/history
 ```
 
 ### Entrada
@@ -449,9 +457,13 @@ GET /sales/invoice/{invoiceId}/history
 
 | Parámetro | Tipo | Descripción |
 |---|---|---|
-| `invoiceId` | `UUID` | ID de la factura |
+| `invoice_id` | `UUID` | ID de la factura |
 
 Sin query params.
+
+> **Alcance por vendedor.** Además del permiso `VIEW_HISTORY_INVOICE`, se aplica el mismo filtro que
+> el resto del módulo: sin `VIEW_ALL_INVOICE` solo se ve el historial de las facturas propias
+> (`sales.invoice.access-denied`). Una factura inexistente devuelve `404`, no una lista vacía.
 
 ### Response 200 OK
 
@@ -493,10 +505,13 @@ Sin query params.
 |---|---|---|
 | `401` | Token ausente/inválido/expirado | `ErrorResponse` |
 | `403` | Sin permiso `VIEW_HISTORY_INVOICE (5001003)` | `ErrorResponse` |
+| `403` | Sin alcance sobre la factura (no es su `salesRep` y no tiene `VIEW_ALL_INVOICE`) | `ErrorResponse` — `"sales.invoice.access-denied"` |
+| `404` | `invoice_id` no existe | `ErrorResponse` — `"sales.invoice.not-exist"` |
 
 ### Permisos
 
 - `VIEW_HISTORY_INVOICE (5001003)` — **obligatorio**
+- Alcance por vendedor: `VIEW_ALL_INVOICE (5001013)` o ser el `salesRep` de la factura
 
 ---
 
@@ -739,7 +754,22 @@ Crea una factura en estado `DRAFT` y queda **bloqueada por el usuario autenticad
 PUT /sales/invoice/{invoice_id}
 ```
 
-Edita una factura en estado `DRAFT`. Solo aplica a drafts; nunca toca numeración, status, departamento, montos ni timestamps de ciclo de vida.
+Edita el encabezado de la factura. Nunca toca numeración, status, departamento, montos ni timestamps
+de ciclo de vida.
+
+**Dos modos según el estado:**
+
+| Estado | Comportamiento |
+|---|---|
+| `DRAFT` | Se aplica el body completo, como siempre |
+| `ISSUED` | Modo restringido: solo se aplican `internalRemarks`, `remarks`, `orderNumber`, `awbBl` y `packingList` |
+| Otro | `400 sales.invoice.not-editable` |
+
+En modo restringido, cualquier **cambio real** en un campo financiero o estructural (`clientId`,
+`clientContactId`, `currency`, `incoterms`, `via`, `paymentTerms`, `salesRepId`, `shipTo*`) se
+rechaza con `sales.invoice.issued-restricted-field` nombrando el campo. Reenviar los valores
+actuales — que es lo que hace el frontend al mandar el formulario completo — no falla; solo falla un
+cambio efectivo. Los line items (productos, cargos, impuestos) siguen bloqueados fuera de `DRAFT`.
 
 ### Entrada
 
@@ -801,7 +831,7 @@ Edita una factura en estado `DRAFT`. Solo aplica a drafts; nunca toca numeració
 
 1. **Buscar factura** → `404` si no existe (`sales.invoice.not-exist`).
 2. **Guard de acceso por vendedor**: sin `VIEW_ALL_INVOICE`, solo el `salesRep` puede editar → `403`/`400` (`sales.invoice.access-denied`).
-3. **Guard de estado editable**: solo `DRAFT` → `400` (`sales.invoice.not-editable`). `ISSUED`/`PARTIAL_PAID` solo aceptan pagos; `PAID`/`CANCELLED` son finales.
+3. **Guard de estado editable**: `DRAFT` (completo) o `ISSUED` (restringido a los cinco campos no financieros); cualquier otro → `400` (`sales.invoice.not-editable`). `PARTIAL_PAID` solo acepta pagos; `PAID` solo anulación de pagos; `CANCELLED` es final.
 4. **Guard de bloqueo**: la factura debe estar abierta por el usuario autenticado → `400` (`sales.invoice.not-block` si nadie la tiene abierta, `sales.invoice.not-block-by` si la tiene otro usuario — con el nombre de quién la bloquea).
 5. **Snapshot previo** para el diff del historial.
 6. **Cambio de cliente** (si `clientId` difiere): valida que el nuevo cliente sea facturable y re-deriva sus datos; el frontend debe recargar el ship-to del nuevo cliente.
@@ -847,6 +877,7 @@ Edita una factura en estado `DRAFT`. Solo aplica a drafts; nunca toca numeració
     "balanceDue": 0.00000,
     "dueAt": null,
     "overdue": false,
+    "paidLate": false,
     "overdueNotifiedAt": null,
     "issuedAt": null,
     "partialPaidAt": null,
@@ -875,7 +906,8 @@ Edita una factura en estado `DRAFT`. Solo aplica a drafts; nunca toca numeració
 | `403` | Sin permiso `UPDATE_INVOICE (5001002)` | `ErrorResponse` |
 | `403` | Sin alcance sobre la factura (no es su `salesRep` y no tiene `VIEW_ALL_INVOICE`) | `ErrorResponse` — `"sales.invoice.access-denied"` |
 | `404` | `invoice_id` no existe | `ErrorResponse` — `"sales.invoice.not-exist"` |
-| `400` | Factura no está en `DRAFT` | `ErrorResponse` — `"sales.invoice.not-editable"` |
+| `400` | Factura no está en `DRAFT` ni en `ISSUED` | `ErrorResponse` — `"sales.invoice.not-editable"` |
+| `400` | Factura en `ISSUED` y el body cambia un campo financiero o estructural | `ErrorResponse` — `"sales.invoice.issued-restricted-field"` con el nombre del campo |
 | `400` | Factura no está bloqueada o la bloquea otro usuario | `ErrorResponse` — `"sales.invoice.not-block"` / `"sales.invoice.not-block-by"` |
 | `400` | Validación `@Valid` falla (ship-to obligatorio, email inválido, tamaños) | `ErrorResponse` con `formErrors` |
 | `400` | Cambio de cliente a uno incompleto | `ErrorResponse` — `"sales.invoice.client-incomplete"` |
@@ -914,10 +946,11 @@ de la factura padre, no dentro del payload de `PUT /sales/invoice/{id}`.
 
 Base: `/sales/invoice/{invoice_id}/product`
 
-> **Precio.** `unitPrice` es el **costo** y `profitMargin` el **margen tal cual** (no fracción, ej.
-> `30.00` = 30%, `0.40` = 0.40%; mínimo `0.01`, máximo `100`). El backend lo divide entre 100 para
-> aplicarlo: `quantity × unitPrice × (1 + profitMargin / 100)` — el margen se aplica **una sola
-> vez**. El `extendedPrice` de la respuesta ya lo trae aplicado.
+> **Precio.** `unitPrice` es el **costo** y `profitMargin` el **margen como porcentaje directo**
+> (`30.00` = 30%, `0.40` = 0.40%), en el rango 0.01–100. **No es una fracción**: el valor viaja y se
+> persiste tal cual, y el servidor lo divide entre 100 al calcular. El precio facturado es
+> `quantity × unitPrice × (1 + profitMargin / 100)` — el margen se aplica **una sola vez**. El
+> `extendedPrice` de la respuesta ya lo trae aplicado.
 
 ### 11.1 Agregar producto — `POST /sales/invoice/{invoice_id}/product`
 
@@ -1164,10 +1197,13 @@ Request body:
   "type": "US_SALES_TAX",
   "description": "US Sales Tax NY",
   "rate": 0.0875,
-  "taxableBase": 5500.00000,
-  "value": 481.25000
+  "taxableBase": 5500.00000
 }
 ```
+
+> **`value` no se envía.** El backend lo calcula como `taxableBase * rate` con `BigDecimal`
+> (escala 5, HALF_UP) y lo devuelve ya resuelto. La base gravable sí la decide el frontend: el
+> backend no la deriva del subtotal de productos.
 
 Response `201 Created`:
 
@@ -1229,9 +1265,9 @@ Response `201 Created`:
 }
 ```
 
-### 14.2 Desvincular PO — `DELETE /sales/invoice/{invoice_id}/purchase-order/{ip_po_id}`
+### 14.2 Desvincular PO — `DELETE /sales/invoice/{invoice_id}/purchase-order/{po_id}`
 
-`{ip_po_id}` es el id del PO. Response `200 OK`:
+`{po_id}` es el id del PO. Response `200 OK`:
 
 ```json
 { "title": "Success", "message": "The Purchase Order has been successfully unlinked from the Invoice", "data": "uuid" }
@@ -1245,6 +1281,432 @@ Response `201 Created`:
 | 400 | `sales.invoice.not-editable` / `not-block` / `not-block-by` | Estado o lock inválido |
 | 403 | `sales.invoice.access-denied` | Alcance por vendedor |
 | 404 | `sales.invoice.not-exist` / `ip.po.not-exist` | Factura o PO inexistente |
+
+---
+
+## 15. Ciclo de vida de la factura (estados)
+
+Todas las transiciones manuales pasan por un único punto (`InvoiceTransitionGuard`); ningún
+endpoint escribe `status` por su cuenta. Matriz vigente:
+
+| Desde | Hacia permitido |
+|---|---|
+| `DRAFT` | `ISSUED`, `CANCELLED` |
+| `ISSUED` | `DRAFT` (revert), `PARTIAL_PAID`, `PAID`, `CANCELLED` |
+| `PARTIAL_PAID` | `ISSUED` (al anular todos los pagos), `PAID` |
+| `PAID` | `PARTIAL_PAID`, `ISSUED` (al anular pagos) |
+| `CANCELLED` | — (final) |
+
+`PARTIAL_PAID` y `PAID` **no se piden**: se derivan del monto pagado (§16). Los tres endpoints de
+esta sección requieren, además del permiso, que el usuario sea el `salesRep` de la factura y que la
+tenga abierta con lock (`PATCH /open-lock/{id}?type=EDIT`).
+
+### 15.1 Emitir factura — `PATCH /sales/invoice/{invoice_id}/issue`
+
+```
+PATCH /sales/invoice/{invoice_id}/issue
+```
+
+Sin body.
+
+**Lógica del servidor**
+
+1. Valida transición `DRAFT → ISSUED`.
+2. Recalcula y **congela** `totalAmount` (productos + charges + taxes).
+3. Valida precondiciones: ≥1 producto, `totalAmount > 0`, y cliente/contacto facturable.
+4. Si `number` es `null`, toma el consecutivo final `INV` (arranca en 1000). Si la factura ya tenía
+   `number` (draft revertido), **lo conserva**.
+5. `issuedAt = now`, `dueAt` calculado según `paymentTerms` (ver tabla abajo), `isOverdue = false`,
+   `overdueNotifiedAt = null`, `status = ISSUED`.
+6. Registra el evento `ISSUE` en el historial con el diff.
+
+**Cálculo de `dueAt` según `paymentTerms`**
+
+| Términos | Fórmula |
+|---|---|
+| `NET_5` … `NET_180` | `issuedAt + N días` |
+| `NET_15TH_PROX`, `NET_20TH_PROX`, `NET_30TH_PROX` | día N del mes siguiente (recortado al último día en meses cortos) |
+| `NET_30_END_OF_THE_MONTH`, `NET_60_END_OF_THE_MONTH` | último día del mes de emisión + N días |
+| `DUE_UPON_RECEIPT`, `COD` | `issuedAt` |
+| `ADVANCED`, `PRIOR_TO_SHIPMENT`, `W_DOCUMENTS`, `TO_BE_AGREED` | `dueAt = null` (no entra al cálculo de vencidas) |
+
+**Response 200 OK** — `MessageResponse<InvoiceResponse>` (mismo schema del detalle de factura):
+
+```json
+{
+  "title": "Success",
+  "message": "The Invoice has been successfully issued",
+  "data": {
+    "id": "3f2a...",
+    "draftNumber": "000012",
+    "number": "001000",
+    "status": "ISSUED",
+    "totalAmount": 15400.00000,
+    "paidAmount": 0.00000,
+    "balanceDue": 15400.00000,
+    "issuedAt": "2026-08-10T14:05:31-04:00",
+    "dueAt": "2026-09-09T14:05:31-04:00",
+    "isOverdue": false,
+    "pdfUrl": null
+  }
+}
+```
+
+> `pdfUrl` sigue en `null`: la generación del PDF es una fase aparte.
+
+### 15.2 Revertir a borrador — `PATCH /sales/invoice/{invoice_id}/revert-to-draft`
+
+```
+PATCH /sales/invoice/{invoice_id}/revert-to-draft
+```
+
+Sin body. Solo desde `ISSUED` y **solo si la factura no tiene pagos vigentes**.
+
+**Lógica del servidor**
+
+- `status = DRAFT`; `issuedAt`, `dueAt`, `overdueNotifiedAt` y `pdfUrl` se limpian a `null`;
+  `isOverdue = false`.
+- **`number` se conserva** — queda reservado para siempre en esa factura. Desde este momento la
+  factura es un "draft bloqueado": es editable pero **ya no se puede eliminar**. El mensaje de
+  respuesta lo advierte explícitamente para mostrarlo al usuario.
+- Al volver a emitir, reutiliza ese mismo `number` y recalcula `issuedAt`/`dueAt`.
+
+**Response 200 OK** — `MessageResponse<InvoiceResponse>`, mensaje
+`The Invoice has been reverted to Draft, its number stays reserved and it can no longer be deleted`.
+
+### 15.3 Cancelar factura — `PATCH /sales/invoice/{invoice_id}/cancel`
+
+```
+PATCH /sales/invoice/{invoice_id}/cancel
+Content-Type: application/json
+```
+
+| Campo | Tipo | Obligatorio | Validación |
+|---|---|---|---|
+| `cancelReason` | string | **Sí** | no vacío, máx. 1000 caracteres |
+
+```json
+{ "cancelReason": "Duplicated invoice, replaced by INV-001042" }
+```
+
+**Lógica del servidor**
+
+- Desde `DRAFT` o `ISSUED`; en ambos casos se valida que no existan pagos vigentes.
+- `status = CANCELLED`, `cancelledAt = now`, `cancelReason` persistido, `isOverdue = false`,
+  `overdueNotifiedAt = null`.
+- **Libera el lock** de la factura: es un estado final y no debe seguir ocupando un tab.
+- La factura **nunca** se borra físicamente; queda para auditoría.
+
+**Response 200 OK** — `MessageResponse<InvoiceResponse>` con `status: "CANCELLED"`.
+
+### 15.4 Eliminar factura — `DELETE /sales/invoice/{invoice_id}`
+
+```
+DELETE /sales/invoice/{invoice_id}
+```
+
+Sin body. Solo para un **draft nuevo**: `status = DRAFT` **y** `number = null`.
+
+**Lógica del servidor**
+
+- Borra el historial y la fila de clonación de esa factura, luego la factura (productos, charges,
+  taxes, pagos y POs vinculadas se van en cascada).
+- Devuelve el `draftNumber` a la lista de números libres, de modo que la siguiente factura creada
+  lo reutiliza.
+
+**Response 200 OK**
+
+```json
+{
+  "title": "Success",
+  "message": "The Invoice has been successfully deleted",
+  "data": "3f2a1b8c-..."
+}
+```
+
+### Errores posibles (§15)
+
+| Código | Mensaje | Causa |
+|---|---|---|
+| 400 | `sales.invoice.invalid-transition` | Transición no permitida; el texto incluye estado origen y destino |
+| 400 | `sales.invoice.has-payments` | Revert o cancel sobre una factura con pagos vigentes |
+| 400 | `sales.invoice.issue-no-products` | Emitir sin productos |
+| 400 | `sales.invoice.issue-zero-total` | Emitir con total ≤ 0 |
+| 400 | `sales.invoice.client-incomplete` | El Cliente perdió datos obligatorios (dirección, ciudad, contacto, teléfono) |
+| 400 | `sales.invoice.not-deletable` | Eliminar una factura que no es draft, o un draft que ya tuvo `number` |
+| 400 | `sales.invoice.not-block` / `not-block-by` | La factura no está abierta por el usuario |
+| 400 | `cancelReason - Cancel reason is required` | Cancelar sin motivo (`formErrors.cancelReason`) |
+| 403 | `sales.invoice.access-denied` | El usuario no es el `salesRep` (VIEW_ALL no otorga escritura) |
+| 404 | `sales.invoice.not-exist` | Factura inexistente |
+
+---
+
+## 16. Pagos de la factura
+
+Base: `/sales/invoice/{invoice_id}/payment`. Los pagos son **inmutables**: no se editan ni se
+borran; un error se corrige anulando el pago y registrando uno nuevo.
+
+Al registrar o anular, el servidor recalcula en la misma transacción:
+
+- `paidAmount` = suma de pagos **no anulados**.
+- `balanceDue` = `totalAmount - paidAmount`.
+- `status`: `paidAmount = 0` → `ISSUED`; `0 < paidAmount < totalAmount` → `PARTIAL_PAID`
+  (`partialPaidAt` se fija solo la primera vez); `paidAmount ≥ totalAmount` → `PAID`
+  (`paidAt = now`, `isOverdue = false`, `overdueNotifiedAt = null`).
+
+### 16.1 Registrar pago — `POST /sales/invoice/{invoice_id}/payment`
+
+```
+POST /sales/invoice/{invoice_id}/payment
+Content-Type: multipart/form-data
+```
+
+Dos partes:
+
+| Parte | Tipo | Obligatorio | Descripción |
+|---|---|---|---|
+| `payment` | `application/json` | **Sí** | Cuerpo del pago (tabla abajo) |
+| `receipt` | archivo | **Sí** | Comprobante: `pdf`, `jpg`, `jpeg` o `png` |
+
+Campos de la parte `payment`:
+
+| Campo | Tipo | Obligatorio | Validación |
+|---|---|---|---|
+| `amount` | number | **Sí** | `> 0` y `≤ balanceDue` (no se permite sobre-pago) |
+| `paymentDate` | string (`YYYY-MM-DD`) | **Sí** | — |
+| `paymentMethod` | enum | **Sí** | `ACH`, `CREDIT_CARD`, `WIRE_TRANSFER`, `CHECK` |
+| `notes` | string | No | máx. 1000 caracteres |
+
+```json
+{
+  "amount": 5000.00,
+  "paymentDate": "2026-08-10",
+  "paymentMethod": "WIRE_TRANSFER",
+  "notes": "Ref. 998877"
+}
+```
+
+Solo se acepta si `status` es `ISSUED` o `PARTIAL_PAID`, el usuario es el `salesRep` y tiene la
+factura abierta con lock.
+
+**Response 201 Created** — `MessageResponse<InvoicePaymentResponse>`:
+
+```json
+{
+  "title": "Success",
+  "message": "The payment has been successfully registered",
+  "data": {
+    "id": "9a1c...",
+    "amount": 5000.00000,
+    "paymentDate": "2026-08-10",
+    "paymentMethod": "WIRE_TRANSFER",
+    "receiptOriginalName": "comprobante-agosto.pdf",
+    "notes": "Ref. 998877",
+    "voided": false,
+    "voidedReason": null,
+    "voidedAt": null,
+    "voidedBy": null,
+    "registeredBy": { "id": "...", "fullName": "Ana Pérez", "departments": [], "role": null, "active": true },
+    "createdAt": "2026-08-10T14:22:07-04:00"
+  }
+}
+```
+
+> El comprobante se almacena en el servidor bajo
+> `{data}/{año}/{mes}/{departamento}/INV/payments/{número}-{uuid}.{ext}` (mismo layout que los PDF
+> de QR/Q/PO). La ruta física **no** se expone en la respuesta; solo el nombre original del archivo.
+
+### 16.2 Anular pago — `PATCH /sales/invoice/{invoice_id}/payment/{payment_id}/void`
+
+```
+PATCH /sales/invoice/{invoice_id}/payment/{payment_id}/void
+Content-Type: application/json
+```
+
+| Campo | Tipo | Obligatorio | Validación |
+|---|---|---|---|
+| `voidedReason` | string | **Sí** | no vacío, máx. 1000 caracteres |
+
+```json
+{ "voidedReason": "Wrong amount, re-registered as payment #2" }
+```
+
+Marca `voided = true`, `voidedAt`, `voidedBy`, y recalcula saldo y estado (`PAID → PARTIAL_PAID`, o
+`PARTIAL_PAID → ISSUED` si ya no queda ningún pago vigente). El archivo del comprobante **no** se
+borra, queda para auditoría.
+
+**Response 200 OK** — `MessageResponse<InvoicePaymentResponse>` con `voided: true`.
+
+### 16.3 Listar pagos — `GET /sales/invoice/{invoice_id}/payment`
+
+Devuelve todos los pagos de la factura, anulados incluidos, ordenados por fecha de creación.
+
+**Response 200 OK** — `List<InvoicePaymentResponse>` (array plano, sin `MessageResponse`).
+
+### Errores posibles (§16)
+
+| Código | Mensaje | Causa |
+|---|---|---|
+| 400 | `sales.invoice.payment.not-payable` | La factura no está en `ISSUED` ni `PARTIAL_PAID` |
+| 400 | `sales.invoice.payment.invalid-amount` | El monto supera el saldo pendiente |
+| 400 | `sales.invoice.payment.receipt-required` | Falta el comprobante |
+| 400 | `file.type.error` | Extensión de comprobante no permitida |
+| 400 | `sales.invoice.payment.not-exist` | El pago no pertenece a esa factura |
+| 400 | `sales.invoice.payment.already-voided` | El pago ya estaba anulado |
+| 400 | `sales.invoice.not-block` / `not-block-by` | La factura no está abierta por el usuario |
+| 400 | `amount - The amount must be greater than zero` | Validación de campo (`formErrors`) |
+| 403 | `sales.invoice.access-denied` | El usuario no es el `salesRep` |
+| 404 | `sales.invoice.not-exist` | Factura inexistente |
+
+---
+
+## 17. Cambios sobre contratos existentes
+
+- **`payment_terms` (dropdown en `/common/static_lists`)**: el contrato del endpoint **no cambia**
+  (sigue siendo `{key, value}`), pero cada término pasó a llevar internamente su regla de
+  vencimiento. El frontend puede seguir usando la lista tal cual; solo debe tener presente que los
+  términos `ADVANCED`, `PRIOR_TO_SHIPMENT`, `W_DOCUMENTS` y `TO_BE_AGREED` dejan `dueAt` en `null`.
+- **`InvoiceResponse`**: los campos que hasta ahora siempre llegaban en `null`/`0` ya se llenan a lo
+  largo del ciclo de vida — `number`, `issuedAt`, `dueAt`, `paidAmount`, `balanceDue`,
+  `partialPaidAt`, `paidAt`, `cancelledAt`, `cancelReason`, `isOverdue`. No se agregaron ni
+  removieron campos.
+- **`open-lock`**: una factura en `PAID` ahora **sí** admite lock de edición, porque anular un pago
+  es la vía de corrección de una factura pagada. `CANCELLED` sigue sin ser bloqueable.
+- **Historial**: el diff de las acciones `ISSUE`, `CANCEL` y `REVERT_TO_DRAFT` ahora también incluye
+  `number`, `totalAmount`, `paidAmount`, `partialPaidAt` y `paidAt`. Se agregan las acciones
+  `REGISTER_PAYMENT` y `VOID_PAYMENT` al historial de la factura.
+- **`POST`/`PUT /sales/invoice/{id}/tax` — cambio breaking**: el campo **`value` se eliminó del
+  request**. El frontend envía `rate` y `taxableBase`; el backend calcula
+  `value = taxableBase * rate` con `BigDecimal` (escala 5, HALF_UP) y lo persiste. Enviar `value`
+  ya no tiene efecto. En la respuesta el campo sigue existiendo, con el valor calculado.
+  > Excepción: los impuestos importados desde un PO (`charge/import-from-po`) traen `rate = 0`,
+  > `taxableBase = 0` y el monto del `salesTax` del PO tal cual, porque ese dato llega sin tasa ni
+  > base. Si se edita esa fila por el endpoint de taxes, el valor pasa a recalcularse.
+- **`InvoiceResponse` y `ListInvoiceResponse`** ganan **`paidLate`** (boolean): la factura se pagó
+  después de su `dueAt`. Es un derivado de `paidAt > dueAt`, y sirve para no perder el dato cuando
+  `isOverdue` se apaga al recibirse el pago.
+- **`pdfUrl` solo se llena en facturas emitidas.** En `DRAFT` siempre llega `null` aunque el
+  `print` funcione: el PDF de borrador se genera al vuelo y no se guarda. `pdfUrl != null` equivale
+  entonces a "hay un documento oficial".
+- **`POST /sales/invoice/{id}/payment`**: el `amount` acepta como máximo **5 decimales**
+  (`@Digits`); antes un valor con más decimales se aceptaba y la base de datos lo redondeaba en
+  silencio. Además, el registro y la anulación bloquean la fila de la factura mientras validan y
+  recalculan, así que dos peticiones simultáneas ya no pueden dejarla sobre-pagada — la segunda
+  espera y luego falla con `sales.invoice.payment.invalid-amount`.
+
+### Cambios de la auditoría del módulo
+
+- **`PUT /sales/invoice/{id}` ahora acepta facturas `ISSUED`** en modo restringido (§10): solo
+  `internalRemarks`, `remarks`, `orderNumber`, `awbBl` y `packingList`. Antes devolvía
+  `not-editable` para todo lo que no fuera `DRAFT`, contra lo que dice la guía §4. Nuevo error
+  `sales.invoice.issued-restricted-field`.
+- **`GET /sales/invoice/{id}/history` aplica alcance por vendedor** (§7). Antes cualquiera con
+  `VIEW_HISTORY_INVOICE` leía el historial de facturas ajenas. También pasa de lista vacía a `404`
+  cuando la factura no existe. El path variable se normalizó a `{invoice_id}` (antes `{invoiceId}`);
+  la ruta efectiva no cambia.
+- **`PATCH /sales/invoice/close/{id}` valida el dueño del lock** (§5): cerrar una factura abierta
+  por otro usuario devuelve `sales.invoice.not-block-by`.
+- **`GET /sales/invoice/statement/{client_id}` excluye los borradores** (§18.2): antes sumaban en
+  `totalInvoiced` y aparecían en el bucket `current` del aging.
+- **`DELETE /sales/invoice/{id}/purchase-order/{po_id}`**: el path variable pasó de `ip_po_id` a
+  `po_id` — el valor siempre fue el id del PO, no el de la fila de enlace. La ruta efectiva no
+  cambia.
+
+---
+
+## 18. Documento PDF y estado de cuenta
+
+### 18.1 Imprimir factura — `GET /sales/invoice/print/{invoice_id}`
+
+```
+GET /sales/invoice/print/{invoice_id}
+```
+
+Permiso: `VIEW_INVOICE`. **No** exige ser el `salesRep` ni tener la factura abierta con lock —
+imprimir es una lectura.
+
+**Dos comportamientos según el estado**
+
+| Estado | Qué hace |
+|---|---|
+| `DRAFT` | Regenera el PDF en cada llamada, con los datos actuales, y lo marca como borrador. **No** persiste `pdfUrl`. |
+| Cualquier otro | Si ya existe el documento oficial lo devuelve tal cual, sin regenerar. Si no existe (por ejemplo porque falló al emitir), lo genera y lo persiste en `pdfUrl`. |
+
+El nombre del archivo en disco es el número oficial con ceros a la izquierda (`001000.pdf`), o el
+`draftNumber` mientras la factura sea borrador, bajo
+`{data}/{año}/{mes}/{departamento}/INV/`. El idioma de la plantilla sale del `language` del Cliente.
+
+**Response 200 OK** — `application/pdf`, `Content-Disposition: inline; filename="invoice_<id>.pdf"`.
+El cuerpo son los bytes del PDF, no un JSON.
+
+| Código | Mensaje | Causa |
+|---|---|---|
+| 400 | `sales.invoice.not-generate-doc` | La factura no tiene productos |
+| 403 | `sales.invoice.access-denied` | Alcance por vendedor |
+| 404 | `sales.invoice.not-exist` | Factura inexistente |
+| 404 | error de generación | La plantilla Jasper no está disponible o falló el render |
+
+> **Print & Send.** No hay endpoint propio de envío, igual que en QR, Q y PO: el frontend descarga
+> el PDF de este endpoint y lo reenvía por `POST /email/send-attachment` (multipart, parte
+> `request` con el `EmailRequest` y parte `files` con el archivo). La única regla adicional del
+> módulo de facturas es que **el botón de enviar solo se habilita con la factura ya emitida**; en
+> `DRAFT` se puede imprimir pero no enviar. Esa validación es del frontend — el endpoint de correo
+> es genérico y no conoce el módulo.
+
+### 18.2 Estado de cuenta del cliente — `GET /sales/invoice/statement/{client_id}`
+
+```
+GET /sales/invoice/statement/{client_id}
+```
+
+Permiso: `VIEW_INVOICE`. Aplica el mismo alcance por vendedor que el listado: sin
+`VIEW_ALL_INVOICE`, las cifras solo cubren las facturas propias.
+
+**Solo cuenta lo efectivamente facturado**: `ISSUED`, `PARTIAL_PAID` y `PAID`. Los **borradores** y
+las **canceladas** quedan fuera de `invoiceCount`, de los totales y del aging — un draft nunca se
+facturó y una cancelada no representa nada adeudado.
+
+**Response 200 OK** — objeto plano (sin `MessageResponse`):
+
+```json
+{
+  "clientId": "8c1d...",
+  "clientName": "ACME Industrial S.A.S.",
+  "invoiceCount": 14,
+  "totalInvoiced": 184500.00000,
+  "totalPaid": 121000.00000,
+  "totalOutstanding": 63500.00000,
+  "aging": {
+    "current": 20000.00000,
+    "days1To30": 18500.00000,
+    "days31To60": 15000.00000,
+    "days61To90": 6000.00000,
+    "days90Plus": 4000.00000
+  },
+  "overdueInvoices": [
+    {
+      "id": "3f2a...",
+      "number": "001000",
+      "status": "PARTIAL_PAID",
+      "totalAmount": 15400.00000,
+      "paidAmount": 5000.00000,
+      "balanceDue": 10400.00000,
+      "dueAt": "2026-06-09T14:05:31-04:00",
+      "overdue": true,
+      "paidLate": false
+    }
+  ]
+}
+```
+
+- `aging` reparte el **saldo pendiente** según los días transcurridos desde `dueAt`. `current` es lo
+  que aún no vence, e incluye las facturas cuyos términos de pago no permiten calcular vencimiento
+  (`dueAt = null`).
+- `overdueInvoices` son las filas del listado (`ListInvoiceResponse`) con `overdue = true`.
+
+| Código | Mensaje | Causa |
+|---|---|---|
+| 404 | `partner.client.not-exist` | Cliente inexistente |
 
 ---
 
@@ -1296,9 +1758,22 @@ Para errores de validación (`422`/`400` por `@Valid`):
 | `POST/PUT/DELETE /sales/invoice/{id}/tax[/**]` | `@AccessToAction(UPDATE_INVOICE)` | `UPDATE_INVOICE (5001002)` |
 | `GET /sales/invoice/{id}/tax/{tid}` | `@AccessToAction(VIEW_INVOICE)` | `VIEW_INVOICE (5001007)` |
 | `POST/DELETE /sales/invoice/{id}/purchase-order[/**]` | `@AccessToAction(UPDATE_INVOICE)` | `UPDATE_INVOICE (5001002)` |
+| `PATCH /sales/invoice/{id}/issue` | `@AccessToAction(ISSUE_INVOICE)` | `ISSUE_INVOICE (5001008)` |
+| `PATCH /sales/invoice/{id}/revert-to-draft` | `@AccessToAction(REVERT_INVOICE_TO_DRAFT)` | `REVERT_INVOICE_TO_DRAFT (5001011)` |
+| `PATCH /sales/invoice/{id}/cancel` | `@AccessToAction(CANCEL_INVOICE)` | `CANCEL_INVOICE (5001005)` |
+| `DELETE /sales/invoice/{id}` | `@AccessToAction(DELETE_INVOICE)` | `DELETE_INVOICE (5001010)` |
+| `POST /sales/invoice/{id}/payment` | `@AccessToAction(REGISTER_PAYMENT_INVOICE)` | `REGISTER_PAYMENT_INVOICE (5001009)` |
+| `PATCH /sales/invoice/{id}/payment/{pid}/void` | `@AccessToAction(VOID_PAYMENT_INVOICE)` | `VOID_PAYMENT_INVOICE (5001012)` |
+| `GET /sales/invoice/{id}/payment` | `@AccessToAction(VIEW_INVOICE)` | `VIEW_INVOICE (5001007)` |
+| `GET /sales/invoice/print/{id}` | `@AccessToAction(VIEW_INVOICE)` | `VIEW_INVOICE (5001007)` |
+| `GET /sales/invoice/statement/{client_id}` | `@AccessToAction(VIEW_INVOICE)` | `VIEW_INVOICE (5001007)` |
 | `GET /common/static_lists` | Sin anotación (público con JWT) | Solo autenticación |
 
 > **Alcance por vendedor:** Los endpoints que acceden a una factura específica (`open-lock`, `clone`) también validan que el usuario tenga `VIEW_ALL_INVOICE (5001013)` o sea el `salesRep` de la factura. Los endpoints de listado (`GET`) aplican el mismo filtro a nivel de query.
+>
+> **Escritura:** todas las transiciones de estado, el borrado y los pagos exigen además ser el
+> `salesRep` de la factura (`VIEW_ALL_INVOICE` da visibilidad, no escritura) y tenerla abierta con
+> lock de edición.
 
 ---
 
