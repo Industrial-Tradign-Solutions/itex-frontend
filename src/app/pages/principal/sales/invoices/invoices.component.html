@@ -18,6 +18,17 @@
           </app-list-invoice>
         </ng-template>
       </p-tabPanel>
+      <!-- Fixed tab, deliberately outside `tabs()`: the statement is not an
+           invoice, holds no lock and must not consume the open-tabs budget. -->
+      <p-tabPanel header="Statement">
+        <ng-template pTemplate="header">
+          <i class="pi pi-chart-bar"></i>
+          <span>Statement</span>
+        </ng-template>
+        <ng-template pTemplate="content">
+          <app-statement-invoice (opened)="openTab($event)" />
+        </ng-template>
+      </p-tabPanel>
       @for (invoiceTab of tabs(); track invoiceTab.item.id) {
         <p-tabPanel [header]="invoiceTab.item.name" [closable]="true">
           <ng-template pTemplate="header">
@@ -28,7 +39,8 @@
               [index]="$index"
               [tabItem]="invoiceTab"
               [permissions]="invoicePermissions"
-              (onClose)="closeTab($event)">
+              (opened)="openTab($event)"
+              (onClose)="closeTabAt($index)">
             </app-form-invoice>
           </ng-template>
         </p-tabPanel>

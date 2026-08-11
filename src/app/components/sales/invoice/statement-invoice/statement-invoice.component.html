@@ -1,0 +1,149 @@
+<p-fieldset legend="Client">
+  <div class="p-fluid w-full animate__animated animate__fadeIn">
+    <div class="formgrid grid" style="margin-top: -1.5rem; margin-bottom: -1rem;">
+      <div class="field col-12 md:col-6">
+        <p-floatLabel>
+          <p-autoComplete
+            [suggestions]="filteredClients"
+            (completeMethod)="searchClient($event)"
+            (onSelect)="selectClient($event)"
+            (onClear)="clearClient()"
+            optionValue="id"
+            optionLabel="showName"
+            appendTo="body"
+            [showClear]="true"
+            [ngModel]="clientId()"
+            [ngModelOptions]="{ standalone: true }" />
+          <label>Client</label>
+        </p-floatLabel>
+      </div>
+      <div class="field col-12 md:col-2 flex">
+        <button
+          pButton
+          icon="pi pi-refresh"
+          label="Refresh"
+          type="button"
+          severity="info"
+          [disabled]="loading() || !clientId()"
+          (click)="reload()">
+        </button>
+      </div>
+    </div>
+  </div>
+</p-fieldset>
+
+@if (loading()) {
+  <div class="w-full mt-3">
+    <p-progressBar mode="indeterminate" [style]="{ height: '6px' }" />
+  </div>
+} @else if (statement()) {
+  <!-- `statement()` is read through the alias below; the `as` binding is only
+       allowed on a primary @if, hence the nested block. -->
+  @if (statement(); as data) {
+  <div class="animate__animated animate__fadeIn mt-3">
+
+    <div class="grid">
+      <div class="col-12 md:col-3">
+        <div class="card mb-0">
+          <div class="text-sm text-color-secondary mb-2">Invoices</div>
+          <div class="text-2xl font-bold">{{ data.invoiceCount }}</div>
+        </div>
+      </div>
+      <div class="col-12 md:col-3">
+        <div class="card mb-0">
+          <div class="text-sm text-color-secondary mb-2">Total invoiced</div>
+          <div class="text-2xl font-bold">{{ data.totalInvoiced | customCurrency: 'USD' }}</div>
+        </div>
+      </div>
+      <div class="col-12 md:col-3">
+        <div class="card mb-0">
+          <div class="text-sm text-color-secondary mb-2">Total collected</div>
+          <div class="text-2xl font-bold text-green-500">{{ data.totalPaid | customCurrency: 'USD' }}</div>
+        </div>
+      </div>
+      <div class="col-12 md:col-3">
+        <div class="card mb-0">
+          <div class="text-sm text-color-secondary mb-2">Outstanding</div>
+          <div class="text-2xl font-bold" [class.text-red-500]="data.totalOutstanding > 0">
+            {{ data.totalOutstanding | customCurrency: 'USD' }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid mt-2">
+      <div class="col-12 md:col-4">
+        <h6 class="mb-2">Aging of the outstanding balance</h6>
+        <p-table [value]="aging()" styleClass="p-datatable-sm">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>RANGE</th>
+              <th style="text-align: right;">AMOUNT</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-bucket>
+            <tr>
+              <td>{{ bucket.label }}</td>
+              <td style="text-align: right;">{{ bucket.value | customCurrency: 'USD' }}</td>
+            </tr>
+          </ng-template>
+        </p-table>
+        <small class="text-color-secondary">
+          Invoices whose payment terms cannot produce a due date count as Current.
+        </small>
+      </div>
+
+      <div class="col-12 md:col-8">
+        <h6 class="mb-2">Overdue invoices</h6>
+        <p-table [value]="overdueInvoices()" styleClass="p-datatable-sm" dataKey="id">
+          <ng-template pTemplate="header">
+            <tr>
+              <th style="min-width: 7rem">#</th>
+              <th style="min-width: 8rem">STATUS</th>
+              <th style="min-width: 8rem">DUE DATE</th>
+              <th style="min-width: 8rem; text-align: right;">TOTAL</th>
+              <th style="min-width: 8rem; text-align: right;">BALANCE</th>
+              <th style="min-width: 4rem"></th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-invoice>
+            <tr>
+              <td>{{ invoice.number ?? invoice.draftNumber }}</td>
+              <td>
+                <span [class]="'customer-badge status-' + statusBadge(invoice)">
+                  {{ statusLabel(invoice) }}
+                </span>
+              </td>
+              <td class="text-red-500 font-bold">{{ invoice.dueAt | date:'MMM dd, yyyy' }}</td>
+              <td style="text-align: right;">{{ invoice.totalAmount | customCurrency: invoice.currency }}</td>
+              <td style="text-align: right;">{{ invoice.balanceDue | customCurrency: invoice.currency }}</td>
+              <td style="text-align: end;">
+                <button
+                  pButton
+                  type="button"
+                  icon="pi pi-eye"
+                  class="p-button-rounded p-button-text"
+                  pTooltip="Open"
+                  severity="info"
+                  (click)="openInvoice(invoice)"
+                  tooltipPosition="left">
+                </button>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="6" class="text-center text-color-secondary">No overdue invoices for this client</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </div>
+
+  </div>
+  }
+} @else {
+  <div class="text-center text-color-secondary mt-5">
+    Select a client to see its account statement.
+  </div>
+}

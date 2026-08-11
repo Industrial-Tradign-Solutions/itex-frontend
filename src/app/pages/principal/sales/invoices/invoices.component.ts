@@ -13,6 +13,11 @@ const INVOICE_ACTIONS_ID = moduleActionsId.sales.invoices;
 const TABS_MESSAGES      = Messages.config.tabs;
 const TITLES             = TitlesMessages;
 
+// Panels rendered before the invoice tabs: the list and the statement. p-tabView
+// speaks in panel indexes while `tabs()` is a plain array from 0, so every
+// conversion between the two goes through this constant instead of a literal.
+const FIXED_TABS = 2;
+
 @Component({
   selector: 'app-invoices',
   templateUrl: './invoices.component.html',
@@ -83,7 +88,7 @@ export class InvoicesComponent extends CommonTabs<ListInvoice> implements OnInit
     const openedIndex = this.tabs().findIndex(tab => tab.item.id === emited.item.id);
 
     if (openedIndex !== -1) {
-      this.focusTab(openedIndex + 1);
+      this.focusTab(openedIndex + FIXED_TABS);
       return;
     }
 
@@ -93,12 +98,19 @@ export class InvoicesComponent extends CommonTabs<ListInvoice> implements OnInit
     }
 
     this._tabs.update(tabs => [...tabs, emited]);
-    this.focusTab(this.tabs().length);
+    this.focusTab(this.tabs().length - 1 + FIXED_TABS);
   }
 
+  // The X of p-tabView reports a panel index.
   closeTab(event: TabViewCloseEvent | { index: number }): void {
-    const index = event.index - 1;
-    const tab   = this.tabs()[index];
+    this.closeTabAt(event.index - FIXED_TABS);
+  }
+
+  // The form asks to be closed by its own position in `tabs()`, which the
+  // template already knows — so it never has to learn how many fixed panels
+  // precede it.
+  closeTabAt(index: number): void {
+    const tab = this.tabs()[index];
 
     if (!tab) {
       return;
