@@ -19,8 +19,11 @@ const TITLES  = TitlesMessages;
 /**
  * Create/edit of a single invoice product line (§11.1 / §11.2, same body).
  *
- * The line comes in through `config.data` instead of being re-fetched with
- * §11.3: the parent already holds it inside `item().products`.
+ * On edit the line is re-read from §11.3 rather than taken from
+ * `item().products`: what the detail embeds is a projection built for the
+ * table, it does not necessarily carry every field of the row, and it can be
+ * stale by the time the user clicks Edit. The row received through
+ * `config.data` is only the initial paint and the source of the line id.
  *
  * `profitMargin` is handled in 0-100 here and sent as-is — the backend stores
  * it verbatim (10.00 = 10%), same convention as Quotations.
@@ -50,8 +53,10 @@ export class InvoiceProductModalComponent implements OnInit {
   type      = computed<'create' | 'edit'>(() => this.config.data.type);
   invoiceId = computed<string>(() => this.config.data.invoiceId);
   currency  = computed<string>(() => this.config.data.currency ?? 'USD');
-  product   = computed<InvoiceProduct | undefined>(() => this.config.data.product);
   isCreate  = computed<boolean>(() => this.type() === 'create');
+
+  private _product = signal<InvoiceProduct | undefined>(this.config.data.product);
+  product = computed<InvoiceProduct | undefined>(() => this._product());
 
   formProduct!: FormGroup;
 
@@ -60,18 +65,40 @@ export class InvoiceProductModalComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    setTimeout(() => {
-      this.buildForm();
-      this._loading.set(false);
-    }, TIMEOUT);
+    const product = this.product();
+
+    if (this.isCreate() || !product) {
+      setTimeout(() => {
+        this.buildForm();
+        this._loading.set(false);
+      }, TIMEOUT);
+      return;
+    }
+
+    // The fetch replaces the artificial delay of the create path: the form is
+    // built once, from the authoritative copy of the line.
+    this.invoiceSV.getInvoiceProduct(this.invoiceId(), product.id)
+      .pipe(finalize(() => this._loading.set(false)))
+      .subscribe({
+        next: resp => {
+          this._product.set(resp);
+          this.buildForm();
+        },
+        // Falling back to the row that is already in memory keeps the edit
+        // usable; the user is told the values may not be the latest.
+        error: err => {
+          this.utilSV.setMessage(TITLES.warning, err?.errorMessage ?? err, 'warn');
+          this.buildForm();
+        }
+      });
   }
 
-  get filteredProducts(): BasicIpProduct[] {
-    return this.productSV.filteredIpProducts;
-  }
+  // Own state instead of `productSV.filteredIpProducts`: that field lives on a
+  // root-provided singleton shared by every open tab and modal.
+  filteredProducts: BasicIpProduct[] = [];
 
   searchProduct(event: AutoCompleteCompleteEvent): void {
-    this.productSV.searchAutoComplete(event);
+    this.filteredProducts = this.productSV.searchAutoComplete(event);
   }
 
   changeProduct(event: AutoCompleteSelectEvent): void {

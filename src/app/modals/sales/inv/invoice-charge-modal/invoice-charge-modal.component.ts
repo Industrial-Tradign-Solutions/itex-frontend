@@ -16,6 +16,12 @@ const TITLES  = TitlesMessages;
 /**
  * Create/edit of a single charge (§12.1 / §12.2). `value` carries no `min`:
  * `DISCOUNT` charges are entered as negatives.
+ *
+ * On edit the charge is re-read from `GET .../charge/{id}` instead of using the
+ * row the list handed over: that row is a projection rendered for the table and
+ * may be stale by the time the user clicks Edit. The list row is still used as
+ * the initial value so the form paints immediately and the id is available even
+ * if the request fails.
  */
 @Component({
   selector: 'app-invoice-charge-modal',
@@ -39,12 +45,32 @@ export class InvoiceChargeModalComponent implements OnInit {
   type      = computed<'create' | 'edit'>(() => this.config.data.type);
   invoiceId = computed<string>(() => this.config.data.invoiceId);
   currency  = computed<string>(() => this.config.data.currency ?? 'USD');
-  charge    = computed<InvoiceCharge | undefined>(() => this.config.data.charge);
+
+  private _charge = signal<InvoiceCharge | undefined>(this.config.data.charge);
+  charge = computed<InvoiceCharge | undefined>(() => this._charge());
 
   formCharge!: FormGroup;
 
   ngOnInit(): void {
     this.buildForm();
+
+    const charge = this.charge();
+    if (this.type() !== 'edit' || !charge) return;
+
+    this._loading.set(true);
+    this.invoiceSV.getInvoiceCharge(this.invoiceId(), charge.id)
+      .pipe(finalize(() => this._loading.set(false)))
+      .subscribe({
+        next: resp => {
+          this._charge.set(resp);
+          // Rebuilt, not patched: a rebuild also resets the pristine flag, so a
+          // value that changed server-side does not look like a user edit.
+          this.buildForm();
+        },
+        // The list row is already on screen and editable; failing to refresh is
+        // not a reason to block the edit.
+        error: err => this.utilSV.setMessage(TITLES.warning, err?.errorMessage ?? err, 'warn')
+      });
   }
 
   onSubmit(): void {
