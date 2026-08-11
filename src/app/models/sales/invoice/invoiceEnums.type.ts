@@ -1,5 +1,21 @@
 export type InvoiceStatus = 'DRAFT' | 'ISSUED' | 'PARTIAL_PAID' | 'PAID' | 'CANCELLED';
 
+// Slugs of the global badge stylesheet (assets/demo/styles/badges.scss). Lives
+// here because both the list and the detail render the same badge.
+const STATUS_BADGE: Record<InvoiceStatus, string> = {
+  DRAFT: 'new',
+  ISSUED: 'renewal',
+  PARTIAL_PAID: 'negotiation',
+  PAID: 'qualified',
+  CANCELLED: 'unqualified'
+};
+
+export const invoiceStatusBadge = (status: InvoiceStatus): string => STATUS_BADGE[status] ?? 'new';
+
+// `value` of the invoice_status static list, so the badge reads "PARTIAL PAID"
+// instead of the raw enum key when the list has not loaded yet.
+export const invoiceStatusLabel = (status: InvoiceStatus): string => status.replace('_', ' ');
+
 // Quick date filter of the list endpoint. The backend binds the shared
 // `common.models.enums.FilterDate` (same one used by QR/Q/PO), so only these
 // four values are accepted — §1 of itex-invoices-api.md documents a longer enum

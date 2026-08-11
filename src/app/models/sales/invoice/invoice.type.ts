@@ -47,6 +47,10 @@ export type Invoice = {
   balanceDue: number;
   dueAt: string | null;
   overdue: boolean;
+  // §17: derived from `paidAt > dueAt`. Survives the payment, unlike `overdue`,
+  // which the server switches off as soon as the invoice is settled. Optional
+  // because the response samples of §1/§4 do not list it yet.
+  paidLate?: boolean;
   overdueNotifiedAt: string | null;
   issuedAt: string | null;
   partialPaidAt: string | null;

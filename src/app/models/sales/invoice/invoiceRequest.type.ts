@@ -37,6 +37,12 @@ export type InvoiceUpdateRequest = InvoiceCreateRequest & {
   shipToEmail: string;
 }
 
+// Body of `PATCH /sales/invoice/{id}/cancel` (§15.3). Issue, revert and delete
+// take no body at all.
+export type InvoiceCancelRequest = {
+  cancelReason: string;
+}
+
 // Empty strings coming from cleared inputs must travel as null, not as '' —
 // the backend size validators would accept '' and persist an empty value.
 const orNull = (value: unknown): string | null =>

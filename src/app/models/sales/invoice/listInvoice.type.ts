@@ -28,6 +28,9 @@ export type ListInvoice = {
   balanceDue: number;
   dueAt: string | null;
   overdue: boolean;
+  // §17, same as in the detail: "was paid after its due date". Optional until
+  // the field shows up in the documented response samples.
+  paidLate?: boolean;
   createdAt: string;
 }
 
