@@ -10,22 +10,54 @@
         severity="warn"
         text="This invoice is open by another user, it is available in read-only mode."
         styleClass="w-full mb-3" />
-    } @else if (!isCreate() && !isDraft()) {
-      <p-message
-        severity="info"
-        text="Only draft invoices can be edited."
-        styleClass="w-full mb-3" />
+    } @else {
+      <!-- Nested instead of `@else if (...; as ...)`: the `as` alias is only
+           allowed on the primary @if block. -->
+      @if (editNotice(); as notice) {
+        <p-message
+          [severity]="notice.severity"
+          [text]="notice.text"
+          styleClass="w-full mb-3" />
+      }
+    }
+
+    @if (!isCreate()) {
+      <!-- `tabItem.pristine` is a plain property, not a signal: it is combined
+           here instead of inside canIssue() so a computed never caches a stale
+           value. Issuing an invoice with unsaved header changes would freeze the
+           total over data the server has not seen. -->
+      <app-invoice-actions-section
+        class="block mb-3"
+        [canIssue]="canIssue()"
+        [issueEnabled]="issueReady() && tabItem.pristine"
+        [canRevert]="canRevert()"
+        [canCancel]="canCancel()"
+        [canDelete]="canDelete()"
+        [deleteLocked]="deleteLocked()"
+        [canClone]="canClone()"
+        [canViewHistory]="canViewHistory()"
+        [canPrint]="canPrint()"
+        [printEnabled]="printReady() && tabItem.pristine"
+        [canSend]="canSend()"
+        [sendEnabled]="printReady() && tabItem.pristine"
+        [draftPdf]="isDraft()"
+        [loadingDownload]="loadingDownload()"
+        [loadingSend]="loadingPrintAndSent()"
+        (issue)="issueInvoice()"
+        (revert)="revertToDraft()"
+        (cancel)="cancelInvoice()"
+        (remove)="deleteInvoice()"
+        (clone)="cloneInvoice()"
+        (history)="openHistory()"
+        (print)="printInvoice()"
+        (printAndSend)="printAndSendInvoice()" />
     }
 
     <form [formGroup]="formTab" (ngSubmit)="onSubmit()">
       <div class="formgrid grid mt-1">
 
         <div class="field col-12 md:col-2 lg:col-2 xl:col-2">
-          <app-invoice-summary-section
-            [group]="formTab"
-            [statusList]="listInvoiceStatus()"
-            [invoice]="item()"
-            [currency]="invoiceCurrency()" />
+          <app-invoice-summary-section [invoice]="item()" />
         </div>
 
         <div class="field col-12 md:col-3 lg:col-3 xl:col-3">
@@ -125,9 +157,13 @@
                   [chargesTotal]="item()?.chargesTotal ?? 0"
                   [taxesTotal]="item()?.taxesTotal ?? 0"
                   [totalAmount]="item()?.totalAmount ?? 0"
+                  [paidAmount]="item()?.paidAmount ?? 0"
+                  [balanceDue]="item()?.balanceDue ?? 0"
+                  [showPayments]="showPayments()"
                   [currency]="invoiceCurrency()"
                   (openCharges)="openChargesModal()"
-                  (openTaxes)="openTaxesModal()" />
+                  (openTaxes)="openTaxesModal()"
+                  (openPayments)="openPaymentsModal()" />
               </div>
             </div>
           </div>
@@ -158,7 +194,7 @@
               </p-tabView>
             </div>
             <div class="field col-12 md:col-3 mt-3">
-              @if (canEdit()) {
+              @if (canSubmit()) {
                 <button pButton
                   label="Save"
                   icon="pi pi-save"

@@ -1,68 +1,55 @@
-<ng-container [formGroup]="group">
-  <div class="formgrid grid">
-    <div class="field col-12 md:col-12 mt-3">
-      <p-floatLabel>
-        <p-dropdown
-          [options]="statusList"
-          optionLabel="value"
-          optionValue="key"
-          appendTo="body"
-          formControlName="status" />
-        <label>Status</label>
-      </p-floatLabel>
+<div class="flex flex-column row-gap-3 mt-3">
+
+  <div>
+    <div class="text-sm text-color-secondary mb-1">Status</div>
+    <span [class]="'customer-badge status-' + statusBadge()">{{ status() }}</span>
+  </div>
+
+  @if (overdue() || paidLate()) {
+    <div class="flex flex-column row-gap-1">
+      @if (overdue()) {
+        <span class="text-red-500 font-bold text-sm">
+          <i class="pi pi-exclamation-triangle mr-1"></i>Overdue
+        </span>
+      }
+      @if (paidLate()) {
+        <span class="text-orange-500 text-sm">
+          <i class="pi pi-clock mr-1"></i>Paid late
+        </span>
+      }
     </div>
-    <div class="field col-12 md:col-12 mt-3">
-      <p-floatLabel>
-        <p-inputNumber
-          [inputStyle]="{ 'text-align': 'right' }"
-          mode="currency"
-          [currency]="currency"
-          currencyDisplay="code"
-          [max]="999999999999"
-          formControlName="totalAmount" />
-        <label>Total</label>
-      </p-floatLabel>
+  }
+
+  <div>
+    <div class="text-sm text-color-secondary mb-1">Issued</div>
+    <div class="text-sm">
+      {{ issuedAt() ? (issuedAt() | date:'MMM dd, yyyy') : 'Not issued yet' }}
     </div>
-    <div class="field col-12 md:col-12 mt-3">
-      <p-floatLabel>
-        <p-inputNumber
-          [inputStyle]="{ 'text-align': 'right' }"
-          mode="currency"
-          [currency]="currency"
-          currencyDisplay="code"
-          [max]="999999999999"
-          formControlName="paidAmount" />
-        <label>Paid</label>
-      </p-floatLabel>
-    </div>
-    <div class="field col-12 md:col-12 mt-3">
-      <p-floatLabel>
-        <p-inputNumber
-          [inputStyle]="{ 'text-align': 'right' }"
-          mode="currency"
-          [currency]="currency"
-          currencyDisplay="code"
-          [max]="999999999999"
-          formControlName="balanceDue" />
-        <label>Balance Due</label>
-      </p-floatLabel>
-    </div>
-    @if (invoice?.issuedAt || invoice?.dueAt) {
-      <div class="field col-12 md:col-12">
-        @if (invoice?.issuedAt) {
-          <div class="text-sm text-color-secondary">
-            Issued: {{ invoice?.issuedAt | date:'MMM dd, yyyy' }}
-          </div>
-        }
-        @if (invoice?.dueAt) {
-          <div class="text-sm" [class.text-red-500]="invoice?.overdue">
-            Due: {{ invoice?.dueAt | date:'MMM dd, yyyy' }}
-            @if (invoice?.overdue) {
-              <i class="pi pi-exclamation-triangle ml-1"></i>
-            }
-          </div>
+  </div>
+
+  @if (issuedAt()) {
+    <div>
+      <div class="text-sm text-color-secondary mb-1">Due</div>
+      <div class="text-sm" [class.text-red-500]="overdue()" [class.font-bold]="overdue()">
+        @if (dueAt()) {
+          {{ dueAt() | date:'MMM dd, yyyy' }}
+        } @else if (dueToBeAgreed()) {
+          To be agreed
+        } @else {
+          -
         }
       </div>
-    }
-  </div>
-</ng-container>
+    </div>
+  }
+
+  @if (cancelledAt()) {
+    <div>
+      <div class="text-sm text-color-secondary mb-1">Cancelled</div>
+      <div class="text-sm">{{ cancelledAt() | date:'MMM dd, yyyy' }}</div>
+      @if (cancelReason()) {
+        <div class="text-xs text-color-secondary mt-1">{{ cancelReason() }}</div>
+      }
+    </div>
+  }
+
+</div>

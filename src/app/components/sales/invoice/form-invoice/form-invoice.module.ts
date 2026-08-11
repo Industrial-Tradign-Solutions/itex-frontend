@@ -11,7 +11,11 @@ import { InputTextareaModule } from 'primeng/inputtextarea';
 import { MessageModule } from 'primeng/message';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { TabViewModule } from 'primeng/tabview';
+import { HistoryInvoiceModalModule } from '@modals/sales/inv/history-invoice-modal/history-invoice-modal.module';
+import { InvoiceReasonModalModule } from '@modals/sales/inv/invoice-reason-modal/invoice-reason-modal.module';
+import { ListInvoicePaymentsModalModule } from '@modals/sales/inv/list-invoice-payments-modal/list-invoice-payments-modal.module';
 import { FormInvoiceComponent } from './form-invoice.component';
+import { InvoiceActionsSectionModule } from './sections/invoice-actions-section/invoice-actions-section.module';
 import { InvoiceClientSectionModule } from './sections/invoice-client-section/invoice-client-section.module';
 import { InvoicePoSectionModule } from './sections/invoice-po-section/invoice-po-section.module';
 import { InvoiceProductsSectionModule } from './sections/invoice-products-section/invoice-products-section.module';
@@ -33,6 +37,7 @@ import { InvoiceTotalsSectionModule } from './sections/invoice-totals-section/in
     MessageModule,
     ProgressBarModule,
     TabViewModule,
+    InvoiceActionsSectionModule,
     InvoiceClientSectionModule,
     InvoiceSummarySectionModule,
     InvoiceShiptoSectionModule,
@@ -44,7 +49,10 @@ import { InvoiceTotalsSectionModule } from './sections/invoice-totals-section/in
     ImportProductsFromPoModalModule,
     LinkPurchaseOrdersModalModule,
     InvoiceChargesModule,
-    InvoiceTaxesModule
+    InvoiceTaxesModule,
+    InvoiceReasonModalModule,
+    HistoryInvoiceModalModule,
+    ListInvoicePaymentsModalModule
   ],
   exports: [
     FormInvoiceComponent

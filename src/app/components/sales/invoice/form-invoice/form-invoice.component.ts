@@ -1,9 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, EventEmitter, inject, OnInit, Output, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Validators } from '@angular/forms';
 import { Messages, TitlesMessages } from '@config/messages';
 import { CommonPageTab } from '@config/tabs/commonPageTab';
-import { TypeTab } from '@config/types/tabs';
+import { EmitedTab, TypeTab } from '@config/types/tabs';
 import { BasicUser, UserInfo } from '@interfaces/administration/user';
 import { BasicCity } from '@interfaces/masters/locations/cities';
 import { MessageResponse } from '@interfaces/message-response';
@@ -13,6 +13,7 @@ import {
   InvoiceAssociatedPo,
   InvoiceCharge,
   InvoiceProduct,
+  InvoiceStatus,
   InvoiceTax,
   invoiceTabName,
   ListInvoice,
@@ -25,27 +26,27 @@ import { UsersService } from '@services/admin';
 import { CityService } from '@services/masters';
 import { ClientsService } from '@services/partners';
 import { InvoiceService } from '@services/sales';
-import { NavigateTabsService, StorageService } from '@services/util';
+import { EmailService, NavigateTabsService, StorageService } from '@services/util';
 import { AutoCompleteCompleteEvent, AutoCompleteSelectEvent } from 'primeng/autocomplete';
+import { HistoryInvoiceModalComponent } from '@modals/sales/inv/history-invoice-modal/history-invoice-modal.component';
 import { ImportProductsFromPoModalComponent } from '@modals/sales/inv/import-products-from-po-modal/import-products-from-po-modal.component';
 import { InvoiceProductModalComponent } from '@modals/sales/inv/invoice-product-modal/invoice-product-modal.component';
+import { InvoiceReasonModalComponent } from '@modals/sales/inv/invoice-reason-modal/invoice-reason-modal.component';
 import { LinkPurchaseOrdersModalComponent } from '@modals/sales/inv/link-purchase-orders-modal/link-purchase-orders-modal.component';
 import { ListInvoiceChargesModalComponent } from '@modals/sales/inv/list-invoice-charges-modal/list-invoice-charges-modal.component';
+import { ListInvoicePaymentsModalComponent } from '@modals/sales/inv/list-invoice-payments-modal/list-invoice-payments-modal.component';
 import { ListInvoiceTaxesModalComponent } from '@modals/sales/inv/list-invoice-taxes-modal/list-invoice-taxes-modal.component';
 import { finalize, Observable } from 'rxjs';
-import { constants, storageKeys } from '../../../../../environments';
+import { constants, emailBodyTemplates, storageKeys } from '../../../../../environments';
 
 const MESSAGES = Messages.pages.sales.invoice;
 const TITLES   = TitlesMessages;
 
-// Assigned by the server (consecutives, lifecycle, derived amounts) or fixed by
-// the only department that exists. Never editable, in any mode.
+// Derived from the selected client, never typed. `status` and the amounts used
+// to live here too; they are not form controls any more — the server owns them
+// and they are rendered as text by the summary and totals sections.
 const READ_ONLY_FIELDS = [
-  'status',
-  'clientAddress',
-  'totalAmount',
-  'paidAmount',
-  'balanceDue'
+  'clientAddress'
 ];
 
 // §9: create does not accept the ship-to block — the backend copies it from the
@@ -57,6 +58,18 @@ const SHIP_TO_FIELDS = [
   'shipToPhone',
   'shipToContactName',
   'shipToEmail'
+];
+
+// §10/§17: an ISSUED invoice still accepts the PUT, but only applies these
+// five. Any real change to another header field is rejected by name
+// (`sales.invoice.issued-restricted-field`), so the rest goes read-only instead
+// of letting the user type into a control the server will refuse.
+const ISSUED_EDITABLE_FIELDS = [
+  'orderNumber',
+  'awbBl',
+  'packingList',
+  'remarks',
+  'internalRemarks'
 ];
 
 // Q/QR/PO relabel the contact in place (`contact.name += ' (DISABLED)'`), which
@@ -78,7 +91,12 @@ export class FormInvoiceComponent extends CommonPageTab<ListInvoice, InvoicePerm
   private userSV     = inject(UsersService);
   private storageSV  = inject(StorageService);
   private navigateSV = inject(NavigateTabsService);
+  private emailSV    = inject(EmailService);
   private destroyRef = inject(DestroyRef);
+
+  // The clone is a brand new invoice: it opens in its own tab instead of
+  // replacing the current one, same as PO.
+  @Output() opened = new EventEmitter<EmitedTab<ListInvoice>>();
 
   // `tabItem.type` is a plain property that the base class mutates (onInitAction
   // downgrades it to 'view' when the update permission is missing or the lock
@@ -90,14 +108,126 @@ export class FormInvoiceComponent extends CommonPageTab<ListInvoice, InvoicePerm
 
   // Only DRAFT accepts a PUT (§10.3). ISSUED/PARTIAL_PAID can be locked but not
   // edited, so the whole form goes read-only instead of failing on submit.
-  isDraft = computed<boolean>(() => (this.item()?.status ?? 'DRAFT') === 'DRAFT');
-  canEdit = computed<boolean>(() => this.mode() !== 'view' && this.isValidOpen() && this.isDraft());
+  invoiceStatus = computed<InvoiceStatus>(() => this.item()?.status ?? 'DRAFT');
+  isDraft = computed<boolean>(() => this.invoiceStatus() === 'DRAFT');
 
-  listCurrency      = computed<StaticListItem[]>(() => this.staticListSV.getListCurrency());
-  listIncoterms     = computed<StaticListItem[]>(() => this.staticListSV.getListIncoterms());
-  listPaymentTerms  = computed<StaticListItem[]>(() => this.staticListSV.getListPaymentTerms());
-  listVia           = computed<StaticListItem[]>(() => this.staticListSV.getListInvoiceVia());
-  listInvoiceStatus = computed<StaticListItem[]>(() => this.staticListSV.getListInvoiceStatus());
+  // The tab is editable at all (not opened read-only, lock not taken by anyone
+  // else). What is editable *within* it is decided by the status below.
+  private lockHeld = computed<boolean>(() => this.mode() !== 'view' && this.isValidOpen());
+
+  // Full edit: header, ship-to and every line item. Only DRAFT.
+  canEdit = computed<boolean>(() => this.lockHeld() && this.isDraft());
+
+  // Restricted edit: the five non-financial fields of an issued invoice. Line
+  // items stay frozen — `total_amount` was snapshotted when it was issued.
+  canEditRestricted = computed<boolean>(() => this.lockHeld() && this.invoiceStatus() === 'ISSUED');
+
+  canSubmit = computed<boolean>(() => this.canEdit() || this.canEditRestricted());
+
+  // One notice per state, so a locked form always explains itself instead of
+  // repeating the same sentence in four different situations.
+  editNotice = computed<{ severity: string, text: string } | null>(() => {
+    if (this.isCreate() || this.isDraft()) return null;
+
+    if (this.canEditRestricted()) {
+      return {
+        severity: 'info',
+        text: 'This invoice is issued: only Order #, AWB / BL, Packing List and the remarks can be edited.'
+      };
+    }
+    if (this.invoiceStatus() === 'CANCELLED') {
+      return { severity: 'warn', text: 'This invoice is cancelled and kept for auditing only.' };
+    }
+    if (this.invoiceStatus() === 'ISSUED') {
+      return { severity: 'info', text: 'Only draft invoices can be edited.' };
+    }
+    return {
+      severity: 'info',
+      text: 'This invoice has registered payments and is read-only. Void its payments to correct it.'
+    };
+  });
+
+  // Every lifecycle endpoint (§15) asks for the same three things on top of its
+  // own permission: a persisted invoice, opened in EDIT mode, with the lock
+  // actually held by this user.
+  private canTransition = computed<boolean>(() => !this.isCreate() && this.mode() === 'edit' && this.isValidOpen());
+
+  // A live payment blocks revert and cancel (§15.2/§15.3). `paidAmount` already
+  // excludes voided payments, so it is exactly "there is money on this invoice".
+  private hasPayments = computed<boolean>(() => (this.item()?.paidAmount ?? 0) > 0);
+
+  // Visible when the action exists for this user and this state; §15.1's data
+  // preconditions (≥1 product, positive total) only disable it, so the tooltip
+  // can say what is missing instead of the button vanishing.
+  canIssue = computed<boolean>(() =>
+    this.canTransition() && this.permissions().issueInvoice && this.isDraft()
+  );
+
+  issueReady = computed<boolean>(() =>
+    this.listProducts().length > 0 && (this.item()?.totalAmount ?? 0) > 0
+  );
+
+  canRevert = computed<boolean>(() =>
+    this.canTransition()
+    && this.permissions().revertInvoiceToDraft
+    && this.invoiceStatus() === 'ISSUED'
+    && !this.hasPayments()
+  );
+
+  canCancel = computed<boolean>(() =>
+    this.canTransition()
+    && this.permissions().cancelInvoice
+    && (this.isDraft() || this.invoiceStatus() === 'ISSUED')
+    && !this.hasPayments()
+  );
+
+  canDelete = computed<boolean>(() =>
+    this.canTransition() && this.permissions().deleteInvoice && this.isDraft()
+  );
+
+  // §15.4: once an invoice has an official number that number stays reserved
+  // forever, so the draft it went back to can never be deleted — permission or
+  // not. The button stays visible and disabled to explain why.
+  deleteLocked = computed<boolean>(() => !!this.item()?.number);
+
+  // Payments only exist from ISSUED onwards; a cancelled invoice never had any
+  // (both cancel and revert are blocked once money is on it).
+  showPayments = computed<boolean>(() =>
+    !this.isCreate() && ['ISSUED', 'PARTIAL_PAID', 'PAID'].includes(this.invoiceStatus())
+  );
+
+  // §16.1 only accepts a payment on ISSUED/PARTIAL_PAID, and like every other
+  // mutation it needs the lock held by this user.
+  canRegisterPayment = computed<boolean>(() =>
+    this.canTransition()
+    && this.permissions().registerPaymentInvoice
+    && ['ISSUED', 'PARTIAL_PAID'].includes(this.invoiceStatus())
+  );
+
+  // Voiding is also allowed on PAID — §17 made that status lockable precisely
+  // because it is the only way to correct a settled invoice.
+  canVoidPayment = computed<boolean>(() =>
+    this.canTransition() && this.permissions().voidPaymentInvoice && this.showPayments()
+  );
+
+  canClone = computed<boolean>(() => !this.isCreate() && this.permissions().cloneInvoice);
+  canViewHistory = computed<boolean>(() => !this.isCreate() && this.permissions().viewHistoryInvoice);
+
+  // §18.1: printing is a read — it needs neither the lock nor ownership. It
+  // does need products, without which the server cannot render the document.
+  canPrint = computed<boolean>(() => !this.isCreate());
+  printReady = computed<boolean>(() => this.listProducts().length > 0);
+
+  // Module rule (§18.1): a draft can be printed but never emailed. A reverted
+  // draft already carries a `number`, so the gate is the status, not the number.
+  canSend = computed<boolean>(() =>
+    !this.isCreate() && ['ISSUED', 'PARTIAL_PAID', 'PAID'].includes(this.invoiceStatus())
+  );
+
+  listCurrency     = computed<StaticListItem[]>(() => this.staticListSV.getListCurrency());
+  listIncoterms    = computed<StaticListItem[]>(() => this.staticListSV.getListIncoterms());
+  listPaymentTerms = computed<StaticListItem[]>(() => this.staticListSV.getListPaymentTerms());
+  listVia          = computed<StaticListItem[]>(() => this.staticListSV.getListInvoiceVia());
 
   // Pure computed: QR/PO push the invoice's own sales rep into the array held by
   // the signal, which keeps the same reference and notifies nobody.
@@ -225,11 +355,10 @@ export class FormInvoiceComponent extends CommonPageTab<ListInvoice, InvoicePerm
   protected override buildFormAction(): void {
     const invoice = this.item();
 
-    // Numbering and department are not in the form: they are server-assigned and
-    // never rendered — the tab header already shows the number.
+    // Numbering, department, status and the amounts are not in the form: they
+    // are server-assigned and read-only, so they are rendered as text instead of
+    // travelling as disabled controls nobody ever submits.
     this.formTab = this.formBuilder.group({
-      status: [invoice?.status ?? 'DRAFT', [Validators.required]],
-
       clientId: [invoice?.client?.id ?? null, [Validators.required]],
       clientContactId: [invoice?.clientContact?.id ?? null, [Validators.required]],
       clientAddress: [invoice?.client?.address ?? null],
@@ -251,11 +380,7 @@ export class FormInvoiceComponent extends CommonPageTab<ListInvoice, InvoicePerm
       shipToEmail: [invoice?.shipToEmail ?? null],
 
       remarks: [invoice?.remarks ?? null],
-      internalRemarks: [invoice?.internalRemarks ?? null],
-
-      totalAmount: [invoice?.totalAmount ?? 0],
-      paidAmount: [invoice?.paidAmount ?? 0],
-      balanceDue: [invoice?.balanceDue ?? 0]
+      internalRemarks: [invoice?.internalRemarks ?? null]
     });
   }
 
@@ -308,8 +433,15 @@ export class FormInvoiceComponent extends CommonPageTab<ListInvoice, InvoicePerm
       controls['clientContactId'].disable({ emitEvent: false });
     }
 
+    // Outside DRAFT the whole form goes down first and only the fields the
+    // backend still applies come back up — the inverse (enabling one by one)
+    // would silently leak any control added to the group later on.
     if (!this.canEdit()) {
       this.formTab.disable({ emitEvent: false });
+
+      if (this.canEditRestricted()) {
+        ISSUED_EDITABLE_FIELDS.forEach(field => controls[field].enable({ emitEvent: false }));
+      }
     }
 
     this.showForm = true;
@@ -422,6 +554,176 @@ export class FormInvoiceComponent extends CommonPageTab<ListInvoice, InvoicePerm
     this._listClientContact.set(contacts);
   }
 
+  //#region Lifecycle (§15) and document actions (§18)
+
+  issueInvoice(): void {
+    this.confirmTransition(MESSAGES.issue(this.invoiceNumber()), () => this.invoiceSV.issueInvoice(this.tabItem.item.id));
+  }
+
+  revertToDraft(): void {
+    this.confirmTransition(MESSAGES.revert(this.invoiceNumber()), () => this.invoiceSV.revertInvoiceToDraft(this.tabItem.item.id));
+  }
+
+  cancelInvoice(): void {
+    const modal = this.dialogSV.open(InvoiceReasonModalComponent, {
+      header: `CANCEL INVOICE ${this.invoiceNumber()}`,
+      width: '45rem',
+      closable: false,
+      closeOnEscape: false,
+      data: {
+        label: 'Cancel reason',
+        message: MESSAGES.cancelWarning,
+        confirmText: 'Cancel Invoice'
+      }
+    });
+
+    modal.onClose.subscribe({
+      next: (resp: { valid: boolean, reason: string }) => {
+        if (!resp?.valid) return;
+
+        this._loading.set(true);
+        this.invoiceSV.cancelInvoice(this.tabItem.item.id, resp.reason)
+          .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this._loading.set(false)))
+          .subscribe({
+            next: response => {
+              this.utilSV.setMessage(response.title, response.message, 'success');
+              this.closeTab();
+            },
+            error: err => this.utilSV.setMessage(TITLES.error, err?.errorMessage ?? err, 'error')
+          });
+      }
+    });
+  }
+
+  deleteInvoice(): void {
+    this.utilSV.confirm({
+      message: MESSAGES.remove(this.invoiceNumber()),
+      header: TITLES.confirmation,
+      accept: () => {
+        this._loading.set(true);
+        this.invoiceSV.deleteInvoice(this.tabItem.item.id)
+          .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this._loading.set(false)))
+          .subscribe({
+            next: resp => {
+              this.utilSV.setMessage(resp.title, resp.message, 'success');
+              this.closeTab();
+            },
+            error: err => this.utilSV.setMessage(TITLES.error, err?.errorMessage ?? err, 'error')
+          });
+      }
+    });
+  }
+
+  cloneInvoice(): void {
+    this.utilSV.confirm({
+      message: MESSAGES.clone(this.invoiceNumber()),
+      header: TITLES.confirmation,
+      accept: () => {
+        this._loading.set(true);
+        this.invoiceSV.cloneInvoice(this.tabItem.item.id)
+          .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this._loading.set(false)))
+          .subscribe({
+            next: resp => {
+              this.utilSV.setMessage(resp.title, resp.message, 'success');
+              // Copy instead of the row itself: the new tab renames its item and
+              // that would otherwise rewrite the record we just received.
+              this.opened.emit({
+                item: { ...resp.data, name: invoiceTabName(resp.data) },
+                type: this.permissions().updateInvoice ? 'edit' : 'view',
+                pristine: true
+              });
+            },
+            error: err => this.utilSV.setMessage(TITLES.error, err?.errorMessage ?? err, 'error')
+          });
+      }
+    });
+  }
+
+  openHistory(): void {
+    this.dialogSV.open(HistoryInvoiceModalComponent, {
+      header: `HISTORY OF ${this.invoiceNumber()}`,
+      width: '75rem',
+      closable: true,
+      closeOnEscape: true,
+      data: { invoiceId: this.tabItem.item.id }
+    });
+  }
+
+  printInvoice(): void {
+    this.downloadFile(this.invoiceSV.printInvoice(this.tabItem.item.id), this.invoiceNumber());
+  }
+
+  // No dedicated endpoint, same as QR/Q/PO: the PDF is downloaded here and
+  // re-sent through the generic mail endpoint from the shared modal.
+  printAndSendInvoice(): void {
+    const invoice = this.item();
+    if (!invoice) return;
+
+    this._loadingPrintAndSent.set(true);
+    this.invoiceSV.printInvoice(invoice.id)
+      .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this._loadingPrintAndSent.set(false)))
+      .subscribe({
+        next: file => {
+          const number    = this.invoiceNumber();
+          const isSpanish = invoice.client?.language === 'SPANISH';
+
+          this.emailSV.openModalEmail({
+            tittle: `SEND INVOICE ${number}`,
+            subjectTemplate: isSpanish ? `Factura ${number}` : `Invoice ${number}`,
+            bodyTemplate: isSpanish
+              ? emailBodyTemplates.invoice_es(invoice.clientContact?.name)
+              : emailBodyTemplates.invoice_en(invoice.clientContact?.name),
+            toTemplate: invoice.clientContact?.email ? [invoice.clientContact.email] : [],
+            attachmentsTemplate: [{ name: `${number}.pdf`, data: file }]
+          });
+        },
+        error: () => this.utilSV.setMessage(TITLES.error, 'Error printing the document', 'error')
+      });
+  }
+
+  // Issue and revert answer with the whole detail, so the form is rebuilt from
+  // the response rather than re-read: `status`, `number` and the four dates all
+  // move at once, and the tab label depends on them.
+  private confirmTransition(message: string, action: () => Observable<MessageResponse<Invoice>>): void {
+    this.utilSV.confirm({
+      message,
+      header: TITLES.confirmation,
+      accept: () => {
+        this._loading.set(true);
+        this.showForm = false;
+        action()
+          .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this._loading.set(false)))
+          .subscribe({
+            next: resp => {
+              this.utilSV.setMessage(resp.title, resp.message, 'success');
+              this._item.set(resp.data);
+              this.rebuildForm();
+            },
+            error: err => {
+              this.showForm = true;
+              this.utilSV.setMessage(TITLES.error, err?.errorMessage ?? err, 'error');
+            }
+          });
+      }
+    });
+  }
+
+  // Cancel releases the lock server-side (§15.3) and delete removes the row
+  // altogether, so in both cases the tab has to go without the page trying to
+  // release a lock that is no longer there — hence the downgrade to 'view',
+  // which is what `removeTab` checks before calling close.
+  private closeTab(): void {
+    this.tabItem.pristine = true;
+    this.tabItem.type = 'view';
+    this.onClose.emit({ index: this.index + 1 });
+  }
+
+  private invoiceNumber(): string {
+    return invoiceTabName(this.item(), this.tabItem.item.name);
+  }
+
+  //#endregion
+
   //#region Products / Charges / Taxes / Purchase orders
   // Every sub-resource (§11-§14) is mutated from its own modal. None of those
   // endpoints answers with the invoice — they return the affected line — while
@@ -528,6 +830,30 @@ export class FormInvoiceComponent extends CommonPageTab<ListInvoice, InvoicePerm
         canEdit: this.canEditProducts(),
         taxes: this.listTaxes(),
         productsTotal: this.item()?.productsTotal ?? 0
+      }
+    });
+
+    modal.onClose.subscribe({
+      next: (resp: { valid: boolean }) => {
+        if (resp?.valid) this.reloadInvoice();
+      }
+    });
+  }
+
+  // Registering or voiding recalculates paidAmount, balanceDue and the status
+  // in the same transaction, so the detail is re-read once the modal closes.
+  openPaymentsModal(): void {
+    const modal = this.dialogSV.open(ListInvoicePaymentsModalComponent, {
+      header: 'PAYMENTS',
+      width: '80rem',
+      closable: false,
+      closeOnEscape: false,
+      data: {
+        invoiceId: this.tabItem.item.id,
+        currency: this.invoiceCurrency(),
+        totalAmount: this.item()?.totalAmount ?? 0,
+        canRegister: this.canRegisterPayment(),
+        canVoid: this.canVoidPayment()
       }
     });
 
