@@ -30,7 +30,7 @@
             [minFractionDigits]="2"
             [maxFractionDigits]="4"
             suffix="%"
-            (onBlur)="suggestValue()" />
+            (onBlur)="previewValue()" />
         </div>
 
         <div class="field col-12">
@@ -55,14 +55,11 @@
             [maxFractionDigits]="5"
             [max]="999999999999"
             formControlName="taxableBase"
-            (onBlur)="suggestValue()" />
+            (onBlur)="previewValue()" />
         </div>
 
         <div class="field col-12 md:col-6">
-          <label>
-            Value
-            <span class="required">*</span>
-          </label>
+          <label>Value</label>
           <p-inputNumber
             [inputStyle]="{ 'text-align': 'right' }"
             mode="currency"
@@ -72,6 +69,7 @@
             [maxFractionDigits]="5"
             [max]="999999999999"
             formControlName="value" />
+          <small class="text-color-secondary">Calculated by the server as rate × taxable base.</small>
         </div>
 
       </div>

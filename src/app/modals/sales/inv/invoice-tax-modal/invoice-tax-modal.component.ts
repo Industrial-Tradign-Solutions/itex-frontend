@@ -16,14 +16,19 @@ const TITLES  = TitlesMessages;
 /**
  * Create/edit of a tax line (§13).
  *
- * Taxes are entered by hand: the backend stores `rate`, `taxableBase` and
- * `value` verbatim and never recalculates them. `taxableBase` is pre-filled
- * with the products subtotal purely as a convenience, and `value` is suggested
- * from rate × base but stays editable — whatever is on screen is what gets
- * persisted.
+ * Taxes are entered by hand, but only `type`, `description`, `rate` and
+ * `taxableBase` travel: §17 removed `value` from the request and the backend
+ * computes it as `taxableBase * rate` with BigDecimal (scale 5, HALF_UP). The
+ * Value input is therefore a disabled preview of what the server will persist,
+ * not an editable field. `taxableBase` is pre-filled with the products subtotal
+ * as a convenience.
  *
  * `rate` is typed as a percentage and divided by 100 on submit (the API stores
  * 0.0875 for 8.75%).
+ *
+ * On edit the tax is re-read from `GET .../tax/{id}`: `value` in particular is
+ * recomputed server-side on every write, so the row rendered in the list can
+ * disagree with what is actually stored.
  */
 @Component({
   selector: 'app-invoice-tax-modal',
@@ -48,20 +53,36 @@ export class InvoiceTaxModalComponent implements OnInit {
   invoiceId     = computed<string>(() => this.config.data.invoiceId);
   currency      = computed<string>(() => this.config.data.currency ?? 'USD');
   productsTotal = computed<number>(() => this.config.data.productsTotal ?? 0);
-  tax           = computed<InvoiceTax | undefined>(() => this.config.data.tax);
+
+  private _tax = signal<InvoiceTax | undefined>(this.config.data.tax);
+  tax = computed<InvoiceTax | undefined>(() => this._tax());
 
   formTax!: FormGroup;
 
   ngOnInit(): void {
     this.buildForm();
+
+    const tax = this.tax();
+    if (this.type() !== 'edit' || !tax) return;
+
+    this._loading.set(true);
+    this.invoiceSV.getInvoiceTax(this.invoiceId(), tax.id)
+      .pipe(finalize(() => this._loading.set(false)))
+      .subscribe({
+        next: resp => {
+          this._tax.set(resp);
+          this.buildForm();
+        },
+        error: err => this.utilSV.setMessage(TITLES.warning, err?.errorMessage ?? err, 'warn')
+      });
   }
 
-  // Suggestion only: the user can overwrite `value` and that is what travels.
-  suggestValue(): void {
+  // Mirrors the server-side formula so the user sees the amount before saving.
+  // The control is disabled and never reaches the request.
+  previewValue(): void {
     const raw = this.formTax.getRawValue();
     const rate = (raw.rate ?? 0) / 100;
     this.formTax.patchValue({ value: rate * (raw.taxableBase ?? 0) });
-    this.formTax.markAsDirty();
   }
 
   onSubmit(): void {
@@ -95,8 +116,7 @@ export class InvoiceTaxModalComponent implements OnInit {
       type: raw.type,
       description: raw.description,
       rate: raw.rate / 100,
-      taxableBase: raw.taxableBase,
-      value: raw.value
+      taxableBase: raw.taxableBase
     };
 
     return this.type() === 'create'
@@ -112,7 +132,7 @@ export class InvoiceTaxModalComponent implements OnInit {
       description: [tax?.description ?? null, [Validators.required, Validators.maxLength(100)]],
       rate: [tax ? tax.rate * 100 : null, [Validators.required, Validators.min(0), Validators.max(100)]],
       taxableBase: [tax?.taxableBase ?? this.productsTotal(), [Validators.required, Validators.min(0)]],
-      value: [tax?.value ?? null, [Validators.required, Validators.min(0)]]
+      value: [{ value: tax?.value ?? null, disabled: true }]
     });
   }
 

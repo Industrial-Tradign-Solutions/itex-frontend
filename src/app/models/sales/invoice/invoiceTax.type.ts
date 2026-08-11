@@ -7,13 +7,13 @@ export type InvoiceTax = {
   value: number;
 };
 
-// §13: taxes are entered manually and the backend persists `rate`,
-// `taxableBase` and `value` verbatim — it does not recalculate the value, so it
-// travels in the request.
+// §13: taxes are entered manually. `value` is NOT part of the request — §17
+// removed it: the backend computes `value = taxableBase * rate` with BigDecimal
+// (scale 5, HALF_UP) so the money arithmetic never travels over the wire. The
+// response still carries the field, with the computed value.
 export type InvoiceTaxRequest = {
   type: string;
   description: string;
   rate: number;
   taxableBase: number;
-  value: number;
 };
