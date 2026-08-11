@@ -1,0 +1,114 @@
+<div class="flex flex-wrap justify-content-end align-items-center gap-2">
+
+  @if (draftPdf && canPrint) {
+    <span class="text-sm text-color-secondary mr-2">
+      <i class="pi pi-info-circle mr-1"></i>
+      Draft PDF is preliminary and regenerated on every print.
+    </span>
+  }
+
+  @if (canIssue) {
+    <button pButton
+      label="Issue"
+      icon="pi pi-check-circle"
+      severity="success"
+      [disabled]="!issueEnabled"
+      (click)="issue.emit()"
+      pTooltip="Save your changes and add at least one product before issuing"
+      [tooltipDisabled]="issueEnabled"
+      tooltipPosition="bottom"
+      type="button">
+    </button>
+  }
+
+  @if (canRevert) {
+    <button pButton
+      label="Revert to Draft"
+      icon="pi pi-undo"
+      severity="warning"
+      [outlined]="true"
+      (click)="revert.emit()"
+      type="button">
+    </button>
+  }
+
+  @if (canCancel) {
+    <button pButton
+      label="Cancel Invoice"
+      icon="pi pi-ban"
+      severity="danger"
+      [outlined]="true"
+      (click)="cancel.emit()"
+      type="button">
+    </button>
+  }
+
+  @if (canDelete) {
+    <button pButton
+      label="Delete"
+      icon="pi pi-trash"
+      severity="danger"
+      [outlined]="true"
+      [disabled]="deleteLocked"
+      (click)="remove.emit()"
+      pTooltip="This invoice already had an official number: it stays reserved and the invoice can no longer be deleted"
+      [tooltipDisabled]="!deleteLocked"
+      tooltipPosition="bottom"
+      type="button">
+    </button>
+  }
+
+  @if (canPrint) {
+    <button pButton
+      label="Print"
+      icon="pi pi-print"
+      severity="help"
+      [outlined]="true"
+      [disabled]="!printEnabled"
+      [loading]="loadingDownload"
+      (click)="print.emit()"
+      pTooltip="Save your changes and add at least one product before printing"
+      [tooltipDisabled]="printEnabled"
+      tooltipPosition="bottom"
+      type="button">
+    </button>
+  }
+
+  @if (canSend) {
+    <button pButton
+      label="Print &amp; Send"
+      icon="pi pi-send"
+      severity="info"
+      [outlined]="true"
+      [disabled]="!sendEnabled"
+      [loading]="loadingSend"
+      (click)="printAndSend.emit()"
+      pTooltip="Only an issued invoice with saved changes can be sent to the client"
+      [tooltipDisabled]="sendEnabled"
+      tooltipPosition="bottom"
+      type="button">
+    </button>
+  }
+
+  @if (canClone) {
+    <button pButton
+      label="Clone"
+      icon="pi pi-copy"
+      severity="secondary"
+      [outlined]="true"
+      (click)="clone.emit()"
+      type="button">
+    </button>
+  }
+
+  @if (canViewHistory) {
+    <button pButton
+      label="History"
+      icon="pi pi-book"
+      severity="help"
+      (click)="history.emit()"
+      type="button">
+    </button>
+  }
+
+</div>

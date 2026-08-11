@@ -1,0 +1,42 @@
+@if (formReason) {
+  <form [formGroup]="formReason" (ngSubmit)="onSubmit()">
+    @if (message()) {
+      <p-message severity="warn" [text]="message()!" styleClass="w-full mb-3" />
+    }
+
+    <div class="p-fluid">
+      <div class="formgrid grid">
+        <div class="field col-12">
+          <label>
+            {{ label() }}
+            <span class="required">*</span>
+          </label>
+          <textarea
+            [rows]="5"
+            pInputTextarea
+            style="resize: none"
+            [maxlength]="maxLength"
+            formControlName="reason">
+          </textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-3 flex justify-content-end column-gap-4">
+      <p-button
+        icon="pi pi-times-circle"
+        styleClass="p-button-sm p-button-danger"
+        label="Cancel"
+        (onClick)="closeModal()">
+      </p-button>
+      <button
+        pButton
+        type="submit"
+        [label]="confirmText()"
+        icon="pi pi-check-circle"
+        [disabled]="formReason.invalid"
+        class="p-button-sm p-button-success">
+      </button>
+    </div>
+  </form>
+}
