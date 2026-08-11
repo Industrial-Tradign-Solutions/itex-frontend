@@ -3,7 +3,7 @@ import { filtersPanel } from '@config/animations/invoice.animations';
 import { TypeTab } from '@config/types/tabs';
 import { BasicUser, UserInfo } from '@interfaces/administration/user';
 import { ClientBasic } from '@interfaces/partners/clients';
-import { emptyListInvoice, InvoiceFilter, InvoiceFilterDate, InvoiceStatus, invoiceTabName, ListInvoice } from '@interfaces/sales/invoice';
+import { emptyListInvoice, InvoiceFilter, InvoiceFilterDate, InvoiceStatus, invoiceStatusBadge, invoiceTabName, ListInvoice } from '@interfaces/sales/invoice';
 import { StaticListItem } from '@interfaces/static-list.model';
 import { InvoicePermissions } from '@pages/principal/sales/invoices/invoices.component';
 import { UsersService } from '@services/admin';
@@ -15,15 +15,6 @@ import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { Table } from 'primeng/table';
 import { storageKeys } from '../../../../../environments';
 import { CommonListTab } from '@config/tabs/commonListTab';
-
-// Slugs of the global badge stylesheet (assets/demo/styles/badges.scss).
-const STATUS_BADGE: Record<InvoiceStatus, string> = {
-  DRAFT: 'new',
-  ISSUED: 'renewal',
-  PARTIAL_PAID: 'negotiation',
-  PAID: 'qualified',
-  CANCELLED: 'unqualified'
-};
 
 const DEFAULT_FILTER: InvoiceFilter = {
   date: 'DAY',
@@ -136,15 +127,16 @@ export class ListInvoiceComponent extends CommonListTab<ListInvoice, InvoicePerm
   }
 
   statusBadge(status: InvoiceStatus): string {
-    return STATUS_BADGE[status] ?? 'new';
+    return invoiceStatusBadge(status);
   }
 
-  get filteredClients(): ClientBasic[] {
-    return this.clientSV.filteredList;
-  }
+  // Own state instead of clientSV.filteredList: that field lives on a
+  // root-provided singleton shared by every module, so any other list or form
+  // searching at the same time overwrites what this autocomplete is showing.
+  filteredClients: ClientBasic[] = [];
 
   searchClient(event: AutoCompleteCompleteEvent): void {
-    this.clientSV.searchAutoComplete(event);
+    this.filteredClients = this.clientSV.searchAutoComplete(event);
   }
 
   override resetForm(dt: Table): void {

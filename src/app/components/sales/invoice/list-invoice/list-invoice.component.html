@@ -346,6 +346,15 @@
               pTooltip="Overdue"
               tooltipPosition="top"></i>
           }
+          <!-- Survives the payment: `overdue` is switched off once the invoice
+               is settled, so without this the fact that it was paid late would
+               disappear from the list. -->
+          @if (invoice.paidLate) {
+            <i
+              class="pi pi-clock text-orange-500 ml-2"
+              pTooltip="Paid after the due date"
+              tooltipPosition="top"></i>
+          }
         }
       </td>
       <td>
