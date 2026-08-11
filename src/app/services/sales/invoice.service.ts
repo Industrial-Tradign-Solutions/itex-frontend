@@ -13,11 +13,15 @@ import {
   InvoiceChargeRequest,
   InvoiceCreateRequest,
   InvoiceFilter,
+  InvoiceHistory,
   InvoiceOpenAndLock,
+  InvoicePayment,
+  InvoicePaymentRequest,
   InvoicePoLinkRequest,
   InvoiceProduct,
   InvoiceProductImportRequest,
   InvoiceProductRequest,
+  InvoiceStatement,
   InvoiceTax,
   InvoiceTaxRequest,
   InvoiceUpdateRequest,
@@ -155,6 +159,102 @@ export class InvoiceService {
       .pipe(catchError(err => throwError(() => err.error)));
   }
 
+  // §6: the clone is born as a fresh DRAFT with its own draftNumber, and it
+  // counts against maxTabsOpen — the response is a list row, ready to open in a
+  // new tab (same contract as PO).
+  cloneInvoice(id: string): Observable<MessageResponse<ListInvoice>> {
+    const url = `${URL_SERVICES}/clone/${id}`;
+    return this.unwrap(this.http.patch<MessageResponse<ListInvoice>>(url, null, { headers: this.authSV.headers() }));
+  }
+
+  getInvoiceHistory(id: string): Observable<InvoiceHistory[]> {
+    const url = `${URL_SERVICES}/${id}/history`;
+    return this.unwrap(this.http.get<InvoiceHistory[]>(url, { headers: this.authSV.headers() }));
+  }
+
+  //#endregion
+
+  //#region Lifecycle (§15)
+  // The three transitions answer with the whole detail, so the caller replaces
+  // `item()` with the response instead of re-reading. All of them require the
+  // EDIT lock and being the invoice's salesRep, on top of the permission.
+
+  issueInvoice(id: string): Observable<MessageResponse<Invoice>> {
+    const url = `${URL_SERVICES}/${id}/issue`;
+    return this.unwrap(this.http.patch<MessageResponse<Invoice>>(url, null, { headers: this.authSV.headers() }));
+  }
+
+  revertInvoiceToDraft(id: string): Observable<MessageResponse<Invoice>> {
+    const url = `${URL_SERVICES}/${id}/revert-to-draft`;
+    return this.unwrap(this.http.patch<MessageResponse<Invoice>>(url, null, { headers: this.authSV.headers() }));
+  }
+
+  // §15.3 releases the lock as part of cancelling: the tab has to be closed
+  // afterwards, not kept open on a final state nobody can edit.
+  cancelInvoice(id: string, cancelReason: string): Observable<MessageResponse<Invoice>> {
+    const url = `${URL_SERVICES}/${id}/cancel`;
+    return this.http.patch<MessageResponse<Invoice>>(url, { cancelReason }, { headers: this.authSV.headers() })
+      .pipe(catchError(err => throwError(() => err.error)));
+  }
+
+  // §15.4: only a brand-new draft (`number === null`). A draft that was ever
+  // issued keeps its number reserved and can never be deleted.
+  deleteInvoice(id: string): Observable<MessageResponse<string>> {
+    const url = `${URL_SERVICES}/${id}`;
+    return this.unwrap(this.http.delete<MessageResponse<string>>(url, { headers: this.authSV.headers() }));
+  }
+
+  //#endregion
+
+  //#region Payments (§16)
+
+  listInvoicePayments(invoiceId: string): Observable<InvoicePayment[]> {
+    const url = `${URL_SERVICES}/${invoiceId}/payment`;
+    return this.unwrap(this.http.get<InvoicePayment[]>(url, { headers: this.authSV.headers() }));
+  }
+
+  // Multipart with two parts: `payment` as a JSON blob and `receipt` as the
+  // file. The receipt is mandatory — §16.1 rejects the request without it.
+  registerInvoicePayment(
+    invoiceId: string,
+    request: InvoicePaymentRequest,
+    receipt: File
+  ): Observable<MessageResponse<InvoicePayment>> {
+    const url = `${URL_SERVICES}/${invoiceId}/payment`;
+    const formData = new FormData();
+
+    formData.append('payment', new Blob([JSON.stringify(request)], { type: 'application/json' }));
+    formData.append('receipt', receipt, receipt.name);
+
+    return this.http.post<MessageResponse<InvoicePayment>>(url, formData, { headers: this.authSV.headersMultipart() })
+      .pipe(catchError(err => throwError(() => err.error)));
+  }
+
+  // Payments are never edited or deleted: a wrong one is voided with a reason
+  // and a correct one is registered afterwards.
+  voidInvoicePayment(invoiceId: string, paymentId: string, voidedReason: string): Observable<MessageResponse<InvoicePayment>> {
+    const url = `${URL_SERVICES}/${invoiceId}/payment/${paymentId}/void`;
+    return this.http.patch<MessageResponse<InvoicePayment>>(url, { voidedReason }, { headers: this.authSV.headers() })
+      .pipe(catchError(err => throwError(() => err.error)));
+  }
+
+  //#endregion
+
+  //#region PDF and statement (§18)
+
+  // In DRAFT the server regenerates the PDF on every call without persisting
+  // `pdfUrl`; once issued it hands back the official document.
+  printInvoice(invoiceId: string): Observable<Blob> {
+    const url = `${URL_SERVICES}/print/${invoiceId}`;
+    return this.unwrap(this.http.get(url, { headers: this.authSV.headersBlob(), responseType: 'blob' }));
+  }
+
+  // Plain object, no MessageResponse envelope.
+  getClientStatement(clientId: string): Observable<InvoiceStatement> {
+    const url = `${URL_SERVICES}/statement/${clientId}`;
+    return this.unwrap(this.http.get<InvoiceStatement>(url, { headers: this.authSV.headers() }));
+  }
+
   //#endregion
 
   //#region Sub-resources (§11 products, §12 charges, §13 taxes, §14 linked POs)
@@ -162,6 +262,28 @@ export class InvoiceService {
   // line, or the id of the deleted one. Totals are recalculated and persisted
   // server-side, so the caller re-reads the detail (open-lock) afterwards
   // instead of patching anything locally.
+  //
+  // The three single-line GETs are what the edit modals open with. The lines
+  // embedded in the detail are a projection for the tables and are not
+  // guaranteed to carry every field of the row, and they can be stale by the
+  // time the user clicks Edit — so the modal always re-reads its own line
+  // instead of trusting the copy already in memory.
+  // All three answer the line directly, without a MessageResponse envelope.
+
+  getInvoiceProduct(invoiceId: string, invoiceProductId: string): Observable<InvoiceProduct> {
+    const url = `${URL_SERVICES}/${invoiceId}/product/${invoiceProductId}`;
+    return this.unwrap(this.http.get<InvoiceProduct>(url, { headers: this.authSV.headers() }));
+  }
+
+  getInvoiceCharge(invoiceId: string, chargeId: string): Observable<InvoiceCharge> {
+    const url = `${URL_SERVICES}/${invoiceId}/charge/${chargeId}`;
+    return this.unwrap(this.http.get<InvoiceCharge>(url, { headers: this.authSV.headers() }));
+  }
+
+  getInvoiceTax(invoiceId: string, taxId: string): Observable<InvoiceTax> {
+    const url = `${URL_SERVICES}/${invoiceId}/tax/${taxId}`;
+    return this.unwrap(this.http.get<InvoiceTax>(url, { headers: this.authSV.headers() }));
+  }
 
   createInvoiceProduct(invoiceId: string, request: InvoiceProductRequest): Observable<MessageResponse<InvoiceProduct>> {
     const url = `${URL_SERVICES}/${invoiceId}/product`;

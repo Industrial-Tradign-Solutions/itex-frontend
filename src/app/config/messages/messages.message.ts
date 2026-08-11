@@ -126,7 +126,28 @@ export const Messages = {
         changeClient: (clientName: string) => `The invoice will be re-issued to "<b>${clientName}</b>".
                                               <br><br>
                                               Please review the Ship To block before saving: it is not
-                                              refreshed automatically.`
+                                              refreshed automatically.`,
+        issue: (number: string) => `Are you sure you want to issue the invoice "<b>${number}</b>"?
+                                    <br><br>
+                                    It will receive its official number, the total will be frozen and
+                                    the products, charges and taxes can no longer be modified.`,
+        revert: (number: string) => `Are you sure you want to revert the invoice "<b>${number}</b>" to Draft?
+                                     <br><br>
+                                     <b>Its number stays reserved forever and the invoice can never be
+                                     deleted again</b>, even after reverting. The issue and due dates are
+                                     cleared and recalculated when it is issued back.`,
+        remove: (number: string) => `Are you sure you want to delete the draft invoice "<b>${number}</b>"?
+                                     <br><br>
+                                     This cannot be undone. Its draft number goes back to the pool and
+                                     will be reused by the next invoice.`,
+        clone: (number: string) => `Are you sure you want to clone the invoice "<b>${number}</b>"?
+                                    <br><br>
+                                    The clone is created as a new draft with its products, charges, taxes
+                                    and linked POs. Payments and the official number are not copied.`,
+        cancelWarning: `Cancelling is final: the invoice can never be edited or reopened, and this tab
+                        will be closed. It stays stored for auditing.`,
+        voidPayment: (amount: string) => `Voiding the payment of ${amount} recalculates the balance and the
+                                          status of the invoice. The payment is kept, marked as voided.`
       }
     }
   }
