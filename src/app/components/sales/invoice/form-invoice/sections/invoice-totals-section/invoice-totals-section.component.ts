@@ -7,7 +7,8 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from 
  *
  * Charges and taxes double as the entry point to their own lists (§12/§13):
  * they have no table of their own in the form, so the box is where they are
- * managed from.
+ * managed from. Payments (§16) follow the same pattern, right under the total
+ * they are settling.
  */
 @Component({
   selector: 'app-invoice-totals-section',
@@ -20,9 +21,16 @@ export class InvoiceTotalsSectionComponent {
   @Input() chargesTotal = 0;
   @Input() taxesTotal = 0;
   @Input() totalAmount = 0;
+  @Input() paidAmount = 0;
+  @Input() balanceDue = 0;
   @Input() currency = 'USD';
+
+  // Payments only exist once the invoice is issued, so the whole block is
+  // hidden in DRAFT rather than shown at zero.
+  @Input() showPayments = false;
 
   @Output() openCharges = new EventEmitter<void>();
   @Output() openTaxes = new EventEmitter<void>();
+  @Output() openPayments = new EventEmitter<void>();
 
 }

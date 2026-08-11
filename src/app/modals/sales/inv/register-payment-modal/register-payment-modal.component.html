@@ -1,0 +1,126 @@
+@if (formPayment) {
+  <form [formGroup]="formPayment" (ngSubmit)="onSubmit()">
+
+    <div class="grid mb-2">
+      <div class="col-12 md:col-4">
+        <div class="text-sm text-color-secondary">Invoice total</div>
+        <div class="text-lg">{{ totalAmount() | customCurrency: currency() }}</div>
+      </div>
+      <div class="col-12 md:col-4">
+        <div class="text-sm text-color-secondary">Already paid</div>
+        <div class="text-lg">{{ paidAmount() | customCurrency: currency() }}</div>
+      </div>
+      <div class="col-12 md:col-4">
+        <div class="text-sm text-color-secondary">Balance due</div>
+        <div class="text-lg font-bold">{{ balanceDue() | customCurrency: currency() }}</div>
+      </div>
+    </div>
+
+    <div class="p-fluid">
+      <div class="formgrid grid">
+
+        <div class="field col-12 md:col-4">
+          <label>
+            Amount
+            <span class="required">*</span>
+          </label>
+          <p-inputNumber
+            [inputStyle]="{ 'text-align': 'right' }"
+            mode="currency"
+            [currency]="currency()"
+            currencyDisplay="code"
+            [minFractionDigits]="2"
+            [maxFractionDigits]="5"
+            [min]="0"
+            [max]="balanceDue()"
+            formControlName="amount" />
+          <small class="text-color-secondary">Cannot exceed the balance due.</small>
+        </div>
+
+        <div class="field col-12 md:col-4">
+          <label>
+            Payment date
+            <span class="required">*</span>
+          </label>
+          <p-calendar
+            appendTo="body"
+            [maxDate]="today"
+            dateFormat="M dd, yy"
+            formControlName="paymentDate" />
+        </div>
+
+        <div class="field col-12 md:col-4">
+          <label>
+            Payment method
+            <span class="required">*</span>
+          </label>
+          <p-dropdown
+            formControlName="paymentMethod"
+            [options]="listPaymentMethods()"
+            optionLabel="value"
+            optionValue="key"
+            appendTo="body"
+            placeholder="Select Method" />
+        </div>
+
+        <div class="field col-12">
+          <label>
+            Receipt
+            <span class="required">*</span>
+          </label>
+          <p-fileUpload
+            accept=".pdf,.jpg,.jpeg,.png"
+            [customUpload]="true"
+            mode="advanced"
+            [auto]="true"
+            [multiple]="false"
+            [showUploadButton]="false"
+            [showCancelButton]="false"
+            chooseLabel="Select receipt"
+            (onSelect)="selectReceipt($event)"
+            (onRemove)="removeReceipt()"
+            (onClear)="removeReceipt()" />
+          @if (!receipt()) {
+            <small class="text-color-secondary">A receipt (PDF or image) is required to register the payment.</small>
+          }
+        </div>
+
+        <div class="field col-12">
+          <label>Notes</label>
+          <textarea
+            [rows]="3"
+            pInputTextarea
+            style="resize: none"
+            maxlength="1000"
+            placeholder="Bank reference, remarks…"
+            formControlName="notes">
+          </textarea>
+        </div>
+
+      </div>
+    </div>
+
+    @if (loading()) {
+      <div class="field col animate__animated animate__fadeIn">
+        <p-progressBar class="w-20rem animate__animated animate__fadeIn" mode="indeterminate"></p-progressBar>
+      </div>
+    } @else {
+      <div class="mt-3 flex justify-content-end column-gap-4">
+        <p-button
+          icon="pi pi-times-circle"
+          styleClass="p-button-sm p-button-danger"
+          label="Cancel"
+          (onClick)="closeModal()">
+        </p-button>
+        <button
+          pButton
+          type="submit"
+          label="Register Payment"
+          icon="pi pi-save"
+          [disabled]="!canSubmit()"
+          class="p-button-sm p-button-success">
+        </button>
+      </div>
+    }
+  </form>
+}

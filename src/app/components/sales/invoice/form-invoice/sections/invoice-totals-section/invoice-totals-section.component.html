@@ -83,4 +83,49 @@
       <label>Total</label>
     </p-floatLabel>
   </div>
+
+  @if (showPayments) {
+    <div class="field col-12 md:col-12 mt-3">
+      <div class="flex align-items-center column-gap-1">
+        <p-floatLabel class="flex-grow-1">
+          <p-inputNumber
+            [inputStyle]="{ 'text-align': 'right' }"
+            mode="currency"
+            [currency]="currency"
+            currencyDisplay="code"
+            [minFractionDigits]="5"
+            [maxFractionDigits]="5"
+            [max]="999999999999"
+            [disabled]="true"
+            [ngModel]="paidAmount" />
+          <label>Paid</label>
+        </p-floatLabel>
+        <button
+          pButton
+          type="button"
+          icon="pi pi-wallet"
+          class="p-button-rounded p-button-text"
+          pTooltip="Manage Payments"
+          tooltipPosition="left"
+          severity="info"
+          (click)="openPayments.emit()">
+        </button>
+      </div>
+    </div>
+    <div class="field col-12 md:col-12 mt-3">
+      <p-floatLabel>
+        <p-inputNumber
+          [inputStyle]="{ 'text-align': 'right' }"
+          mode="currency"
+          [currency]="currency"
+          currencyDisplay="code"
+          [minFractionDigits]="5"
+          [maxFractionDigits]="5"
+          [max]="999999999999"
+          [disabled]="true"
+          [ngModel]="balanceDue" />
+        <label>Balance Due</label>
+      </p-floatLabel>
+    </div>
+  }
 </div>

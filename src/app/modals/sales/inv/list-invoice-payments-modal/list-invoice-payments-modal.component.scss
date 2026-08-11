@@ -1,0 +1,9 @@
+// Voided payments stay in the table for auditing, visually retired instead of
+// removed: the amount no longer counts, but the record has to remain readable.
+.voided-row {
+  opacity: 0.65;
+
+  td:not(:nth-child(6)) {
+    text-decoration: line-through;
+  }
+}
