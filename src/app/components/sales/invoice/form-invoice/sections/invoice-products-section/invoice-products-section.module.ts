@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
+import { PipesModule } from '@pipes/pipes.module';
 import { InvoiceProductsSectionComponent } from './invoice-products-section.component';
 
 @NgModule({
@@ -13,7 +14,8 @@ import { InvoiceProductsSectionComponent } from './invoice-products-section.comp
     CommonModule,
     ButtonModule,
     TableModule,
-    TooltipModule
+    TooltipModule,
+    PipesModule
   ],
   exports: [
     InvoiceProductsSectionComponent

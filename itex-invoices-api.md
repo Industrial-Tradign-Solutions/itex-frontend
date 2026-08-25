@@ -69,7 +69,6 @@ GET /sales/invoice?page=0&size=10&status=ISSUED
       "balanceDue": 10000.00,
       "dueAt": "2026-08-30T23:59:59-04:00",
       "overdue": false,
-      "paidLate": false,
       "createdAt": "2026-07-15T10:30:00-04:00"
     }
   ],
@@ -238,7 +237,6 @@ PATCH /sales/invoice/open-lock/{invoice_id}?type=EDIT
     "balanceDue": 15000.00,
     "dueAt": null,
     "overdue": false,
-    "paidLate": false,
     "overdueNotifiedAt": null,
     "issuedAt": null,
     "partialPaidAt": null,
@@ -267,9 +265,11 @@ PATCH /sales/invoice/open-lock/{invoice_id}?type=EDIT
         "leadTime": 15,
         "leadTimeType": "DAYS",
         "unitPrice": 50.00000,
-        "profitMargin": 25.00,
+        "profitMargin": 0.25,
         "condition": "NEW",
-        "extendedPrice": 5000.00000
+        "extendedPrice": 5000.00000,
+        "sellingUnitPrice": 50.00000,
+        "sellingExtendedPrice": 5000.00000
       }
     ],
     "charges": [
@@ -877,7 +877,6 @@ cambio efectivo. Los line items (productos, cargos, impuestos) siguen bloqueados
     "balanceDue": 0.00000,
     "dueAt": null,
     "overdue": false,
-    "paidLate": false,
     "overdueNotifiedAt": null,
     "issuedAt": null,
     "partialPaidAt": null,
@@ -946,11 +945,11 @@ de la factura padre, no dentro del payload de `PUT /sales/invoice/{id}`.
 
 Base: `/sales/invoice/{invoice_id}/product`
 
-> **Precio.** `unitPrice` es el **costo** y `profitMargin` el **margen como porcentaje directo**
-> (`30.00` = 30%, `0.40` = 0.40%), en el rango 0.01–100. **No es una fracción**: el valor viaja y se
-> persiste tal cual, y el servidor lo divide entre 100 al calcular. El precio facturado es
-> `quantity × unitPrice × (1 + profitMargin / 100)` — el margen se aplica **una sola vez**. El
-> `extendedPrice` de la respuesta ya lo trae aplicado.
+> **Precio.** `unitPrice` es el **costo** y `profitMargin` el **margen** (fracción, ej. `0.30` = 30%).
+> `extendedPrice` es el costo total de la línea (`quantity × unitPrice`), sin margen — solo display.
+> `sellingUnitPrice` es el precio de venta unitario (`unitPrice × (1 + profitMargin / 100)`).
+> `sellingExtendedPrice` es el precio de venta total (`quantity × sellingUnitPrice`) y se usa para
+> el `productsTotal` y `totalAmount` de la factura.
 
 ### 11.1 Agregar producto — `POST /sales/invoice/{invoice_id}/product`
 
@@ -964,7 +963,7 @@ Request body:
   "leadTime": 4,
   "leadTimeType": "WEEKS",
   "unitPrice": 50.00000,
-  "profitMargin": 30.00,
+  "profitMargin": 0.30,
   "condition": "NEW"
 }
 ```
@@ -988,9 +987,11 @@ Response `201 Created`:
     "leadTime": 4,
     "leadTimeType": "WEEKS",
     "unitPrice": 50.00000,
-    "profitMargin": 30.00,
+    "profitMargin": 0.30,
     "condition": "NEW",
-    "extendedPrice": 6500.00000
+    "extendedPrice": 5000.00000,
+    "sellingUnitPrice": 65.00000,
+    "sellingExtendedPrice": 6500.00000
   }
 }
 ```
@@ -1053,7 +1054,7 @@ Response `200 OK` — array plano, puede estar vacío:
     "leadTime": 4,
     "leadTimeType": "WEEKS",
     "unitPrice": 0.85000,
-    "profitMargin": 30.00000,
+    "profitMargin": 0.30000,
     "condition": "NEW"
   }
 ]
@@ -1562,6 +1563,16 @@ Devuelve todos los pagos de la factura, anulados incluidos, ordenados por fecha 
 
 ## 17. Cambios sobre contratos existentes
 
+- **`InvoiceProductResponse` — cambio breaking**: el campo **`extendedPrice`** ahora devuelve el
+  costo puro de la línea (`quantity × unitPrice`), sin aplicar el margen de ganancia. Antes
+  devolvía el precio de venta (`quantity × unitPrice × (1 + profitMargin / 100)`). Se agregan
+  dos campos nuevos:
+  - **`sellingUnitPrice`**: precio de venta unitario (`unitPrice × (1 + profitMargin / 100)`).
+  - **`sellingExtendedPrice`**: precio de venta total de la línea (`quantity × sellingUnitPrice`).
+    Es el valor que antes tenía `extendedPrice`.
+  - **`productsTotal`** ahora se calcula como la suma de `sellingExtendedPrice` (antes era la suma
+    de `extendedPrice`). El `totalAmount` de la factura no se ve afectado porque ya usaba la
+    fórmula correcta a nivel de entidad.
 - **`payment_terms` (dropdown en `/common/static_lists`)**: el contrato del endpoint **no cambia**
   (sigue siendo `{key, value}`), pero cada término pasó a llevar internamente su regla de
   vencimiento. El frontend puede seguir usando la lista tal cual; solo debe tener presente que los
@@ -1823,13 +1834,21 @@ Línea de producto con su correspondencia en la factura:
   "leadTime": 15,
   "leadTimeType": "DAYS",
   "unitPrice": 50.00000,
-  "profitMargin": 25.00,
+  "profitMargin": 0.25,
   "condition": "NEW",
-  "extendedPrice": 5000.00000
+  "extendedPrice": 5000.00000,
+  "sellingUnitPrice": 62.50000,
+  "sellingExtendedPrice": 6250.00000
 }
 ```
 
 > **Precisión:** escala interna 5 decimales, redondeo HALF_UP. Display en PDF: 2 decimales.
+>
+> **Campos de precio:**
+> - `unitPrice`: costo unitario del producto (sin margen).
+> - `extendedPrice`: costo total de la línea (`quantity × unitPrice`), sin margen. Solo display.
+> - `sellingUnitPrice`: precio de venta unitario (`unitPrice × (1 + profitMargin / 100)`).
+> - `sellingExtendedPrice`: precio de venta total de la línea (`quantity × sellingUnitPrice`). Usado para `productsTotal` y `totalAmount`.
 
 ### InvoiceChargeResponse
 
@@ -1869,7 +1888,7 @@ Reusa `BasicIpPurchaseOrderResponse`:
 ### Totales desglosados
 
 En `InvoiceResponse`:
-- **`productsTotal`**: ∑ `quantity × unitPrice` de todas las líneas, escala 5.
+- **`productsTotal`**: ∑ `sellingExtendedPrice` de todas las líneas (precio de venta con margen), escala 5.
 - **`chargesTotal`**: ∑ `charges[].value`, escala 5.
 - **`taxesTotal`**: ∑ `taxes[].value`, escala 5.
 - **`totalAmount`**: `productsTotal + chargesTotal + taxesTotal` — **no se recalcula en PUT**, solo en POST o cuando se modifican productos/cargos/impuestos.

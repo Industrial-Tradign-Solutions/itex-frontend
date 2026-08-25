@@ -722,13 +722,8 @@ No existía definido quién puede ver/editar qué facturas. Regla acordada:
 > consumirlo desde la UI. `➖` en FE marca lógica que vive solo en el servidor y no tiene
 > contraparte visual (schedulers, guards, recálculos internos).
 >
-> **El frontend quedó al día con el backend en esta iteración.** Ya no queda ningún `⬜` en la
-> columna FE: el detalle de lo entregado está al final de la sección, en "Entregado en frontend".
->
-> ⚠️ **Corrección de esta revisión.** Las filas *Clonar factura* y *Ver historial de auditoría*
-> figuraban como `FE ✅` sin estarlo — no existían ni el método de servicio, ni el botón, ni el
-> modal. Ambas se construyeron ahora, así que la marca por fin es real. Vale como recordatorio de
-> que esta tabla se verifica contra el código, no contra la memoria.
+> El resumen accionable de todo lo que hoy está en `⬜` para frontend está al final de esta
+> sección, en "Pendiente de integrar en frontend".
 
 ### Encabezado de factura
 
@@ -736,24 +731,24 @@ No existía definido quién puede ver/editar qué facturas. Regla acordada:
 |---|---|---|---|---|
 | Crear factura (`POST /sales/invoice`) | ✅ | ✅ | §4 — reglas DRAFT | Asigna `draft_number`, open/lock automático, ship-to derivado del cliente |
 | Editar factura (`PUT /sales/invoice/{id}`) | ✅ | ✅ | §4 — DRAFT editable | Incluye `CHANGE_SALES_REP` y `EDIT_PAYMENT_TERMS` condicionales |
-| Editar campos no financieros en `ISSUED` | ✅ | ✅ | §4 — campos editables en ISSUED | BE: el PUT en `ISSUED` acepta solo `internalRemarks`, `remarks`, `orderNumber`, `awbBl`, `packingList`; cualquier otro cambio se rechaza nombrando el campo. FE: `canEditRestricted` deshabilita todo el formulario y vuelve a habilitar solo esos cinco controles |
+| Editar campos no financieros en `ISSUED` | ✅ | ⬜ | §4 — campos editables en ISSUED | BE: el PUT en `ISSUED` acepta solo `internalRemarks`, `remarks`, `orderNumber`, `awbBl`, `packingList`; cualquier otro cambio se rechaza nombrando el campo. FE: en `ISSUED` dejar habilitados solo esos cinco inputs |
 | Listar facturas con filtros y paginación | ✅ | ✅ | §12 — alcance por vendedor | `VIEW_ALL_INVOICE` / solo propias |
 | Ver detalle de factura (`open-lock`) | ✅ | ✅ | §4, §12 | Lock tipo `VIEW` no requiere ownership |
 | Clonar factura | ✅ | ✅ | §8 `t_invoice_cloned` | Requiere `CLONE_INVOICE (5001004)` |
 | Ver historial de auditoría | ✅ | ✅ | §8 `t_invoice_history` | Requiere `VIEW_HISTORY_INVOICE (5001003)`. Desde la auditoría también aplica el alcance por vendedor: sin `VIEW_ALL_INVOICE` solo se ve el historial de las facturas propias, y una factura inexistente devuelve 404 en vez de lista vacía |
-| Emitir factura (`DRAFT → ISSUED`) | ✅ | ✅ | §4 — reglas ISSUED | BE: `PATCH /{id}/issue`, asigna `number` o conserva el existente, congela `total_amount`, calcula `due_at`. FE: botón "Issue" en la barra de acciones, gateado por `ISSUE_INVOICE` + `DRAFT` + ≥1 producto + total > 0 + tab guardado; el detalle se reconstruye con la respuesta |
-| Calcular `due_at` según `payment_terms` | ✅ | ✅ | §6 — 4 grupos de fórmulas | BE: `PaymentTerms` lleva `DueDateRule` + valor; `InvoiceDueDateCalculator`. FE: `dueAt` en detalle y listado; con los términos `ADVANCED`/`PRIOR_TO_SHIPMENT`/`W_DOCUMENTS`/`TO_BE_AGREED` el detalle muestra "To be agreed" en vez de vacío |
-| Cancelar factura (`DRAFT`/`ISSUED → CANCELLED`) | ✅ | ✅ | §4 — CANCELLED | BE: `PATCH /{id}/cancel`, sin pagos, libera el lock. FE: modal de motivo obligatorio (máx. 1000) y cierre automático del tab, porque el backend ya soltó el lock |
-| Revertir a borrador (`ISSUED → DRAFT`) | ✅ | ✅ | §4 — ISSUED → DRAFT | BE: `PATCH /{id}/revert-to-draft`. FE: confirmación que advierte explícitamente que el `number` queda reservado y la factura ya no podrá eliminarse |
-| Eliminar factura draft nuevo | ✅ | ✅ | §4 — Draft nuevo | BE: `DELETE /{id}`, solo si `number IS NULL`. FE: botón deshabilitado con tooltip explicativo cuando `number != null`, aunque el usuario tenga `DELETE_INVOICE`; al borrar cierra el tab sin intentar soltar el lock |
-| Generación de PDF | ✅ | ✅ | §4, §8 `path_pdf` | BE: `GET /print/{id}`. En `DRAFT` regenera en cada llamada sin persistir `pdfUrl`; al emitir genera el definitivo y lo guarda. Redondeo a 2 decimales solo aquí. **Falta la plantilla Jasper** en el repo `itex-reports`. FE: botón Print + aviso de que el PDF de un borrador es preliminar |
-| Print & Send | ➖ | ✅ | §11 | Sin endpoint propio, igual que QR/Q/PO: el FE descarga de `/print/{id}` y reenvía por `POST /email/send-attachment`, con plantilla EN/ES según el `language` del cliente. **Habilitado solo desde `ISSUED`** — un draft revertido conserva su `number`, así que la regla mira el estado, no el número |
-| Marca de factura vencida (`is_overdue`) | ✅ | ✅ | §4 — manejo OVERDUE | BE: la mantiene el scheduler. FE: fecha en rojo + icono en el listado, badge "Overdue" en el detalle, y filtro "Overdue only" en los filtros avanzados |
-| Marca de pago fuera de tiempo (`paidLate`) | ✅ | ✅ | §4 | BE: derivado de `paidAt > dueAt`, expuesto en `InvoiceResponse` y `ListInvoiceResponse`. FE: icono en el listado y badge "Paid late" en el detalle. **Nota:** el campo no aparece en los ejemplos de respuesta de §1/§4 del API doc, así que el modelo lo declara opcional |
+| Emitir factura (`DRAFT → ISSUED`) | ✅ | ⬜ | §4 — reglas ISSUED | BE: `PATCH /{id}/issue`, asigna `number` o conserva el existente, congela `total_amount`, calcula `due_at`. FE: botón "Issue" visible solo en `DRAFT` con `ISSUE_INVOICE`, confirmación, y refresco del detalle (cambia `number`, `issuedAt`, `dueAt`, `status`) |
+| Calcular `due_at` según `payment_terms` | ✅ | ⬜ | §6 — 4 grupos de fórmulas | BE: `PaymentTerms` lleva `DueDateRule` + valor; `InvoiceDueDateCalculator`. FE: mostrar `dueAt` en detalle y listado; los términos `ADVANCED`/`PRIOR_TO_SHIPMENT`/`W_DOCUMENTS`/`TO_BE_AGREED` llegan en `null` y deben renderizarse como "por acordar", no vacío |
+| Cancelar factura (`DRAFT`/`ISSUED → CANCELLED`) | ✅ | ⬜ | §4 — CANCELLED | BE: `PATCH /{id}/cancel`, sin pagos, libera el lock. FE: modal con `cancelReason` obligatorio (máx. 1000), y tras cancelar cerrar el tab porque el backend ya soltó el lock |
+| Revertir a borrador (`ISSUED → DRAFT`) | ✅ | ⬜ | §4 — ISSUED → DRAFT | BE: `PATCH /{id}/revert-to-draft`. FE: confirmación que **advierta que la factura ya no podrá eliminarse** (el `number` queda reservado); tras revertir, `dueAt`/`issuedAt`/`pdfUrl` vuelven a `null` |
+| Eliminar factura draft nuevo | ✅ | ⬜ | §4 — Draft nuevo | BE: `DELETE /{id}`, solo si `number IS NULL`. FE: botón de borrar **deshabilitado** cuando `number != null`, aunque el usuario tenga `DELETE_INVOICE` |
+| Generación de PDF | ✅ | ⬜ | §4, §8 `path_pdf` | BE: `GET /print/{id}`. En `DRAFT` regenera en cada llamada sin persistir `pdfUrl`; al emitir genera el definitivo y lo guarda. Redondeo a 2 decimales solo aquí. **Falta la plantilla Jasper** en el repo `itex-reports`. FE: botón Print, y badge/aviso de que un PDF en `DRAFT` es preliminar |
+| Print & Send | ➖ | ⬜ | §11 | Sin endpoint propio, igual que QR/Q/PO: el FE descarga de `/print/{id}` y reenvía por `POST /email/send-attachment`. Regla del módulo: **el envío solo se habilita con la factura emitida** |
+| Marca de factura vencida (`is_overdue`) | ✅ | ⬜ | §4 — manejo OVERDUE | BE: la mantiene el scheduler. FE: badge "Overdue" en listado y detalle, y filtro por vencidas — el campo ya viene en la respuesta pero hoy no se usa |
+| Marca de pago fuera de tiempo (`paidLate`) | ✅ | ⬜ | §4 | BE: derivado de `paidAt > dueAt`, expuesto en `InvoiceResponse` y `ListInvoiceResponse`. Conserva el dato cuando `isOverdue` se apaga al pagarse. FE: indicador en listado y detalle |
 | Scheduler diario OVERDUE | ✅ | ➖ | §4 — manejo OVERDUE | `InvoiceScheduler`: 23:57 recalcula `is_overdue` en ambos sentidos, 23:58 notifica al sales rep las recién vencidas |
 | Recordatorio semanal de vencidas | ✅ | ➖ | §4 | `InvoiceScheduler`: lunes 9:00 AM re-notifica al sales rep todas las que sigan vencidas y sin pagar |
 | Unlock nocturno de facturas abiertas | ✅ | ➖ | — | `InvoiceScheduler` 23:56 → `unlockAllOpen()`. Antes una factura abierta y nunca cerrada quedaba bloqueada indefinidamente; QR/Q/PO ya tenían su equivalente |
-| Estado de cuenta / reporte aging por cliente | ✅ | ✅ | §11 | BE: `GET /statement/{client_id}` — facturado, cobrado, saldo, aging (current / 1-30 / 31-60 / 61-90 / 90+) y facturas vencidas, con el mismo alcance por vendedor. Sin migraciones. FE: pestaña fija "Statement" del módulo, con selector de cliente, tarjetas de totales, tabla de aging y facturas vencidas que abren en tab |
+| Estado de cuenta / reporte aging por cliente | ✅ | ⬜ | §11 | BE: `GET /statement/{client_id}` — facturado, cobrado, saldo, aging (current / 1-30 / 31-60 / 61-90 / 90+) y facturas vencidas, con el mismo alcance por vendedor. Sin migraciones. FE: la vista completa está por construir |
 | Multi-moneda / tasa de cambio | 🚫 | 🚫 | §10 — no requerimiento actual | Campos en `t_invoice_payments`; no priorizar |
 
 ### Permisos (acciones `t_actions`)
@@ -767,14 +762,14 @@ usuario no lo tiene.
 | `UPDATE_INVOICE` | 5001002 | ✅ | ✅ |
 | `VIEW_HISTORY_INVOICE` | 5001003 | ✅ | ✅ |
 | `CLONE_INVOICE` | 5001004 | ✅ | ✅ |
-| `CANCEL_INVOICE` | 5001005 | ✅ | ✅ |
+| `CANCEL_INVOICE` | 5001005 | ✅ | ⬜ Falta gatear el botón "Cancel" |
 | `EDIT_PAYMENT_TERMS_INVOICE` | 5001006 | ✅ (soft, dentro de PUT) | ✅ |
 | `VIEW_INVOICE` | 5001007 | ✅ | ✅ |
-| `ISSUE_INVOICE` | 5001008 | ✅ | ✅ |
-| `REGISTER_PAYMENT_INVOICE` | 5001009 | ✅ | ✅ |
-| `DELETE_INVOICE` | 5001010 | ✅ | ✅ (+ regla del draft bloqueado) |
-| `REVERT_INVOICE_TO_DRAFT` | 5001011 | ✅ | ✅ |
-| `VOID_PAYMENT_INVOICE` | 5001012 | ✅ | ✅ |
+| `ISSUE_INVOICE` | 5001008 | ✅ | ⬜ Falta gatear el botón "Issue" |
+| `REGISTER_PAYMENT_INVOICE` | 5001009 | ✅ | ⬜ Falta gatear el botón "Registrar pago" |
+| `DELETE_INVOICE` | 5001010 | ✅ | ⬜ Falta gatear el botón de borrar (+ regla del draft bloqueado) |
+| `REVERT_INVOICE_TO_DRAFT` | 5001011 | ✅ | ⬜ Falta gatear el botón "Revertir a borrador" |
+| `VOID_PAYMENT_INVOICE` | 5001012 | ✅ | ⬜ Falta gatear la acción de anular pago |
 | `VIEW_ALL_INVOICE` | 5001013 | ✅ (guard de scoping) | ✅ |
 | `CHANGE_SALES_REP_INVOICE` | 5001014 | ✅ (soft, dentro de PUT) | ✅ |
 
@@ -782,29 +777,29 @@ usuario no lo tiene.
 
 | Funcionalidad | BE | FE | Notas |
 |---|---|---|---|
-| Productos — CRUD manual | ✅ | ✅ | `POST/PUT/DELETE/GET /sales/invoice/{id}/product[/{pid}]`. El `GET` de una línea es lo que abre el modal de edición: no se edita sobre la copia embebida en el detalle |
+| Productos — CRUD manual | ✅ | ✅ | `POST/PUT/DELETE/GET /sales/invoice/{id}/product[/{pid}]` |
 | Productos — importar desde PO vinculado | ✅ | ✅ | `POST .../product/import-from-po`; filtra duplicados por `productId` |
 | Productos — listar disponibles en POs vinculadas | ✅ | ✅ | `GET .../product/available-from-pos`; excluye ya importados |
-| Charges — CRUD manual | ✅ | ✅ | `POST/PUT/DELETE/GET /sales/invoice/{id}/charge[/{cid}]`. Mismo criterio: el modal de edición relee la línea |
+| Charges — CRUD manual | ✅ | ✅ | `POST/PUT/DELETE/GET /sales/invoice/{id}/charge[/{cid}]` |
 | Charges — importar desde PO vinculado | ✅ | ✅ | `POST .../charge/import-from-po`; `salesTax` → registro en taxes |
 | Charges — listar disponibles en POs vinculadas | ✅ | ✅ | `GET .../charge/available-from-pos`; sin filtro; incluye fila `SALES_TAX` |
-| Taxes — CRUD manual | ✅ | ✅ | `POST/PUT/DELETE/GET /sales/invoice/{id}/tax[/{tid}]`. El modal relee la línea; importa especialmente aquí porque `value` lo recalcula el backend en cada escritura |
-| Taxes — calcular el `value` del impuesto | ✅ | ✅ | BE: `value = taxable_base * rate` con `BigDecimal`, escala 5 HALF_UP. FE: `value` salió de `InvoiceTaxRequest`; el input del modal quedó como vista previa deshabilitada de lo que va a calcular el servidor |
+| Taxes — CRUD manual | ✅ | ✅ | `POST/PUT/DELETE/GET /sales/invoice/{id}/tax[/{tid}]` |
+| Taxes — calcular el `value` del impuesto | ✅ | ⬜ | BE: `value = taxable_base * rate` con `BigDecimal`, escala 5 HALF_UP. FE: **dejar de enviar `value`** en el body — se eliminó del request |
 | Taxes — determinar `taxable_base` automáticamente | 🚫 | ✅ | Decisión confirmada: la base gravable la decide el frontend; el backend no la deriva del subtotal de productos |
 | POs vinculadas — vincular | ✅ | ✅ | `POST /sales/invoice/{id}/purchase-order` |
 | POs vinculadas — desvincular | ✅ | ✅ | `DELETE /sales/invoice/{id}/purchase-order/{po_id}` |
 | Recálculo de `total_amount` tras cambios en line items | ✅ | ➖ | `InvoiceAmountCalculator.applyTotals` — invocado en todo add/update/remove; la UI solo refleja el valor devuelto |
-| `profit_margin` como porcentaje directo (10.00 = 10%) | ✅ | ✅ | Rango 0.01–100. FE: se eliminaron las conversiones ×100/÷100 en Invoice y Quotation, los inputs quedaron con 2 decimales fijos y sufijo `%`, y las tablas dejaron de usar el pipe `percent` (que volvía a multiplicar por 100) |
+| `profit_margin` como porcentaje directo (10.00 = 10%) | ✅ | ⬜ | Rango 0.01–100. FE: ajustar el input y el texto de ayuda — antes se enviaba la fracción (0.10) |
 
 ### Pagos
 
 | Funcionalidad | BE | FE | Referencia en guía | Notas |
 |---|---|---|---|---|
-| Registrar pago (con comprobante) | ✅ | ✅ | §7 — flujo completo | BE: `POST /{id}/payment` **multipart** (parte `payment` JSON + parte `receipt` archivo), comprobante obligatorio pdf/jpg/jpeg/png, sin sobre-pago. FE: modal con total / pagado / saldo, monto prellenado con el saldo y topado por `max`, `p-fileUpload` obligatorio, y `paymentDate` serializada como `YYYY-MM-DD` local (no ISO, que correría el día) |
-| Anular pago | ✅ | ✅ | §7 — anulación | BE: `PATCH /{id}/payment/{pid}/void`. FE: acción por fila con motivo obligatorio; la fila anulada queda tachada con su motivo, autor y fecha, nunca oculta |
-| Listar pagos de una factura | ✅ | ✅ | §7 | BE: `GET /{id}/payment`, incluye los anulados. FE: modal "Payments" desde el bloque de totales, mismo patrón que charges/taxes |
+| Registrar pago (con comprobante) | ✅ | ⬜ | §7 — flujo completo | BE: `POST /{id}/payment` **multipart** (parte `payment` JSON + parte `receipt` archivo), comprobante obligatorio pdf/jpg/jpeg/png, sin sobre-pago. FE: modal "Registrar pago" completo — habilitado solo en `ISSUED`/`PARTIAL_PAID`, muestra total / pagado / saldo, prellena el monto con el saldo, y sube el comprobante |
+| Anular pago | ✅ | ⬜ | §7 — anulación | BE: `PATCH /{id}/payment/{pid}/void`. FE: acción por fila con `voidedReason` obligatorio; las filas anuladas deben verse tachadas/marcadas, no ocultarse |
+| Listar pagos de una factura | ✅ | ⬜ | §7 | BE: `GET /{id}/payment`, incluye los anulados. FE: tabla de pagos en el detalle de la factura (hoy no existe) |
 | Recalcular `paid_amount` y status tras pago/anulación | ✅ | ➖ | §7, §5 | `InvoiceBalanceCalculator.apply` — único punto, usado en registro y anulación |
-| Estados `PARTIAL_PAID` / `PAID` en listado y detalle | ✅ | ✅ | §4 | Badge con su color en ambos; `paidAmount` y `balanceDue` visibles en el bloque de totales del detalle y en la columna Balance del listado |
+| Estados `PARTIAL_PAID` / `PAID` en listado y detalle | ✅ | ⬜ | §4 | Los dos estados ya se producen; falta que la UI los muestre con su color/etiqueta y exponga `paidAmount` y `balanceDue` |
 
 ### Notas de crédito
 
@@ -822,86 +817,42 @@ usuario no lo tiene.
 | `VIEW_ALL_INVOICE` no otorga write access | ✅ | ✅ | `InvoiceAccessGuard.assertCanMutate` |
 | Máx. tabs abiertos por usuario (`itex.tabs.max-tabs-open`) | ✅ | ✅ | Validado en create y en open-lock EDIT |
 | Desbloquear al cerrar sesión | ✅ | ✅ | `InvoiceLockService.closeAllOpenByUser` |
-| Draft nuevo (`number IS NULL`) eliminable; draft bloqueado no | ✅ | ✅ | BE: `InvoiceDeleteServiceImpl.assertDeletable`. FE: `deleteLocked` deshabilita el botón cuando `number != null` y el tooltip explica que el número quedó reservado |
-| ISSUED: contenido financiero inmutable | ✅ | ✅ | BE: line items solo en `DRAFT` + `total_amount` congelado al emitir + el PUT rechaza todo campo financiero del encabezado. FE: fuera de `DRAFT` se deshabilita el formulario completo y solo se rehabilitan los cinco campos no financieros; productos, charges, taxes y POs quedan en solo lectura |
+| Draft nuevo (`number IS NULL`) eliminable; draft bloqueado no | ✅ | ⬜ | BE: `InvoiceDeleteServiceImpl.assertDeletable`. FE: deshabilitar el botón de borrar cuando `number != null` |
+| ISSUED: contenido financiero inmutable | ✅ | ⬜ | BE: line items solo en `DRAFT` + `total_amount` congelado al emitir + el PUT rechaza todo campo financiero del encabezado. FE: al pasar a `ISSUED` debe bloquear los editores de productos/charges/taxes y dejar editables solo los cinco campos no financieros |
 | Cerrar una factura solo si el lock es propio | ✅ | ✅ | `PATCH /close/{id}` valida el dueño del lock: antes cualquier usuario del módulo podía soltar el lock de otro. Cerrar una factura no abierta, o abierta por uno mismo, sigue siendo idempotente |
 | Índices de acceso en la base de datos | ✅ | ➖ | Agregados en `V2.0.2` (§8): listado, locks, scheduler de vencidas y las tres tablas hijas por `invoice_id`. PostgreSQL no indexa las FK por sí solo |
-| Reversión bloqueada si hay pagos | ✅ | ✅ | BE: `InvoiceTransitionGuard.assertNoPayments`. FE: "Revertir" y "Cancelar" no se renderizan cuando `paidAmount > 0`, en vez de dejar que el usuario reciba el 400 |
+| Reversión bloqueada si hay pagos | ✅ | ⬜ | BE: `InvoiceTransitionGuard.assertNoPayments`. FE: ocultar/deshabilitar "Revertir" y "Cancelar" cuando la factura tiene pagos vigentes, en vez de dejar que el usuario reciba el 400 |
 | `is_overdue` forzado a `false` al llegar a `PAID` | ✅ | ➖ | `InvoiceBalanceCalculator.apply` (también limpia `overdue_notified_at`) |
 | `due_at` limpiado al revertir a DRAFT | ✅ | ➖ | `InvoiceStatusServiceImpl.revertToDraft` |
 | Todas las transiciones centralizadas en un solo punto | ✅ | ➖ | `InvoiceTransitionGuard` — matriz única; ningún endpoint escribe `status` por su cuenta |
-| Factura en `PAID` bloqueable para anular pagos | ✅ | ✅ | BE: `LOCKABLE_STATUSES` incluye `PAID`; solo `CANCELLED` queda fuera. FE: una factura `PAID` se abre en modo edición y el modal de pagos permite anular, aunque el formulario en sí quede en solo lectura |
+| Factura en `PAID` bloqueable para anular pagos | ✅ | ⬜ | BE: `LOCKABLE_STATUSES` incluye `PAID`; solo `CANCELLED` queda fuera. FE: permitir abrir en modo edición una factura `PAID` (hoy la UI asume que es final) |
 
-### Entregado en frontend
+### Pendiente de integrar en frontend
 
-Cierre de la brecha con el backend. Los 11 endpoints que estaban documentados y sin consumir ya
-tienen contraparte de UI, y no queda ningún `⬜` en la columna FE de las tablas anteriores.
+Todo lo de abajo **ya tiene endpoint disponible y documentado** en
+[itex-invoices-api.md](itex-invoices-api.md) §15–§17; es trabajo exclusivo de UI.
 
-**Ciclo de vida.** Barra de acciones nueva (`invoice-actions-section`) en el detalle, con Issue,
-Revert to Draft, Cancel, Delete, Clone, History, Print y Print & Send. Cada botón se decide en el
-contenedor con un `computed` que combina permiso + estado + pagos + lock, así la política vive en un
-solo sitio y la sección es puramente presentacional. Cancel y Delete cierran el tab, y en ambos
-casos se baja el tipo a `view` antes de emitir el cierre para que la página no intente soltar un
-lock que ya no existe.
-
-**Motivos obligatorios.** Un único `invoice-reason-modal` sirve a Cancel (`cancelReason`) y a la
-anulación de pagos (`voidedReason`): mismo contrato de validación, el modal solo recoge el texto y
-el llamador se encarga del request.
-
-**Historial.** `history-invoice-modal` normaliza el `data` dinámico a una lista plana de cambios en
-vez de la escalera de `@if` por acción que crecieron QR/Q/PO — una acción nueva del backend ya no
-obliga a tocar el template.
-
-**Pagos.** Modal "Payments" desde el bloque de totales, con la tabla completa (los anulados tachados
-y con su motivo), el registro multipart y la anulación. El saldo se recalcula localmente desde las
-filas, de modo que el modal no queda desfasado respecto al detalle que el formulario todavía tiene
-en memoria.
-
-**Estado de cuenta.** Pestaña fija del módulo, deliberadamente fuera de `tabs()` — no es una factura,
-no toma lock y no debe consumir el presupuesto de pestañas abiertas. Se agregó la constante
-`FIXED_TABS` para que la conversión entre índice de panel e índice de array quede en un solo lugar.
-
-**Line items releídos al editar.** Los tres modales de edición (producto, charge, tax) dejaron de
-editar sobre la copia embebida en el detalle y ahora piden su propia línea al backend. Ver
-"Cobertura de endpoints" más abajo.
-
-**Deuda técnica saldada en el camino.** `value` salió del request de taxes (§17); el listado y el
-modal de producto dejaron de leer `filteredList`/`filteredIpProducts` de los singletons; el mapa de
-badges de estado se movió al modelo para que listado y detalle compartan el mismo; y `status`,
-`totalAmount`, `paidAmount` y `balanceDue` dejaron de ser controles deshabilitados del formulario
-para renderizarse como lo que son, texto.
-
-### Lo que sigue pendiente
-
-- **Plantilla Jasper del PDF** en el repo `itex-reports` — el endpoint de print existe y el frontend
-  ya lo consume, pero el documento no se puede generar hasta que exista la plantilla.
-- **Notas de crédito** (§9) y **multi-moneda** (§10): sin confirmar con negocio.
-- **Preguntas abiertas de impuestos** (§13): determinación automática por país y manejo de
-  `WITHHOLDING_TAX` en la conciliación de pagos.
-- **Verificar contra el backend en ejecución** que `paidLate` viaja en las respuestas de listado y
-  detalle: el campo está documentado en §17 pero no aparece en los ejemplos de §1/§4, así que el
-  modelo del frontend lo declara opcional.
-
-### Cobertura de endpoints
-
-**No queda ningún endpoint del módulo sin consumir.** Los tres "ver una línea suelta" son los que
-alimentan los modales de edición:
-
-| Endpoint | Quién lo consume |
-|---|---|
-| `GET /sales/invoice/{id}/product/{pid}` | `invoice-product-modal` al abrirse en modo edición |
-| `GET /sales/invoice/{id}/charge/{cid}` | `invoice-charge-modal` al abrirse en modo edición |
-| `GET /sales/invoice/{id}/tax/{tid}` | `invoice-tax-modal` al abrirse en modo edición |
-
-**Regla del módulo: un modal de edición nunca confía en la fila que tiene en memoria.** Lo que el
-detalle trae embebido en `products` / `charges` / `taxes` es una proyección armada para pintar las
-tablas: no garantiza traer todos los campos de la fila, y además puede haber quedado desactualizada
-entre que se abrió el tab y el usuario hizo clic en Editar. Por eso el modal siempre relee su propia
-línea contra el backend antes de dejar editar.
-
-La fila que llega por `DynamicDialogConfig` se sigue usando, pero solo para dos cosas: pintar el
-formulario de inmediato mientras la petición viaja, y aportar el id de la línea. Cuando la respuesta
-llega, el formulario se **reconstruye** en vez de parchearse — así el flag `pristine` se reinicia y
-un valor que cambió del lado del servidor no queda registrado como si lo hubiera editado el usuario.
-Si la petición falla, el modal no se bloquea: se avisa con un `warn` y se sigue editando sobre la
-fila que ya estaba en pantalla.
+1. **Acciones de estado en el detalle** — botones "Issue", "Revertir a borrador" y "Cancelar",
+   cada uno gateado por su permiso y por el estado actual (§15). El de revertir debe advertir que
+   la factura quedará sin poder eliminarse; el de cancelar pide motivo obligatorio y cierra el tab.
+2. **Borrado de factura** — `DELETE /sales/invoice/{id}` con el botón deshabilitado en drafts
+   bloqueados (`number != null`).
+3. **Módulo de pagos** — tabla de pagos en el detalle, modal "Registrar pago" (multipart con
+   comprobante obligatorio, monto prellenado con el saldo y tope en el saldo) y acción de anular
+   con motivo (§16).
+4. **Estados y montos derivados** — `PARTIAL_PAID`/`PAID` con su etiqueta, y `paidAmount` /
+   `balanceDue` visibles en listado y detalle.
+5. **Vencimiento** — mostrar `dueAt` (con el caso `null` para términos no calculables), el badge de
+   `isOverdue` y el de `paidLate` (pagada fuera de tiempo), más el filtro de vencidas en el listado.
+6. **`profit_margin` como porcentaje** — el input pasa a recibir 10.00 en vez de 0.10, rango
+   0.01–100.
+7. **Bloqueo de edición financiera en `ISSUED`** — dejar habilitados únicamente `internalRemarks`,
+   `remarks`, `orderNumber`, `awbBl` y `packingList`; el resto del encabezado y los line items van
+   deshabilitados. Y **apertura en modo edición de facturas `PAID`** (necesario para anular un pago).
+8. **Print y Print & Send** — botón de imprimir contra `GET /print/{id}` (advirtiendo que en
+   `DRAFT` el PDF es preliminar y se regenera en cada llamada), y el "Print & Send" del patrón
+   QR/Q/PO: descargar el PDF y reenviarlo por `POST /email/send-attachment`, **habilitado solo con
+   la factura emitida**.
+9. **Impuestos** — quitar `value` del body de `POST`/`PUT .../tax`; ahora lo calcula el backend.
+10. **Estado de cuenta del cliente** — vista nueva sobre `GET /statement/{client_id}`: totales,
+    aging por rangos y facturas vencidas.

@@ -7,10 +7,14 @@ import { InvoiceProductModalModule } from '@modals/sales/inv/invoice-product-mod
 import { InvoiceTaxesModule } from '@modals/sales/inv/invoice-taxes/invoice-taxes.module';
 import { LinkPurchaseOrdersModalModule } from '@modals/sales/inv/link-purchase-orders-modal/link-purchase-orders-modal.module';
 import { ButtonModule } from 'primeng/button';
+import { ChipModule } from 'primeng/chip';
 import { InputTextareaModule } from 'primeng/inputtextarea';
 import { MessageModule } from 'primeng/message';
 import { ProgressBarModule } from 'primeng/progressbar';
+import { ScrollPanelModule } from 'primeng/scrollpanel';
+import { TableModule } from 'primeng/table';
 import { TabViewModule } from 'primeng/tabview';
+import { TooltipModule } from 'primeng/tooltip';
 import { HistoryInvoiceModalModule } from '@modals/sales/inv/history-invoice-modal/history-invoice-modal.module';
 import { InvoiceReasonModalModule } from '@modals/sales/inv/invoice-reason-modal/invoice-reason-modal.module';
 import { ListInvoicePaymentsModalModule } from '@modals/sales/inv/list-invoice-payments-modal/list-invoice-payments-modal.module';
@@ -23,6 +27,7 @@ import { InvoiceShiptoSectionModule } from './sections/invoice-shipto-section/in
 import { InvoiceSummarySectionModule } from './sections/invoice-summary-section/invoice-summary-section.module';
 import { InvoiceTermsSectionModule } from './sections/invoice-terms-section/invoice-terms-section.module';
 import { InvoiceTotalsSectionModule } from './sections/invoice-totals-section/invoice-totals-section.module';
+import { PipesModule } from '@pipes/pipes.module';
 
 @NgModule({
   declarations: [
@@ -33,10 +38,15 @@ import { InvoiceTotalsSectionModule } from './sections/invoice-totals-section/in
     FormsModule,
     ReactiveFormsModule,
     ButtonModule,
+    ChipModule,
     InputTextareaModule,
     MessageModule,
     ProgressBarModule,
+    ScrollPanelModule,
+    TableModule,
     TabViewModule,
+    TooltipModule,
+    PipesModule,
     InvoiceActionsSectionModule,
     InvoiceClientSectionModule,
     InvoiceSummarySectionModule,

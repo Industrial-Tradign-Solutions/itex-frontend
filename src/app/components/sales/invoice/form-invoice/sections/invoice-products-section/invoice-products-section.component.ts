@@ -15,6 +15,7 @@ import { InvoiceProduct } from '@interfaces/sales/invoice';
 export class InvoiceProductsSectionComponent {
 
   @Input({ required: true }) products: InvoiceProduct[] = [];
+  @Input({ required: true }) currency: string = 'USD';
   @Input() canEdit = false;
   @Input() loading = false;
 

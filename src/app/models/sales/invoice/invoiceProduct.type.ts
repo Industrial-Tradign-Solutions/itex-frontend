@@ -21,6 +21,8 @@ export type InvoiceProduct = {
   profitMargin: number;
   condition: string;
   extendedPrice: number;
+  sellingUnitPrice: number;
+  sellingExtendedPrice: number;
 };
 
 // §11.1 / §11.2: create and update share the same body. `profitMargin` travels

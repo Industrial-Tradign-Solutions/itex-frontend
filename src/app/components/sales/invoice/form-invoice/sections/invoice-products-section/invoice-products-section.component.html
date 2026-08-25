@@ -16,6 +16,9 @@
       <th style="min-width: 7rem">
         <div class="flex justify-content-between">TYPE</div>
       </th>
+      <th style="min-width: 6rem">
+        <div class="flex justify-content-between">CONDITION</div>
+      </th>
       <th style="min-width: 30rem">
         <div class="flex justify-content-between">DESCRIPTION</div>
       </th>
@@ -32,7 +35,10 @@
         <div class="flex justify-content-end">PRICE</div>
       </th>
       <th style="min-width: 13rem" pFrozenColumn alignFrozen="right">
-        <div class="flex justify-content-end">EXTENDED</div>
+        <div class="flex justify-content-end">PURCHASE</div>
+      </th>
+      <th style="min-width: 13rem" pFrozenColumn alignFrozen="right">
+        <div class="flex justify-content-end">SELLING</div>
       </th>
       <th style="min-width: 10rem; text-align: end;" pFrozenColumn alignFrozen="right">
         <div class="flex justify-content-end"></div>
@@ -44,6 +50,7 @@
       <td>{{ index + 1 }}</td>
       <td>{{ product.quantity }}</td>
       <td>{{ product.unitType ? product.unitType.replace('_', ' ') : '-' }}</td>
+      <td>{{ product.condition || '-' }}</td>
       <td>
         <div class="formgrid grid">
           <div class="field col-12 md:col-3 tittle">
@@ -83,10 +90,20 @@
       <td style="text-align: end;" pFrozenColumn alignFrozen="right">
         <div class="formgrid grid">
           <div class="field col-12 md:col-12" style="text-align: right;">
-            {{ product.unitPrice | number:'1.5-5' }}
+            {{ product.unitPrice | customCurrency:currency:'1.2-5' }}
           </div>
           <div class="field col-12 md:col-12" style="text-align: right;">
-            {{ product.extendedPrice | number:'1.5-5' }}
+            {{ product.extendedPrice | customCurrency:currency:'1.2-2' }}
+          </div>
+        </div>
+      </td>
+      <td style="text-align: end;" pFrozenColumn alignFrozen="right">
+        <div class="formgrid grid">
+          <div class="field col-12 md:col-12" style="text-align: right;">
+            {{ product.sellingUnitPrice | customCurrency:currency:'1.2-5' }}
+          </div>
+          <div class="field col-12 md:col-12" style="text-align: right;">
+            {{ product.sellingExtendedPrice | customCurrency:currency:'1.2-2' }}
           </div>
         </div>
       </td>
@@ -139,7 +156,7 @@
   </ng-template>
   <ng-template pTemplate="emptymessage">
     <tr>
-      <td colspan="9" class="text-center text-color-secondary">No products added</td>
+      <td colspan="12" class="text-center text-color-secondary">No products added</td>
     </tr>
   </ng-template>
 </p-table>
