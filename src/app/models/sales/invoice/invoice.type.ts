@@ -69,6 +69,7 @@ export type Invoice = {
   taxesTotal: number;
   clonedInvoices?: { id: string; number: string | null; draftNumber: string }[];
   clonedByInvoice?: { id: string; number: string | null; draftNumber: string };
+  createdAt?: string;
 }
 
 // Envelope of the open-lock endpoint: `isValidOpen = false` means the invoice

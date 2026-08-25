@@ -24,10 +24,10 @@
 
         <!-- ══════════════════════════════════════════════════════════════
              ROW 1 — HEADER (matches Q pattern):
-             col-2 Client | col-3 Terms | col-2 Remarks | col-5 Side Tables
+             col-2 Client | col-3 Terms+Save | col-3 Remarks(3tabs) | col-4 Side Tables
              ══════════════════════════════════════════════════════════════ -->
 
-        <!-- COL 2: Client -->
+        <!-- COL 2: Client + Status Badge -->
         <div class="field col-12 md:col-2 lg:col-2 xl:col-2">
           <app-invoice-client-section
             [group]="formTab"
@@ -36,6 +36,9 @@
             (searchClient)="searchClient($event)"
             (clientSelected)="changeClient($event)"
             (clientCleared)="clearClient()" />
+          @if (item()?.status) {
+            <span [class]="'customer-badge status-' + statusBadge()">{{ statusLabel() }}</span>
+          }
         </div>
 
         <!-- COL 3: Terms + Save -->
@@ -63,12 +66,12 @@
           </div>
         </div>
 
-        <!-- COL 2: Remarks tabview -->
-        <div class="field col-12 md:col-2 lg:col-2 xl:col-2">
+        <!-- COL 3: Remarks tabview (Remarks + Internal Remarks + Ship-To) -->
+        <div class="field col-12 md:col-3 lg:col-3 xl:col-3">
           <p-tabView>
             <p-tabPanel header="Remarks">
               <textarea
-                [rows]="9"
+                [rows]="6"
                 pInputTextarea
                 style="resize: none"
                 placeholder="Remarks"
@@ -77,21 +80,29 @@
             </p-tabPanel>
             <p-tabPanel header="Internal Remarks">
               <textarea
-                [rows]="9"
+                [rows]="6"
                 pInputTextarea
                 style="resize: none"
                 placeholder="Internal Remarks"
                 formControlName="internalRemarks">
               </textarea>
             </p-tabPanel>
+            <p-tabPanel header="Ship-To">
+              <app-invoice-shipto-section
+                [group]="formTab"
+                [cities]="filteredCities"
+                [canCopyFromClient]="canEdit() && !isCreate()"
+                (searchCity)="searchCity($event)"
+                (copyFromClient)="copyShipToFromClient()" />
+            </p-tabPanel>
           </p-tabView>
         </div>
 
-        <!-- COL 5: Side tables (Cloned Invoices + Linked POs) -->
-        <div class="field col-12 md:col-5 lg:col-5 xl:col-5">
+        <!-- COL 4: Side tables (Cloned Invoices + Linked POs) — matches Q pattern -->
+        <div class="field col-12 md:col-4 lg:col-4 xl:col-4">
           <div class="formgrid grid">
             <!-- CLONED INVOICES -->
-            <div class="field col-12 md:col-5 mt-1">
+            <div class="field col-12 md:col-6 mt-1">
               <p-scrollPanel [style]="{ width: '100%', height: '19.05rem' }">
                 <p-table
                   styleClass="p-datatable-sm"
@@ -134,7 +145,7 @@
               </p-scrollPanel>
             </div>
             <!-- LINKED PURCHASE ORDERS -->
-            <div class="field col-12 md:col-5 mt-1">
+            <div class="field col-12 md:col-6 mt-1">
               <app-invoice-po-section
                 [purchaseOrders]="linkedPurchaseOrders()"
                 [canEdit]="canEditProducts()"
@@ -142,11 +153,14 @@
                 (openPo)="openPo($event)"
                 (removePo)="removePo($event)" />
             </div>
+          </div>
+          <!-- Add PO button below tables (Q pattern: spacer + button) -->
+          <div class="formgrid grid">
             <div class="field col-12 md:col-1 mt-1"></div>
-            <div class="field col-12 md:col-1 mt-1">
+            <div class="field col-12 md:col-3 mt-1">
               <button pButton
-                label="Associate PO"
-                icon="pi pi-link"
+                label="Add PO"
+                icon="pi pi-plus"
                 severity="success"
                 [outlined]="true"
                 (click)="openLinkPoModal()"
@@ -155,18 +169,6 @@
               </button>
             </div>
           </div>
-        </div>
-
-        <!-- ══════════════════════════════════════════════════════════════
-             ROW 1.5 — SHIP-TO (full width, compact horizontal)
-             ══════════════════════════════════════════════════════════════ -->
-        <div class="col-12 md:col-12 mt-1">
-          <app-invoice-shipto-section
-            [group]="formTab"
-            [cities]="filteredCities"
-            [canCopyFromClient]="canEdit() && !isCreate()"
-            (searchCity)="searchCity($event)"
-            (copyFromClient)="copyShipToFromClient()" />
         </div>
 
         <!-- ══════════════════════════════════════════════════════════════
@@ -187,7 +189,7 @@
                   (viewProduct)="viewProduct($event)" />
               </div>
               <div class="col-12 md:col-2">
-                <!-- Product management buttons -->
+                <!-- Row 1: Add Product + Clone (Q pattern) -->
                 <div class="formgrid grid">
                   <div class="field col-12 md:col-6 mt-3">
                     <button pButton
@@ -200,17 +202,56 @@
                       type="button">
                     </button>
                   </div>
-                  <div class="field col-12 md:col-6 mt-3">
-                    <button pButton
-                      label="Import from PO"
-                      icon="pi pi-upload"
-                      severity="info"
-                      [outlined]="true"
-                      (click)="openImportProductsModal()"
-                      [disabled]="!canEditProducts()"
-                      type="button">
-                    </button>
-                  </div>
+                  @if (canClone()) {
+                    <div class="field col-12 md:col-6 mt-3">
+                      <button pButton
+                        label="Clone"
+                        icon="pi pi-copy"
+                        severity="secondary"
+                        [outlined]="true"
+                        (click)="cloneInvoice()"
+                        type="button">
+                      </button>
+                    </div>
+                  }
+                </div>
+
+                <!-- Row 2: Print + Print & Send (Q pattern) -->
+                <div class="formgrid grid">
+                  @if (canPrint()) {
+                    <div class="field col-12 md:col-6 mt-1">
+                      <button pButton
+                        label="Print"
+                        icon="pi pi-print"
+                        severity="help"
+                        [outlined]="true"
+                        [disabled]="!printReady() || !tabItem.pristine"
+                        [loading]="loadingDownload()"
+                        (click)="printInvoice()"
+                        pTooltip="Save changes and add at least one product before printing"
+                        [tooltipDisabled]="printReady() && tabItem.pristine"
+                        tooltipPosition="bottom"
+                        type="button">
+                      </button>
+                    </div>
+                  }
+                  @if (canSend()) {
+                    <div class="field col-12 md:col-6 mt-1">
+                      <button pButton
+                        label="Print &amp; Send"
+                        icon="pi pi-send"
+                        severity="info"
+                        [outlined]="true"
+                        [disabled]="!printReady() || !tabItem.pristine"
+                        [loading]="loadingPrintAndSent()"
+                        (click)="printAndSendInvoice()"
+                        pTooltip="Only an issued invoice with saved changes can be sent to the client"
+                        [tooltipDisabled]="printReady() && tabItem.pristine"
+                        tooltipPosition="bottom"
+                        type="button">
+                      </button>
+                    </div>
+                  }
                 </div>
 
                 <!-- Totals -->
@@ -285,63 +326,6 @@
                       </button>
                     </div>
                   }
-                  @if (canPrint()) {
-                    <div class="field col-12 md:col-6 mt-1">
-                      <button pButton
-                        label="Print"
-                        icon="pi pi-print"
-                        severity="help"
-                        [outlined]="true"
-                        [disabled]="!printReady() || !tabItem.pristine"
-                        [loading]="loadingDownload()"
-                        (click)="printInvoice()"
-                        pTooltip="Save changes and add at least one product before printing"
-                        [tooltipDisabled]="printReady() && tabItem.pristine"
-                        tooltipPosition="bottom"
-                        type="button">
-                      </button>
-                    </div>
-                  }
-                  @if (canSend()) {
-                    <div class="field col-12 md:col-6 mt-1">
-                      <button pButton
-                        label="Print &amp; Send"
-                        icon="pi pi-send"
-                        severity="info"
-                        [outlined]="true"
-                        [disabled]="!printReady() || !tabItem.pristine"
-                        [loading]="loadingPrintAndSent()"
-                        (click)="printAndSendInvoice()"
-                        pTooltip="Only an issued invoice with saved changes can be sent to the client"
-                        [tooltipDisabled]="printReady() && tabItem.pristine"
-                        tooltipPosition="bottom"
-                        type="button">
-                      </button>
-                    </div>
-                  }
-                  @if (canClone()) {
-                    <div class="field col-12 md:col-6 mt-1">
-                      <button pButton
-                        label="Clone"
-                        icon="pi pi-copy"
-                        severity="secondary"
-                        [outlined]="true"
-                        (click)="cloneInvoice()"
-                        type="button">
-                      </button>
-                    </div>
-                  }
-                  @if (canViewHistory()) {
-                    <div class="field col-12 md:col-6 mt-1">
-                      <button pButton
-                        label="History"
-                        icon="pi pi-book"
-                        severity="help"
-                        (click)="openHistory()"
-                        type="button">
-                      </button>
-                    </div>
-                  }
                 </div>
               </div>
             </div>
@@ -352,15 +336,15 @@
 
       <!-- ══════════════════════════════════════════════════════════════
            ROW 3 — FOOTER (matches Q pattern):
-           p-chips + Cloned By INV# + View History
+           p-chips (Created, Issued, Due, Paid, Cancelled) + Cloned By INV# + View History
            ══════════════════════════════════════════════════════════════ -->
       <div class="formgrid grid" style="margin-bottom: -2.5rem;">
         <div class="field col-12 md:col-8 lg:col-8 xl:col-9 md:mt-5 lg:mt-5 xl:mt-5">
-          @if (invoiceStatus()) {
+          @if (item() && item()?.createdAt) {
             <p-chip>
               <div class="p-2">
-                <b>Status: </b>
-                {{ invoiceStatus() }}
+                <b>Created: </b>
+                {{ item()?.createdAt | date:'MMM dd, yyyy hh:mm a' }}
               </div>
             </p-chip>
           }

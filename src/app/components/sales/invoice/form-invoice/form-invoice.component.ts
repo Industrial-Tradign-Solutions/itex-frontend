@@ -15,6 +15,8 @@ import {
   InvoiceProduct,
   InvoiceStatus,
   InvoiceTax,
+  invoiceStatusBadge,
+  invoiceStatusLabel,
   invoiceTabName,
   ListInvoice,
   mapToInvoiceCreateRequest,
@@ -36,7 +38,7 @@ import { LinkPurchaseOrdersModalComponent } from '@modals/sales/inv/link-purchas
 import { ListInvoiceChargesModalComponent } from '@modals/sales/inv/list-invoice-charges-modal/list-invoice-charges-modal.component';
 import { ListInvoicePaymentsModalComponent } from '@modals/sales/inv/list-invoice-payments-modal/list-invoice-payments-modal.component';
 import { ListInvoiceTaxesModalComponent } from '@modals/sales/inv/list-invoice-taxes-modal/list-invoice-taxes-modal.component';
-import { finalize, Observable } from 'rxjs';
+import { finalize, Observable, Subject } from 'rxjs';
 import { constants, emailBodyTemplates, storageKeys } from '../../../../../environments';
 
 const MESSAGES = Messages.pages.sales.invoice;
@@ -110,6 +112,10 @@ export class FormInvoiceComponent extends CommonPageTab<ListInvoice, InvoicePerm
   // edited, so the whole form goes read-only instead of failing on submit.
   invoiceStatus = computed<InvoiceStatus>(() => this.item()?.status ?? 'DRAFT');
   isDraft = computed<boolean>(() => this.invoiceStatus() === 'DRAFT');
+
+  // Status badge displayed below the client section (matches list badge styling).
+  statusBadge = computed<string>(() => invoiceStatusBadge(this.item()?.status ?? 'DRAFT'));
+  statusLabel = computed<string>(() => invoiceStatusLabel(this.item()?.status ?? 'DRAFT'));
 
   // The tab is editable at all (not opened read-only, lock not taken by anyone
   // else). What is editable *within* it is decided by the status below.
@@ -254,6 +260,10 @@ export class FormInvoiceComponent extends CommonPageTab<ListInvoice, InvoicePerm
   // Kept apart from the form because "Copy from client" needs the client record,
   // not just the id held by the control.
   private _selectedClient = signal<ClientBasic | undefined>(undefined);
+
+  // Subject used to signal the Add Product modal to close so the Import from PO
+  // modal can open in its place (two-level modal pattern, same as Q's charges).
+  private _openImportFromPo$ = new Subject<void>();
 
   private userData = computed<UserInfo | null>(() => this.storageSV.getPlain<UserInfo>(storageKeys.user_data.info));
 
@@ -737,6 +747,9 @@ export class FormInvoiceComponent extends CommonPageTab<ListInvoice, InvoicePerm
   openProductModal(type: 'create' | 'edit', product?: InvoiceProduct): void {
     if (!this.canEditProducts()) return;
 
+    // Reset the subject so a previous subscription does not fire.
+    this._openImportFromPo$ = new Subject<void>();
+
     const modal = this.dialogSV.open(InvoiceProductModalComponent, {
       header: type === 'edit' ? 'UPDATE PRODUCT' : 'ADD PRODUCT',
       width: '70rem',
@@ -746,13 +759,18 @@ export class FormInvoiceComponent extends CommonPageTab<ListInvoice, InvoicePerm
         type,
         product,
         invoiceId: this.tabItem.item.id,
-        currency: this.invoiceCurrency()
+        currency: this.invoiceCurrency(),
+        openImportFromPo$: this._openImportFromPo$.asObservable()
       }
     });
 
     modal.onClose.subscribe({
-      next: (resp: { valid: boolean }) => {
-        if (resp?.valid) this.reloadInvoice();
+      next: (resp: { valid: boolean; openImportFromPo?: boolean }) => {
+        if (resp?.valid) {
+          this.reloadInvoice();
+        } else if (resp?.openImportFromPo) {
+          this.openImportProductsModal();
+        }
       }
     });
   }

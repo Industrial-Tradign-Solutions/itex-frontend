@@ -296,6 +296,8 @@ PATCH /sales/invoice/open-lock/{invoice_id}?type=EDIT
         "number": "000123"
       }
     ],
+    "clonedInvoices": [],
+    "clonedByInvoice": null,
     "productsTotal": 5000.00000,
     "chargesTotal": 500.00000,
     "taxesTotal": 481.25000
@@ -1563,6 +1565,16 @@ Devuelve todos los pagos de la factura, anulados incluidos, ordenados por fecha 
 
 ## 17. Cambios sobre contratos existentes
 
+- **`InvoiceResponse` — campos de clonación**: se agregan dos campos nuevos para exponer la
+  relación de clonación entre facturas:
+  - **`clonedInvoices`**: array de `InvoiceBasicResponse` con las facturas clonadas **desde** esta
+    factura. Array vacío si no hay clones.
+  - **`clonedByInvoice`**: `InvoiceBasicResponse` con la factura padre de la que fue clonada esta
+    factura. `null` si no fue clonada.
+  - `InvoiceBasicResponse` contiene `id` (UUID) y `number` (String): el `draftNumber` formateado
+    si la factura está en `DRAFT`, o el `number` formateado si ya fue emitida.
+  - Estos campos solo aparecen en los endpoints de detalle (`open-lock`, `POST`, `PUT`), no en el
+    listado (`GET /sales/invoice`).
 - **`InvoiceProductResponse` — cambio breaking**: el campo **`extendedPrice`** ahora devuelve el
   costo puro de la línea (`quantity × unitPrice`), sin aplicar el margen de ganancia. Antes
   devolvía el precio de venta (`quantity × unitPrice × (1 + profitMargin / 100)`). Se agregan
@@ -1884,6 +1896,21 @@ Reusa `BasicIpPurchaseOrderResponse`:
   "number": "000123"
 }
 ```
+
+### InvoiceBasicResponse (clonación)
+
+Referencia básica de una factura para los campos de clonación:
+
+```json
+{
+  "id": "uuid",
+  "number": "000001"
+}
+```
+
+- `number` contiene el `draftNumber` formateado si la factura está en `DRAFT`, o el `number` formateado si ya fue emitida.
+- `clonedInvoices`: array de facturas clonadas **desde** esta factura. Array vacío si no hay clones.
+- `clonedByInvoice`: factura padre de la que fue clonada esta factura. `null` si no fue clonada.
 
 ### Totales desglosados
 

@@ -10,7 +10,7 @@ import { InvoiceService } from '@services/sales';
 import { StaticListsService, UtilService } from '@services/util';
 import { AutoCompleteCompleteEvent, AutoCompleteSelectEvent } from 'primeng/autocomplete';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { finalize, Observable } from 'rxjs';
+import { finalize, Observable, Subscription } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 
 const TIMEOUT = environment.timeout;
@@ -60,11 +60,23 @@ export class InvoiceProductModalComponent implements OnInit {
 
   formProduct!: FormGroup;
 
+  // When the parent signals to open the Import from PO modal, close this one
+  // with a special response so the parent can chain the next modal.
+  private importSub?: Subscription;
+
   constructor() {
     this.productSV.loadBasicProducts();
   }
 
   ngOnInit(): void {
+    // Subscribe to the parent's signal to open the Import from PO modal.
+    const openImportFromPo$ = this.config.data.openImportFromPo$;
+    if (openImportFromPo$) {
+      this.importSub = openImportFromPo$.subscribe(() => {
+        this.ref.close({ valid: false, openImportFromPo: true });
+      });
+    }
+
     const product = this.product();
 
     if (this.isCreate() || !product) {
@@ -142,7 +154,13 @@ export class InvoiceProductModalComponent implements OnInit {
   }
 
   closeModal(): void {
+    this.importSub?.unsubscribe();
     this.ref.close({ valid: false });
+  }
+
+  openImportFromPo(): void {
+    this.importSub?.unsubscribe();
+    this.ref.close({ valid: false, openImportFromPo: true });
   }
 
   private submitAction(): Observable<MessageResponse<InvoiceProduct>> {
