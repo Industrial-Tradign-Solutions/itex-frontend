@@ -886,7 +886,7 @@ export class FormInvoiceComponent extends CommonPageTab<ListInvoice, InvoicePerm
     this.navigateSV.openModuleNewTabAndOpenItem('Purchase_Orders', po.id);
   }
 
-  openClonedInvoice(cloned: { id: string; number: string | null; draftNumber: string }): void {
+  openClonedInvoice(cloned: { id: string; number: string }): void {
     this.navigateSV.openModuleNewTabAndOpenItem('Invoices', cloned.id);
   }
 

@@ -60,10 +60,10 @@
         pButton
         type="button"
         icon="pi pi-pencil"
-        class="p-button-rounded p-button-text"
+        severity="warning"
+        [outlined]="true"
         pTooltip="Manage Taxes"
         tooltipPosition="left"
-        severity="info"
         (click)="openTaxes.emit()">
       </button>
     </div>

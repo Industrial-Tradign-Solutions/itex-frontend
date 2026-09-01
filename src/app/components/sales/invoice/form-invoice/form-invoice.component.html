@@ -23,7 +23,7 @@
       <div class="formgrid grid mt-1">
 
         <!-- ══════════════════════════════════════════════════════════════
-             ROW 1 — HEADER (matches Q pattern):
+             ROW 1 — HEADER:
              col-2 Client | col-3 Terms+Save | col-3 Remarks(3tabs) | col-4 Side Tables
              ══════════════════════════════════════════════════════════════ -->
 
@@ -37,7 +37,9 @@
             (clientSelected)="changeClient($event)"
             (clientCleared)="clearClient()" />
           @if (item()?.status) {
-            <span [class]="'customer-badge status-' + statusBadge()">{{ statusLabel() }}</span>
+            <div class="mt-2">
+              <span [class]="'customer-badge status-' + statusBadge()">{{ statusLabel() }}</span>
+            </div>
           }
         </div>
 
@@ -71,7 +73,7 @@
           <p-tabView>
             <p-tabPanel header="Remarks">
               <textarea
-                [rows]="6"
+                [rows]="7"
                 pInputTextarea
                 style="resize: none"
                 placeholder="Remarks"
@@ -80,7 +82,7 @@
             </p-tabPanel>
             <p-tabPanel header="Internal Remarks">
               <textarea
-                [rows]="6"
+                [rows]="7"
                 pInputTextarea
                 style="resize: none"
                 placeholder="Internal Remarks"
@@ -98,11 +100,11 @@
           </p-tabView>
         </div>
 
-        <!-- COL 4: Side tables (Cloned Invoices + Linked POs) — matches Q pattern -->
+        <!-- COL 4: Side tables -->
         <div class="field col-12 md:col-4 lg:col-4 xl:col-4">
           <div class="formgrid grid">
             <!-- CLONED INVOICES -->
-            <div class="field col-12 md:col-6 mt-1">
+            <div class="field col-12 md:col-5 mt-1">
               <p-scrollPanel [style]="{ width: '100%', height: '19.05rem' }">
                 <p-table
                   styleClass="p-datatable-sm"
@@ -126,7 +128,7 @@
                   </ng-template>
                   <ng-template pTemplate="body" let-cloned>
                     <tr>
-                      <td>{{ cloned.number ?? cloned.draftNumber }}</td>
+                      <td>{{ cloned.number }}</td>
                       <td style="text-align: end;">
                         <button
                           pButton
@@ -145,7 +147,7 @@
               </p-scrollPanel>
             </div>
             <!-- LINKED PURCHASE ORDERS -->
-            <div class="field col-12 md:col-6 mt-1">
+            <div class="field col-12 md:col-5 mt-1">
               <app-invoice-po-section
                 [purchaseOrders]="linkedPurchaseOrders()"
                 [canEdit]="canEditProducts()"
@@ -153,8 +155,9 @@
                 (openPo)="openPo($event)"
                 (removePo)="removePo($event)" />
             </div>
+            <div class="field col-12 md:col-2 mt-1"></div>
           </div>
-          <!-- Add PO button below tables (Q pattern: spacer + button) -->
+          <!-- Add PO button below tables -->
           <div class="formgrid grid">
             <div class="field col-12 md:col-1 mt-1"></div>
             <div class="field col-12 md:col-3 mt-1">
@@ -172,8 +175,9 @@
         </div>
 
         <!-- ══════════════════════════════════════════════════════════════
-             ROW 2 — PRODUCTS (matches Q pattern):
-             col-10 Table | col-2 Sidebar (buttons + totals + actions)
+             ROW 2 — PRODUCTS:
+             col-10 Table | col-2 Sidebar
+             Order: Add Product+Clone → Print+Print&Send → Issue+Cancel → Delete+Revert → Totals
              ══════════════════════════════════════════════════════════════ -->
         @if (department() === 'IP') {
           <div class="col-12 md:col-12 mt-1">
@@ -189,7 +193,7 @@
                   (viewProduct)="viewProduct($event)" />
               </div>
               <div class="col-12 md:col-2">
-                <!-- Row 1: Add Product + Clone (Q pattern) -->
+                <!-- Row 1: Add Product + Clone -->
                 <div class="formgrid grid">
                   <div class="field col-12 md:col-6 mt-3">
                     <button pButton
@@ -216,7 +220,7 @@
                   }
                 </div>
 
-                <!-- Row 2: Print + Print & Send (Q pattern) -->
+                <!-- Row 2: Print + Print & Send -->
                 <div class="formgrid grid">
                   @if (canPrint()) {
                     <div class="field col-12 md:col-6 mt-1">
@@ -235,19 +239,81 @@
                       </button>
                     </div>
                   }
-                  @if (canSend()) {
+                  <div class="field col-12 md:col-6 mt-1">
+                    <button pButton
+                      label="Print &amp; Send"
+                      icon="pi pi-send"
+                      severity="info"
+                      [outlined]="true"
+                      [disabled]="!canSend() || !printReady() || !tabItem.pristine"
+                      [loading]="loadingPrintAndSent()"
+                      (click)="printAndSendInvoice()"
+                      pTooltip="Only an issued invoice with saved changes can be sent to the client"
+                      [tooltipDisabled]="canSend() && printReady() && tabItem.pristine"
+                      tooltipPosition="bottom"
+                      type="button">
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Row 3: Issue + Cancel -->
+                <div class="formgrid grid">
+                  @if (canIssue()) {
                     <div class="field col-12 md:col-6 mt-1">
                       <button pButton
-                        label="Print &amp; Send"
-                        icon="pi pi-send"
-                        severity="info"
+                        label="Issue"
+                        icon="pi pi-check-circle"
+                        severity="success"
                         [outlined]="true"
-                        [disabled]="!printReady() || !tabItem.pristine"
-                        [loading]="loadingPrintAndSent()"
-                        (click)="printAndSendInvoice()"
-                        pTooltip="Only an issued invoice with saved changes can be sent to the client"
-                        [tooltipDisabled]="printReady() && tabItem.pristine"
+                        [disabled]="!issueReady() || !tabItem.pristine"
+                        (click)="issueInvoice()"
+                        pTooltip="Save changes and add at least one product before issuing"
+                        [tooltipDisabled]="issueReady() && tabItem.pristine"
                         tooltipPosition="bottom"
+                        type="button">
+                      </button>
+                    </div>
+                  }
+                  @if (canCancel()) {
+                    <div class="field col-12 md:col-6 mt-1">
+                      <button pButton
+                        label="Cancel"
+                        icon="pi pi-ban"
+                        severity="danger"
+                        [outlined]="true"
+                        (click)="cancelInvoice()"
+                        type="button">
+                      </button>
+                    </div>
+                  }
+                </div>
+
+                <!-- Row 4: Delete + Revert to Draft -->
+                <div class="formgrid grid">
+                  @if (canDelete()) {
+                    <div class="field col-12 md:col-6 mt-1">
+                      <button pButton
+                        label="Delete"
+                        icon="pi pi-trash"
+                        severity="danger"
+                        [outlined]="true"
+                        [disabled]="deleteLocked()"
+                        (click)="deleteInvoice()"
+                        pTooltip="This invoice already had an official number: it stays reserved and can no longer be deleted"
+                        [tooltipDisabled]="!deleteLocked()"
+                        tooltipPosition="bottom"
+                        type="button">
+                      </button>
+                    </div>
+                  }
+                  @if (canRevert()) {
+                    <div class="field col-12 md:col-6 mt-1">
+                      <button pButton
+                        label="Revert to Draft"
+                        icon="pi pi-undo"
+                        severity="warning"
+                        [outlined]="true"
+                        (click)="revertToDraft()"
                         type="button">
                       </button>
                     </div>
@@ -267,66 +333,6 @@
                   (openCharges)="openChargesModal()"
                   (openTaxes)="openTaxesModal()"
                   (openPayments)="openPaymentsModal()" />
-
-                <!-- Actions (2 per row, Q pattern) -->
-                <div class="formgrid grid">
-                  @if (canIssue()) {
-                    <div class="field col-12 md:col-6 mt-1">
-                      <button pButton
-                        label="Issue"
-                        icon="pi pi-check-circle"
-                        severity="success"
-                        [outlined]="true"
-                        [disabled]="!issueReady() || !tabItem.pristine"
-                        (click)="issueInvoice()"
-                        pTooltip="Save changes and add at least one product before issuing"
-                        [tooltipDisabled]="issueReady() && tabItem.pristine"
-                        tooltipPosition="bottom"
-                        type="button">
-                      </button>
-                    </div>
-                  }
-                  @if (canRevert()) {
-                    <div class="field col-12 md:col-6 mt-1">
-                      <button pButton
-                        label="Revert to Draft"
-                        icon="pi pi-undo"
-                        severity="warning"
-                        [outlined]="true"
-                        (click)="revertToDraft()"
-                        type="button">
-                      </button>
-                    </div>
-                  }
-                  @if (canCancel()) {
-                    <div class="field col-12 md:col-6 mt-1">
-                      <button pButton
-                        label="Cancel"
-                        icon="pi pi-ban"
-                        severity="danger"
-                        [outlined]="true"
-                        (click)="cancelInvoice()"
-                        type="button">
-                      </button>
-                    </div>
-                  }
-                  @if (canDelete()) {
-                    <div class="field col-12 md:col-6 mt-1">
-                      <button pButton
-                        label="Delete"
-                        icon="pi pi-trash"
-                        severity="danger"
-                        [outlined]="true"
-                        [disabled]="deleteLocked()"
-                        (click)="deleteInvoice()"
-                        pTooltip="This invoice already had an official number: it stays reserved and can no longer be deleted"
-                        [tooltipDisabled]="!deleteLocked()"
-                        tooltipPosition="bottom"
-                        type="button">
-                      </button>
-                    </div>
-                  }
-                </div>
               </div>
             </div>
           </div>
@@ -335,8 +341,8 @@
       </div>
 
       <!-- ══════════════════════════════════════════════════════════════
-           ROW 3 — FOOTER (matches Q pattern):
-           p-chips (Created, Issued, Due, Paid, Cancelled) + Cloned By INV# + View History
+           ROW 3 — FOOTER:
+           p-chips + Cloned By INV# + View History
            ══════════════════════════════════════════════════════════════ -->
       <div class="formgrid grid" style="margin-bottom: -2.5rem;">
         <div class="field col-12 md:col-8 lg:col-8 xl:col-9 md:mt-5 lg:mt-5 xl:mt-5">
@@ -387,7 +393,7 @@
           </div>
           <div class="field col-12 md:col-1 lg:col-1 xl:col-1 md:mt-5 lg:mt-4 xl:mt-4">
             <p-button
-              [label]="item()!.clonedByInvoice!.number ?? item()!.clonedByInvoice!.draftNumber"
+              [label]="item()!.clonedByInvoice!.number"
               [link]="true"
               severity="primary"
               (click)="openClonedInvoice(item()!.clonedByInvoice!)"

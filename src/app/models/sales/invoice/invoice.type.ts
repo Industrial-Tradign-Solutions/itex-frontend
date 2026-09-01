@@ -48,9 +48,8 @@ export type Invoice = {
   dueAt: string | null;
   overdue: boolean;
   // §17: derived from `paidAt > dueAt`. Survives the payment, unlike `overdue`,
-  // which the server switches off as soon as the invoice is settled. Optional
-  // because the response samples of §1/§4 do not list it yet.
-  paidLate?: boolean;
+  // which the server switches off as soon as the invoice is settled.
+  paidLate: boolean;
   overdueNotifiedAt: string | null;
   issuedAt: string | null;
   partialPaidAt: string | null;
@@ -67,9 +66,9 @@ export type Invoice = {
   productsTotal: number;
   chargesTotal: number;
   taxesTotal: number;
-  clonedInvoices?: { id: string; number: string | null; draftNumber: string }[];
-  clonedByInvoice?: { id: string; number: string | null; draftNumber: string };
-  createdAt?: string;
+  clonedInvoices: { id: string; number: string }[];
+  clonedByInvoice: { id: string; number: string } | null;
+  createdAt: string;
 }
 
 // Envelope of the open-lock endpoint: `isValidOpen = false` means the invoice
