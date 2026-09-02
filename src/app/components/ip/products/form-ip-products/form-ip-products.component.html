@@ -104,9 +104,11 @@
                 <p-floatLabel>
                   <p-inputNumber
                     mode="decimal"
-                    [useGrouping]="false"
+                    [useGrouping]="true"
                     suffix=" lbs"
                     [max]="999999999999"
+                    [minFractionDigits]="5"
+                    [maxFractionDigits]="5"
                     formControlName="netWeightLbs" />
                   <label>
                     Net Weight Lbs
