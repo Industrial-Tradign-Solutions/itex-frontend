@@ -47,6 +47,6 @@ export class SubstituteIpProductModalComponent {
   }
 
   searchProduct(event: AutoCompleteCompleteEvent) {
-    this.ipProdSV.searchAutoComplete(event);
+    this.ipProdSV.searchActiveAutoComplete(event);
   }
 }

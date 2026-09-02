@@ -87,6 +87,17 @@ export class FormIpQuoteRequestComponent extends CommonPageTab<ListIpQuoteReques
     });
   }
 
+  ipProductStatusClass(status: string | undefined): string {
+    if (status === 'DRAFT') {
+      return 'new';
+    } else if (status === 'INACTIVE') {
+      return 'unqualified';
+    } else if (status === 'SUBSTITUTED') {
+      return 'renewal';
+    }
+    return 'qualified';
+  }
+
   openQuotation( quotation: {id: string, number: string}) {
     this.navigateSV.openModuleNewTabAndOpenItem('Quotations', quotation.id);
   }
@@ -471,6 +482,9 @@ export class FormIpQuoteRequestComponent extends CommonPageTab<ListIpQuoteReques
       ],
       ipProductId: [
         product?.ipProduct?.id ?? null
+      ],
+      ipProductStatus: [
+        product?.ipProduct?.status ?? 'ACTIVE'
       ],
       mfrReference: [
         product?.ipProduct?.mfrReference  ?? '',

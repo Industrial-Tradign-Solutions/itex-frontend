@@ -474,6 +474,11 @@
                         </div>
                         <div class="field col-12 md:col-9">
                           {{product.value.description}}
+                          @if (product.value.ipProductStatus !== 'ACTIVE') {
+                            <span [class]="'customer-badge status-' + ipProductStatusClass(product.value.ipProductStatus)">
+                              {{ product.value.ipProductStatus }}
+                            </span>
+                          }
                         </div>
                         <div class="field col-12 md:col-3 tittle">
                           <b>CLIENT: </b>

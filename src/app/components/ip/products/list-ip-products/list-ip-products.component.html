@@ -34,6 +34,8 @@
                     (onKeyUp)="searchByBrand($event)"
                     optionValue="id"
                     appendTo="body"
+                    [virtualScroll]="true"
+                    [virtualScrollItemSize]="34"
                     optionLabel="name"/>
                   <label>Brand</label>
                 </p-floatLabel>

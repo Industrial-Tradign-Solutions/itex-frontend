@@ -1,4 +1,4 @@
-import { Component, computed, EventEmitter, inject, OnInit, Output } from '@angular/core';
+import { Component, computed, EventEmitter, inject, OnInit, Output, signal } from '@angular/core';
 import { Messages, TitlesMessages } from '@config/messages';
 import { CommonPageTab } from '@config/tabs/commonPageTab';
 import { IpProduct, IpProductAddSurplusRequest, IpProductOutSurplusRequest, IpProductsRequest, ListIpProduct, mapToIpProductsRequest } from '@interfaces/ip/products';
@@ -25,6 +25,24 @@ const MESSAGES = Messages.pages.ip.products;
 const TITLES = TitlesMessages;
 const TIMEOUT = environment.timeout;
 
+const ACTIVATION_REQUIRED_FIELDS = ['brandId', 'description', 'clientDescription', 'mfrReference', 'clientReference', 'netWeightLbs'] as const;
+
+const ACTIVATION_FIELD_LABELS: Record<string, string> = {
+  brandId: 'Brand',
+  description: 'Description',
+  clientDescription: 'Client Description',
+  mfrReference: 'MFR Reference',
+  clientReference: 'Client Reference',
+  netWeightLbs: 'Net Weight Lbs'
+};
+
+const STATUS_TRANSITIONS: Record<string, string[]> = {
+  DRAFT: ['ACTIVE', 'INACTIVE'],
+  INACTIVE: ['ACTIVE', 'DRAFT'],
+  ACTIVE: ['INACTIVE', 'SUBSTITUTED'],
+  SUBSTITUTED: []
+};
+
 @Component({
   selector: 'app-form-ip-products',
   templateUrl: './form-ip-products.component.html',
@@ -41,6 +59,12 @@ export class FormIpProductsComponent extends CommonPageTab<ListIpProduct, IpProd
   //* Señales
   listIpProductStatus = computed<StaticListItem[]>(() => this.staticListSV.getListIpProductsStatus());
   listIpProductFreightClass = computed<StaticListItem[]>(() => this.staticListSV.getListFreightClass());
+  statusOptions = computed<StaticListItem[]>(() => {
+    const current = this.item()?.status ?? 'DRAFT';
+    const allowed = STATUS_TRANSITIONS[current] ?? [];
+    return this.listIpProductStatus().filter(opt => opt.key === current || allowed.includes(opt.key));
+  });
+  private _missingActivationFields = signal<string[]>([]);
   //* -----------------------------------------------------------
   //? Variables
 
@@ -48,7 +72,9 @@ export class FormIpProductsComponent extends CommonPageTab<ListIpProduct, IpProd
 
   constructor() {
     super(MESSAGES);
-    this.brandsSV.loadBrands(false);
+    if (!this.brandsSV.listBrands().length) {
+      this.brandsSV.loadBrands(false);
+    }
     this.countrySV.loadCountries();
   }
 
@@ -65,11 +91,16 @@ export class FormIpProductsComponent extends CommonPageTab<ListIpProduct, IpProd
     const productName = this.tabItem.item.name;
 
     const actions: Record<string, () => void> = {
-      ACTIVE: () => this.handlePermissionedAction(
+      ACTIVE: () => this.handleActivate(
         this.permissions().enableIpProduct,
-        MESSAGES.confirmEnable(productName),
-        () => this.productSV.enableProduct(productId),
-        'ACTIVE',
+        productId,
+        productName,
+        MESSAGES.enableNotAllowed
+      ),
+      DRAFT: () => this.handleBackToDraft(
+        this.permissions().enableIpProduct,
+        productId,
+        productName,
         MESSAGES.enableNotAllowed
       ),
       INACTIVE: () => this.handlePermissionedAction(
@@ -88,11 +119,86 @@ export class FormIpProductsComponent extends CommonPageTab<ListIpProduct, IpProd
     actions[event.value]?.();
   }
 
+  private handleActivate(hasPermission: boolean, productId: string, productName: string, errorMessage: string) {
+    if (!hasPermission) {
+      return this.rejectStatusChange(errorMessage);
+    }
+    if (this.hasUnsavedChanges()) {
+      this.resetFormStatus();
+      this.utilSV.setMessage(TITLES.warning, MESSAGES.saveBeforeActivate, 'warn');
+      return;
+    }
+    const missing = this.getMissingActivationFields();
+    if (missing.length > 0) {
+      this._missingActivationFields.set(missing);
+      this.resetFormStatus();
+      this.utilSV.setMessage(
+        TITLES.error,
+        MESSAGES.activateNotComplete(missing.map(field => ACTIVATION_FIELD_LABELS[field] ?? field).join(', ')),
+        'error'
+      );
+      return;
+    }
+    this.handlePermissionedAction(
+      hasPermission,
+      MESSAGES.confirmEnable(productName),
+      () => this.productSV.changeStatusProduct(productId, 'ACTIVE'),
+      'ACTIVE',
+      errorMessage
+    );
+  }
+
+  private handleBackToDraft(hasPermission: boolean, productId: string, productName: string, errorMessage: string) {
+    if (!hasPermission) {
+      return this.rejectStatusChange(errorMessage);
+    }
+    if (this.hasUnsavedChanges()) {
+      this.resetFormStatus();
+      this.utilSV.setMessage(TITLES.warning, MESSAGES.saveBeforeActivate, 'warn');
+      return;
+    }
+    this.handlePermissionedAction(
+      hasPermission,
+      MESSAGES.confirmBackToDraft(productName),
+      () => this.productSV.changeStatusProduct(productId, 'DRAFT'),
+      'DRAFT',
+      errorMessage
+    );
+  }
+
+  private getMissingActivationFields(): string[] {
+    const missing: string[] = [];
+    for (const field of ACTIVATION_REQUIRED_FIELDS) {
+      if (!this.hasFormValue(field)) {
+        missing.push(field);
+      }
+    }
+    return missing;
+  }
+
+  private hasUnsavedChanges(): boolean {
+    if (this.tabItem.type !== 'edit') return false;
+    return Object.keys(this.formTab.controls)
+      .filter(key => key !== 'status')
+      .some(key => this.formTab.get(key)!.dirty);
+  }
+
+  private hasFormValue(field: string): boolean {
+    const value = this.formTab.get(field)?.value;
+    if (value === null || value === undefined || value === '') return false;
+    if (typeof value === 'number' && Number.isNaN(value)) return false;
+    return true;
+  }
+
+  isActivationFieldMissing(field: string): boolean {
+    return this._missingActivationFields().includes(field);
+  }
+
   private handlePermissionedAction(
     hasPermission: boolean,
     message: string,
     action: () => Observable<MessageResponse<ListIpProduct>>,
-    newStatus: 'ACTIVE' | 'INACTIVE',
+    newStatus: 'ACTIVE' | 'INACTIVE' | 'DRAFT',
     errorMessage: string
   ) {
     if (!hasPermission) {
@@ -159,14 +265,6 @@ export class FormIpProductsComponent extends CommonPageTab<ListIpProduct, IpProd
     });
   }
 
-  createQR(product: IpProduct) {
-    this.utilSV.setMessage(
-      TITLES.error,
-      'Create QR is not implemented',
-      'warn'
-    );
-  }
-
   private handleSubstitution(
     hasPermission: boolean,
     productId: string,
@@ -203,10 +301,10 @@ export class FormIpProductsComponent extends CommonPageTab<ListIpProduct, IpProd
   }
 
   private resetFormStatus() {
-    this.formTab.patchValue({ status: this.item()?.status ?? 'ACTIVE' });
+    this.formTab.patchValue({ status: this.item()?.status ?? 'DRAFT' });
   }
 
-  private executeChangeStatus(action: Observable<MessageResponse<IpProduct | ListIpProduct | any>>, newStatus: 'ACTIVE' | 'INACTIVE' | 'SUBSTITUTED') {
+  private executeChangeStatus(action: Observable<MessageResponse<IpProduct | ListIpProduct | any>>, newStatus: 'ACTIVE' | 'INACTIVE' | 'DRAFT' | 'SUBSTITUTED') {
     this._loading.set(true);
     this.showForm = false;
     action
@@ -295,6 +393,7 @@ export class FormIpProductsComponent extends CommonPageTab<ListIpProduct, IpProd
       mfrReference: [
         this.item()?.mfrReference ?? null,
         [
+          Validators.required
         ]
       ],
       clientReference: [
@@ -365,7 +464,7 @@ export class FormIpProductsComponent extends CommonPageTab<ListIpProduct, IpProd
         ]
       ],
       status: [
-        this.item()?.status ?? 'ACTIVE',
+        this.item()?.status ?? 'DRAFT',
         [
           Validators.required
         ]
@@ -394,6 +493,14 @@ export class FormIpProductsComponent extends CommonPageTab<ListIpProduct, IpProd
           Validators.required
         ]
       ],
+    });
+
+    ACTIVATION_REQUIRED_FIELDS.forEach(field => {
+      this.formTab.get(field)?.valueChanges.subscribe(() => {
+        if (this._missingActivationFields().length > 0) {
+          this._missingActivationFields.set([]);
+        }
+      });
     });
   }
   protected override enableForm(): void {
