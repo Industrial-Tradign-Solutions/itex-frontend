@@ -9,6 +9,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { DropdownModule } from 'primeng/dropdown';
+import { CalendarModule } from 'primeng/calendar';
 
 @NgModule({
   declarations: [
@@ -25,7 +26,8 @@ import { DropdownModule } from 'primeng/dropdown';
     CheckboxModule,
     ButtonModule,
     TableModule,
-    DropdownModule
+    DropdownModule,
+    CalendarModule
 ],
   exports: [
     NewQuotationModalComponent
