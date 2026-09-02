@@ -215,22 +215,30 @@ export class IpProductsService extends BaseAutoCompleteService<BasicIpProduct> {
   }
 
   override searchAutoComplete(event: AutoCompleteCompleteEvent) {
-    let filtered: BasicIpProduct[] = [];
-    let query = event.query;
+    this.searchProducts(event);
+  }
 
-    for (let i = 0; i < (this.list() as any[]).length; i++) {
-      let item = (this.list() as any[])[i];
-      if (
-        item.name.toLowerCase().indexOf(query.toLowerCase()) == 0 ||
-        item.description.toLowerCase().indexOf(query.toLowerCase()) == 0 ||
-        item.clientDescription.toLowerCase().indexOf(query.toLowerCase()) == 0 ||
-        item.mfrReference.toLowerCase().indexOf(query.toLowerCase()) == 0 ||
-        item.clientReference.toLowerCase().indexOf(query.toLowerCase()) == 0
-      ) {
-          filtered.push(item);
-      }
-    }
+  searchActiveAutoComplete(event: AutoCompleteCompleteEvent) {
+    this.searchProducts(event, (item) => item.status === 'ACTIVE');
+  }
+
+  private searchProducts(event: AutoCompleteCompleteEvent, restrict?: (item: BasicIpProduct) => boolean) {
+    const query = (event.query ?? '').toLowerCase();
+    const filtered = (this.list() as BasicIpProduct[]).filter((item) =>
+      (restrict ? restrict(item) : true) &&
+      this.matchesProductQuery(item, query)
+    );
     this.filteredList = filtered;
+  }
+
+  private matchesProductQuery(item: BasicIpProduct, query: string): boolean {
+    return (
+      (item.name?.toLowerCase() ?? '').indexOf(query) === 0 ||
+      (item.description?.toLowerCase() ?? '').indexOf(query) === 0 ||
+      (item.clientDescription?.toLowerCase() ?? '').indexOf(query) === 0 ||
+      (item.mfrReference?.toLowerCase() ?? '').indexOf(query) === 0 ||
+      (item.clientReference?.toLowerCase() ?? '').indexOf(query) === 0
+    );
   }
 
   get listIpProducts(): Signal<BasicIpProduct[]> {
