@@ -32,7 +32,9 @@ export class ListIpProductsComponent extends CommonListTab<ListIpProduct, IpProd
 
   constructor() {
     super();
-    this.brandSV.loadBrands(true);
+    if (!this.brandSV.listBrands().length) {
+      this.brandSV.loadBrands(true);
+    }
     this.formBuild();
   }
 
@@ -78,13 +80,15 @@ export class ListIpProductsComponent extends CommonListTab<ListIpProduct, IpProd
     this.brandSV.searchAutoComplete(event);
   }
 
-  getStatusColor(status: 'ACTIVE' | 'INACTIVE' | 'SUBSTITUTED'): string {
+  getStatusColor(status: 'ACTIVE' | 'INACTIVE' | 'SUBSTITUTED' | 'DRAFT'): string {
     if (status === 'ACTIVE') {
       return 'qualified';
     } else if (status === 'INACTIVE') {
       return 'unqualified';
     } else if (status === 'SUBSTITUTED') {
       return 'renewal';
+    } else if (status === 'DRAFT') {
+      return 'new';
     } else {
       return 'new';
     }
