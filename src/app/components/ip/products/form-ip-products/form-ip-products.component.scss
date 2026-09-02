@@ -5,3 +5,16 @@
 .surplus {
   margin-top: -0.5rem !important;
 }
+
+.required-missing {
+  label {
+    color: var(--red-600) !important;
+  }
+
+  .p-inputtext,
+  .p-autocomplete > .p-autocomplete-panel,
+  .p-dropdown:not(.p-disabled),
+  .p-inputnumber > .p-inputnumber-buttons-stacked {
+    border-color: var(--red-500) !important;
+  }
+}

@@ -10,8 +10,10 @@
             <p-inputNumber
               formControlName="profitMargin"
               mode="decimal"
-              [min]="1"
+              [min]="0.01"
               [max]="100"
+              [minFractionDigits]="2"
+              [maxFractionDigits]="2"
               suffix="%"/>
           </div>
           <div class="field col-12 md:col-6">

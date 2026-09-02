@@ -65,7 +65,7 @@ export class EditQuotationProductModalComponent implements OnInit {
     const data = {
       quotationsQuoteRequestId: this.quotationsQuoteRequestId(),
       quoteRequestProductId: this.quoteRequestProductId(),
-      profitMargin: this.formProduct.value.profitMargin / 100,
+      profitMargin: this.formProduct.value.profitMargin,
       condition: this.formProduct.value.condition
     };
 
