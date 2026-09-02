@@ -1,7 +1,7 @@
 @if(!loading()) {
   <div class="p-fluid w-full mt-4">
     <div class="formgrid grid">
-      <div class="field col-12 md:col-6">
+      <div class="field col-12 md:col-12">
         <p-floatLabel>
           <p-autoComplete
             [suggestions]="filteredClients"
@@ -16,10 +16,24 @@
             optionLabel="showName"/>
           <label>
             Client
+            <span class="required">*</span>
           </label>
         </p-floatLabel>
       </div>
-      <div class="field col-12 md:col-3" >
+       <div class="field col-12 md:col-4 mt-4">
+        <p-floatLabel>
+          <p-calendar
+            [(ngModel)]="applicationAt"
+            dateFormat="mm/dd/yy"
+            appendTo="body"
+            [required]="true" />
+          <label>
+            Date of Application
+            <span class="required">*</span>
+          </label>
+        </p-floatLabel>
+      </div>
+      <div class="field col-12 md:col-3 mt-4" >
         <p-floatLabel>
           <p-dropdown
             selected
@@ -34,7 +48,7 @@
           </label>
         </p-floatLabel>
       </div>
-      <div class="field col-12 md:col-3">
+      <div class="field col-12 md:col-3 mt-4">
         <div class="flex align-items-center check">
           <p-checkbox
             value="View Completed QR"
@@ -101,7 +115,7 @@
       type="button"
       label="Save"
       icon="pi pi-save"
-      [disabled]="client === ''"
+      [disabled]="client === '' || !applicationAt"
       (click)="createQuotation()"
       class="p-button-sm p-button-success">
     </button>

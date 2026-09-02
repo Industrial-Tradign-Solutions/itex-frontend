@@ -9,7 +9,7 @@ import { ListIpQuoteRequest } from '@interfaces/ip/quoteRequest';
 import { finalize } from 'rxjs';
 import { StaticListItem } from '@interfaces/static-list.model';
 import { StaticListsService } from '../../../../services/util/static-lists.service';
-import { CreateIpQuotationRequest } from '@interfaces/ip/quotation';
+import { CreateIpQuotationRequest, formatDateToSend } from '@interfaces/ip/quotation';
 import { UtilService } from '../../../../services/util/util.service';
 
 const TIMEOUT = environment.timeout;
@@ -41,6 +41,7 @@ export class NewQuotationModalComponent implements OnInit {
   viewCompletedQR: boolean = false;
   selectedQR: ListIpQuoteRequest[] = [];
   currency!: any;
+  applicationAt: Date | null = null;
   //?------------------------------------------------------------
 
   constructor() {
@@ -79,6 +80,7 @@ export class NewQuotationModalComponent implements OnInit {
       currency: this.currency,
       paymentTerms: 'NET_30',
       incoterms: 'FOB',
+      applicationAt: formatDateToSend(this.applicationAt),
       observations: ''
     };
     
