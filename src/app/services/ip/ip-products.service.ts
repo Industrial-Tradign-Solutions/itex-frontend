@@ -145,8 +145,8 @@ export class IpProductsService extends BaseAutoCompleteService<BasicIpProduct> {
     );
   }
 
-  enableProduct(id: string): Observable<MessageResponse<ListIpProduct>> {
-    let url  = `${ URL_SERVICES }/enable/${id}`;
+  changeStatusProduct(id: string, status: 'ACTIVE' | 'DRAFT'): Observable<MessageResponse<ListIpProduct>> {
+    let url  = `${ URL_SERVICES }/change-status/${id}?status=${status}`;
     return this.http.patch<MessageResponse<ListIpProduct>>( url, null, {headers: this.authSV.headers()} )
       .pipe(
         catchError( err => throwError( () => err.error.errorMessage ))

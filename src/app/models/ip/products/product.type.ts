@@ -14,7 +14,7 @@ export type IpProduct = {
   netWeightLbs: number;
   nmfc: number;
   freightClass: string;
-  status: 'ACTIVE' | 'INACTIVE' | 'SUBSTITUTED';
+  status: 'ACTIVE' | 'INACTIVE' | 'SUBSTITUTED' | 'DRAFT';
   notes: string;
   keywords: string;
   htsScheduleBNumber: number;
