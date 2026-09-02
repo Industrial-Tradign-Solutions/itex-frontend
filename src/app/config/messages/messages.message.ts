@@ -84,9 +84,12 @@ export const Messages = {
         openBy: (module: Modules, item: string, openBy: String) => openByMessage(module, item, openBy),
         confirmDisable: (item: string) => `Are you sure you want to disable the product: "<b>${item}</b>" ?`,
         confirmEnable: (item: string) => `Are you sure you want to enable the product: "<b>${item}</b>" ?`,
+        confirmBackToDraft: (item: string) => `Are you sure you want to return the product: "<b>${item}</b>" to DRAFT status?`,
         disableNotAllowed: 'You cannot deactivate the product',
         enableNotAllowed: 'You cannot activate the product',
         replaceNotAllowed: 'You cannot replace the product',
+        saveBeforeActivate: 'You have unsaved changes. Save the product before changing its status.',
+        activateNotComplete: (fields: string) => `The product cannot be activated. Complete the following required fields: ${fields}`,
       },
       quoteRequest: {
         openBy: (module: Modules, item: string, openBy: String) => openByMessage(module, item, openBy),
