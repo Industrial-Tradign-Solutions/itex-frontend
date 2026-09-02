@@ -6,4 +6,5 @@ export type BasicIpProduct = {
   mfrReference: string;
   clientReference?: string;
   status?: string;
+  showName?: string;
 }

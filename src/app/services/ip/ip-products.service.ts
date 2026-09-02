@@ -201,7 +201,10 @@ export class IpProductsService extends BaseAutoCompleteService<BasicIpProduct> {
   loadBasicProducts(): void{
     this.loadBasicsAction().subscribe({
       next: resp => {
-        this._listItems = resp;
+        this._listItems = resp.map((product) => ({
+          ...product,
+          showName: `(${product.mfrReference ?? ''}) - ${product.description ?? ''}`
+        }));
       }
     });
   }
