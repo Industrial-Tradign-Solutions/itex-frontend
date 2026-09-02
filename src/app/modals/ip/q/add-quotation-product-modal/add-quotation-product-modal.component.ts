@@ -131,7 +131,7 @@ export class AddQuotationProductModalComponent implements OnInit {
         selected: newSelected,
         disabled: false,
         profitMargin: newSelected ? item.profitMargin : null,
-        condition: newSelected ? item.condition : null
+        condition: newSelected ? this.newConditionValue() : null
       };
 
       if (newSelected) {
@@ -159,6 +159,13 @@ export class AddQuotationProductModalComponent implements OnInit {
 
   onFormChange(): void {
     this._version.update(v => v + 1);
+  }
+
+  private newConditionValue(): string | null {
+    const option = this.listCondition().find(c =>
+      c.key?.trim().toUpperCase() === 'NEW' || c.value?.trim().toUpperCase() === 'NEW'
+    );
+    return option?.key ?? null;
   }
 
   onSubmit(): void {
