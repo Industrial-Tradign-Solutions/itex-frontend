@@ -7,7 +7,7 @@
           Se debe poner del mismo tamaño para cuando se carguen las tablas
         -->
         <div class="formgrid grid mt-1">
-          <div class="field col-12 md:col-3 lg:col-3 xl:col-3 mt-3" >
+          <div class="field col-12 md:col-3 lg:col-3 xl:col-3 mt-3" [class.required-missing]="isActivationFieldMissing('description')" >
             <p-floatLabel>
               <input
                 pInputText
@@ -20,7 +20,7 @@
               </label>
             </p-floatLabel>
           </div>
-          <div class="field col-12 md:col-3 lg:col-3 xl:col-3 mt-3" >
+          <div class="field col-12 md:col-3 lg:col-3 xl:col-3 mt-3" [class.required-missing]="isActivationFieldMissing('clientDescription')" >
             <p-floatLabel>
               <input
                 pInputText
@@ -32,7 +32,7 @@
               </label>
             </p-floatLabel>
           </div>
-          <div class="field col-12 md:col-2 lg:col-2 xl:col-2 mt-3" >
+          <div class="field col-12 md:col-2 lg:col-2 xl:col-2 mt-3" [class.required-missing]="isActivationFieldMissing('brandId')" >
             <p-floatLabel>
               <p-autoComplete
                 formControlName="brandId"
@@ -40,6 +40,8 @@
                 (completeMethod)="searchBrand($event)"
                 optionValue="id"
                 [showClear]="true"
+                [virtualScroll]="true"
+                [virtualScrollItemSize]="34"
                 optionLabel="name"/>
               <label>
                 Brand
@@ -61,7 +63,7 @@
           <div class="field col-12 md:col-2 lg:col-2 xl:col-2 mt-3" >
             <p-floatLabel>
               <p-dropdown
-                [options]="listIpProductStatus()"
+                [options]="statusOptions()"
                 optionLabel="value"
                 (onChange)="changeStatus($event)"
                 formControlName="status"
@@ -73,7 +75,7 @@
           </div>
           <div class="field col-12 md:col-6 lg:col-6 xl:col-6 mt-3" >
             <div class="grid">
-              <div class="field col-12 md:col-3 lg:col-3 xl:col-3 mt-3" >
+              <div class="field col-12 md:col-3 lg:col-3 xl:col-3 mt-3" [class.required-missing]="isActivationFieldMissing('mfrReference')" >
                 <p-floatLabel>
                   <input
                     pInputText
@@ -82,10 +84,11 @@
                     type="text"/>
                   <label>
                     MFR Reference
+                    <span class="required">*</span>
                   </label>
                 </p-floatLabel>
               </div>
-              <div class="field col-12 md:col-3 lg:col-3 xl:col-3 mt-3" >
+              <div class="field col-12 md:col-3 lg:col-3 xl:col-3 mt-3" [class.required-missing]="isActivationFieldMissing('clientReference')" >
                 <p-floatLabel>
                   <input
                     pInputText
@@ -97,7 +100,7 @@
                   </label>
                 </p-floatLabel>
               </div>
-              <div class="field col-12 md:col-3 lg:col-3 xl:col-3 mt-3" >
+              <div class="field col-12 md:col-3 lg:col-3 xl:col-3 mt-3" [class.required-missing]="isActivationFieldMissing('netWeightLbs')" >
                 <p-floatLabel>
                   <p-inputNumber
                     mode="decimal"
@@ -322,25 +325,13 @@
             </div>
           }
         } @else {
-          <div class="field col-12 md:col-6 lg:col-6 xl:col-9 md:mt-5 lg:mt-5 xl:mt-5"></div>
-          <div class="field col-12 md:col-2 lg:col-2 xl:col-1 md:mt-5 lg:mt-5 xl:mt-5">
-            @if (tabItem.type === 'edit') {
-              <button pButton
-                label="Create QR"
-                icon="pi pi-plus"
-                severity="contrast"
-                [disabled]="formTab.disabled"
-                (click)="createQR(item()!)"
-                type="button">
-              </button>
-            }
-          </div>
+          <div class="field col-12 md:col-8 lg:col-8 xl:col-10 md:mt-5 lg:mt-5 xl:mt-5"></div>
           <div class="field col-12 md:col-2 lg:col-2 xl:col-1 md:mt-5 lg:mt-5 xl:mt-5">
             <button pButton
               label="Save"
               icon="pi pi-save"
               severity="success"
-              [disabled]="formTab.disabled || formTab.invalid"
+              [disabled]="formTab.disabled || formTab.invalid || tabItem.pristine"
               type="submit">
             </button>
           </div>

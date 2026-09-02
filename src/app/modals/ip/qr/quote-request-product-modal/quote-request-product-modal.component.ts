@@ -157,7 +157,9 @@ export class QuoteRequestProductModalComponent implements OnInit {
         description: qrProduct?.ipProduct.description,
         clientDescription: qrProduct?.ipProduct.clientDescription,
         mfrReference: qrProduct?.ipProduct.mfrReference,
-        clientReference: qrProduct?.ipProduct.clientReference
+        clientReference: qrProduct?.ipProduct.clientReference,
+        status: qrProduct?.ipProduct.status,
+        showName: `(${qrProduct?.ipProduct.mfrReference ?? ''}) - ${qrProduct?.ipProduct.description ?? ''}`
       });
     }
     this.formProduct.controls['productRef'].disable();
