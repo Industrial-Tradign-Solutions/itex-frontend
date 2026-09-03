@@ -84,6 +84,9 @@ export class SuppliersService {
     if (filter.taxId)
       url = `${url}&taxId=${filter.taxId}`;
 
+    if (filter.brand)
+      url = `${url}&brand=${filter.brand}`;
+
     return this.http.get<Page<ListSuppliers>>( url, {headers: this.authSV.headers()} )
       .pipe(
         catchError( err => throwError( () => err.error.errorMessage ))

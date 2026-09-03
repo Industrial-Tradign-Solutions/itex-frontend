@@ -203,8 +203,10 @@
               <p-floatLabel>
                 <p-inputNumber
                   mode="decimal"
-                  [useGrouping]="false"
+                  [useGrouping]="true"
                   suffix=" lbs"
+                  [minFractionDigits]="5"
+                  [maxFractionDigits]="5"
                   [max]="999999999999"
                   formControlName="grossWeightLbs" />
                 <label>
@@ -606,6 +608,8 @@
                       mode="currency"
                       [currency]="getCurrency()"
                       currencyDisplay="code"
+                      [minFractionDigits]="5"
+                      [maxFractionDigits]="5"
                       [max]="999999999999"
                       formControlName="subTotal" />
                     <label>
@@ -636,6 +640,8 @@
                       mode="currency"
                       [currency]="getCurrency()"
                       currencyDisplay="code"
+                      [minFractionDigits]="5"
+                      [maxFractionDigits]="5"
                       [max]="999999999999"
                       formControlName="otherCharges" />
                     <label>
@@ -660,6 +666,8 @@
                       mode="currency"
                       [currency]="getCurrency()"
                       currencyDisplay="code"
+                      [minFractionDigits]="5"
+                      [maxFractionDigits]="5"
                       [max]="999999999999"
                       formControlName="total" />
                     <label>
