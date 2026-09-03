@@ -7,6 +7,6 @@ export type ListIpQuotation = {
   client        ?: Client;
   status        ?: string;
   salesRep      ?: BasicUser;
-  applicationAt ?: Date;
+  applicationAt ?: string;
   createdAt     ?: Date;
 }

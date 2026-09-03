@@ -10,3 +10,18 @@
 .date {
     margin-left: 1rem;
 }
+
+.float-field-application {
+    display: inline-block;
+    width: 14rem;
+    margin-right: 1.5rem;
+    vertical-align: middle;
+}
+
+.required-chip {
+    ::ng-deep .p-chip {
+        background: var(--yellow-100);
+        color: var(--yellow-900);
+        border: 1px solid var(--yellow-300);
+    }
+}

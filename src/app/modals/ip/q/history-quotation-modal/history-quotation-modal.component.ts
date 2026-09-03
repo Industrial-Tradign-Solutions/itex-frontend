@@ -75,6 +75,7 @@ export class HistoryQuotationModalComponent implements OnInit {
       validity: 'Validity',
       validityType: 'Validity Type',
       incoterms: 'Incoterms',
+      applicationAt: 'Application Date',
       remarks: 'Remarks',
       internalRemarks: 'Internal Remarks',
       value: 'Value',

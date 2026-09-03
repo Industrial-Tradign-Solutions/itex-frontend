@@ -3,5 +3,6 @@ export type CreateIpQuotationRequest = {
   currency: string;
   paymentTerms: string;
   incoterms: string;
+  applicationAt: string;
   observations?: string;
 }

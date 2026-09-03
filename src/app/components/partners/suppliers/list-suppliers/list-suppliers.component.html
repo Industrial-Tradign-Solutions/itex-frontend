@@ -3,7 +3,7 @@
     @if (formFilter) {
       <form [formGroup]="formFilter" (ngSubmit)="search(true)" style="margin-top: -1.5rem; margin-bottom: -1rem;">
         <div class="formgrid grid">
-          <div class="col-12 md:col-5">
+          <div class="col-12 md:col-4">
             <div class="formgrid grid">
               <div class="field col-12 md:col-3 flex">
                 @if(permissions().createSupplier) {
@@ -41,9 +41,9 @@
               </div>
             </div>
           </div>
-          <div class="col-12 md:col-7">
+          <div class="col-12 md:col-8">
             <div class="formgrid grid">
-              <div class="field col-12 md:col-3">
+              <div class="field col-12 md:col-2">
                 <p-floatLabel>
                   <p-autoComplete
                     formControlName="countryId"
@@ -57,7 +57,16 @@
                   <label>Country</label>
                 </p-floatLabel>
               </div>
-              <div class="field col-12 md:col-3">
+              <div class="field col-12 md:col-2">
+                <p-floatLabel>
+                  <input
+                    pInputText
+                    formControlName="brand"
+                    type="text"/>
+                    <label>Brand</label>
+                </p-floatLabel>
+              </div>
+              <div class="field col-12 md:col-2">
                 <p-floatLabel>
                   <p-dropdown
                     [options]="listSupplierStatus()"

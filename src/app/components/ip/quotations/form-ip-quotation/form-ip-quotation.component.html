@@ -758,6 +758,37 @@
       <!-- Footer: Dates -->
       <div class="formgrid grid" style="margin-bottom: -2.5rem;">
         <div class="field col-12 md:col-8 lg:col-8 xl:col-9 md:mt-5 lg:mt-5 xl:mt-5">
+          @if (tabItem.type !== 'view') {
+            <div class="field float-field-application">
+              <p-floatLabel>
+                <p-calendar
+                  formControlName="applicationAt"
+                  dateFormat="mm/dd/yy"
+                  appendTo="body" />
+                <label>
+                  Date of Application
+                  <span class="required">*</span>
+                </label>
+              </p-floatLabel>
+            </div>
+          }
+          @if (tabItem.type !== 'view' && item() && !item()?.applicationAt) {
+            <p-chip styleClass="p-mr-2" class="required-chip">
+              <div class="p-2">
+                <b>Date of Application required: </b>
+                <i class="pi pi-exclamation-triangle" style="margin-right: 0.25rem;"></i>
+                <span>Set the application date before saving.</span>
+              </div>
+            </p-chip>
+          }
+          @if(item() && item()?.applicationAt && tabItem.type === 'view') {
+            <p-chip>
+              <div class="p-2">
+                <b>Application: </b>
+                {{item()?.applicationAt | date:'MMM dd, yyyy'}}
+              </div>
+            </p-chip>
+          }
           @if(item() && item()?.createdAt) {
             <p-chip>
               <div class="p-2">

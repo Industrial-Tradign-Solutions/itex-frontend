@@ -16,6 +16,7 @@ import { FieldsetModule } from 'primeng/fieldset';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { TabViewModule } from 'primeng/tabview';
 import { TableModule } from 'primeng/table';
+import { CalendarModule } from 'primeng/calendar';
 import { PipesModule } from '@pipes/pipes.module';
 import { SendEmailModalModule } from '@modals/util/email/send-email-modal/send-email-modal.module';
 import { AddQuotationProductModalModule } from '@modals/ip/q/add-quotation-product-modal/add-quotation-product-modal.module';
@@ -50,6 +51,7 @@ import { DividerModule } from 'primeng/divider';
     AutoCompleteModule,
     TabViewModule,
     TableModule,
+    CalendarModule,
     PipesModule,
     SendEmailModalModule,
     AddQuotationProductModalModule,

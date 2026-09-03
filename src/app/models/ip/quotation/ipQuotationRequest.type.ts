@@ -12,7 +12,17 @@ export type IpQuotationRequest = {
   validityType: string;
   incoterms: string;
   paymentTerms: string;
+  applicationAt: string;
 };
+
+export function formatDateToSend(date: Date | string | null): string {
+  if (!date) return '';
+  const d = typeof date === 'string' ? new Date(date) : date;
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const year = d.getFullYear();
+  return `${month}-${day}-${year}`;
+}
 
 export function mapToIpQuotationRequest(form: any): IpQuotationRequest {
   const data = JSON.parse(JSON.stringify(form));
@@ -30,6 +40,7 @@ export function mapToIpQuotationRequest(form: any): IpQuotationRequest {
     validity: data.validity,
     validityType: data.validityType,
     incoterms: data.incoterms,
-    paymentTerms: data.paymentTerms
+    paymentTerms: data.paymentTerms,
+    applicationAt: data.applicationAt
   };
 }

@@ -1,7 +1,7 @@
 import { Component, computed, EventEmitter, inject, OnInit, Output, signal } from '@angular/core';
 import { Messages, TitlesMessages } from '@config/messages';
 import { CommonPageTab } from '@config/tabs/commonPageTab';
-import { IpQuotation, ListIpQuotation, mapToIpQuotationRequest, IpQuotationProduct } from '@interfaces/ip/quotation';
+import { IpQuotation, ListIpQuotation, mapToIpQuotationRequest, formatDateToSend, IpQuotationProduct } from '@interfaces/ip/quotation';
 import { IpQuotationPermissions } from '@pages/principal/ip/quotations/quotations.component';
 import { environment } from '../../../../../environments/environment';
 import { IpQuotationService } from '@services/ip';
@@ -198,7 +198,19 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
   }
 
   protected override getRequest() {
-    return mapToIpQuotationRequest(this.formTab.getRawValue());
+    const request = mapToIpQuotationRequest(this.formTab.getRawValue());
+    const applicationAt = this.formTab.get('applicationAt')?.value as Date | null;
+    return {
+      ...request,
+      applicationAt: formatDateToSend(applicationAt)
+    };
+  }
+
+  private parseApplicationAt(value?: string): Date | null {
+    if (!value) return null;
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return null;
+    return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
   }
 
   protected override buildFormAction(): void {
@@ -254,6 +266,10 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
       incoterms: [
         this.item()?.incoterms ?? null,
         []
+      ],
+      applicationAt: [
+        this.parseApplicationAt(this.item()?.applicationAt),
+        [Validators.required]
       ],
       paymentTerms: [
         this.item()?.paymentTerms ?? null,

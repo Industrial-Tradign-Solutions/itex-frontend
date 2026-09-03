@@ -60,9 +60,8 @@ export class ListIpQuoteRequestComponent extends CommonListTab<ListIpQuoteReques
     this._listEmployees.set(this.userSV.listEmployees());
 
     this.formFilter.patchValue({
-      date: 'DAY',
-      salesRepId: this.userData()?.id,
-      status: 'CREATED'
+      date: 'MONTH',
+      salesRepId: this.userData()?.id
     });
     setTimeout(() => {
       this.search(true);

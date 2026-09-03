@@ -8,4 +8,5 @@ export type SupplierFilter = {
   shortBy?: string;
   shortOrder?: number;
   countryId?: string;
+  brand?: string;
 }
