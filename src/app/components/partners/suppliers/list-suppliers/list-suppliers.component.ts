@@ -143,6 +143,10 @@ export class ListSuppliersComponent extends CommonListTab<ListSuppliers, Supplie
       shortOrder: [
         null,
         []
+      ],
+      brand: [
+        null,
+        []
       ]
     });
   }

@@ -57,9 +57,8 @@ export class ListIpPurchaseOrderComponent extends CommonListTab<ListIpPurchaseOr
     this._listEmployees.set(this.userSV.listEmployees());
 
     this.formFilter.patchValue({
-      date: 'DAY',
+      date: 'MONTH',
       salesRepId: this.userData()?.id,
-      status: 'CREATED'
     });
     setTimeout(() => {
       this.search(true);
