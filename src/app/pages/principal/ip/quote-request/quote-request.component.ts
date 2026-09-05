@@ -28,6 +28,7 @@ export class QuoteRequestComponent extends CommonTabs<ListIpQuoteRequest> implem
     createIpQuoteRequest: false,
     updateIpQuoteRequest: false,
     viewHistoryIpQuoteRequest: false,
+    completeIpQuoteRequest: false,
     cloneIpQuoteRequest: false,
     rejectIpQuoteRequest: false,
     editPaymentTermsIpQuoteRequest: false
@@ -82,6 +83,7 @@ export class QuoteRequestComponent extends CommonTabs<ListIpQuoteRequest> implem
       createIpQuoteRequest: await this.permissionsSV.isValidAction(IP_QUOTE_REQUESTS_ACTIONS_ID.CREATE_IP_QUOTE_REQUESTS),
       updateIpQuoteRequest: await this.permissionsSV.isValidAction(IP_QUOTE_REQUESTS_ACTIONS_ID.UPDATE_IP_QUOTE_REQUESTS),
       viewHistoryIpQuoteRequest: await this.permissionsSV.isValidAction(IP_QUOTE_REQUESTS_ACTIONS_ID.VIEW_HISTORY_IP_QUOTE_REQUESTS),
+      completeIpQuoteRequest: await this.permissionsSV.isValidAction(IP_QUOTE_REQUESTS_ACTIONS_ID.COMPLETE_IP_QUOTE_REQUESTS),
       cloneIpQuoteRequest: await this.permissionsSV.isValidAction(IP_QUOTE_REQUESTS_ACTIONS_ID.CLONE_IP_QUOTE_REQUESTS),
       rejectIpQuoteRequest: await this.permissionsSV.isValidAction(IP_QUOTE_REQUESTS_ACTIONS_ID.REJECT_IP_QUOTE_REQUESTS),
       editPaymentTermsIpQuoteRequest: await this.permissionsSV.isValidAction(IP_QUOTE_REQUESTS_ACTIONS_ID.EDIT_PAYMENT_TERMS_IP_QUOTE_REQUESTS),
@@ -94,6 +96,7 @@ export type IpQuoteRequestPermissions = {
   createIpQuoteRequest: boolean;
   updateIpQuoteRequest: boolean;
   viewHistoryIpQuoteRequest: boolean;
+  completeIpQuoteRequest: boolean;
   cloneIpQuoteRequest: boolean;
   rejectIpQuoteRequest: boolean;
   editPaymentTermsIpQuoteRequest: boolean;
