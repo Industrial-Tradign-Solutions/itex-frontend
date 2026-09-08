@@ -58,8 +58,13 @@ export class IpQuotationService extends  BaseAutoCompleteService<any>{
     if (filter.number)
       url = `${url}&number=${filter.number}`;
 
-    if (filter.status)
-      url = `${url}&status=${filter.status}`;
+    if (filter.status) {
+      if (filter.status === 'ACTIVE') {
+        url = `${url}&status=CREATED,SENT,ANSWERED`;
+      } else {
+        url = `${url}&status=${filter.status}`;
+      }
+    }
 
     if (filter.clientId)
       url = `${url}&clientId=${filter.clientId}`;

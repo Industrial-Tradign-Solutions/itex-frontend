@@ -35,7 +35,13 @@ export class ListIpPurchaseOrderComponent extends CommonListTab<ListIpPurchaseOr
   private supplierSV        = inject(SuppliersService);
   private dialogSV          = inject(DialogService);
 
-  listIpPurchaseOrderStatus = computed<StaticListItem[]>(() => this.staticListSV.getListIpPurchaseOrderStatus());
+  listIpPurchaseOrderStatus = computed<StaticListItem[]>(() => [
+    {
+      key: 'ACTIVE',
+      value: 'ACTIVE'
+    },
+    ...this.staticListSV.getListIpPurchaseOrderStatus()
+  ]);
   private userData = computed<UserInfo | null>(() => this.storageSV.getPlain<UserInfo>(storageKeys.user_data.info))
   private _listEmployees = signal<BasicUser[]>([]);
   listEmployees = computed<BasicUser[]>(() => this._listEmployees());
@@ -59,6 +65,7 @@ export class ListIpPurchaseOrderComponent extends CommonListTab<ListIpPurchaseOr
     this.formFilter.patchValue({
       date: 'MONTH',
       salesRepId: this.userData()?.id,
+      status: 'ACTIVE'
     });
     setTimeout(() => {
       this.search(true);
