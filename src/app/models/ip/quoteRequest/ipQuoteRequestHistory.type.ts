@@ -9,7 +9,9 @@ export type IpQuoteRequestHistoryAction =
   | 'UPDATE_PRODUCT'
   | 'ADD_OTHER_CHARGE'
   | 'REMOVE_OTHER_CHARGE'
-  | 'UPDATE_OTHER_CHARGE';
+  | 'UPDATE_OTHER_CHARGE'
+  | 'AUTO_REJECTED_TIME'
+  | 'STATUS_CHANGE_BY_Q';
 
 export type IpQuoteRequestHistoryResponse = {
   employee: string;

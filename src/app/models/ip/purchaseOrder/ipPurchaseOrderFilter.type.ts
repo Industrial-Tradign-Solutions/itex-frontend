@@ -8,7 +8,7 @@ export type IpPurchaseOrderFilter = {
   clientId?: string;
   supplierId?: string;
   remarks?: string;
-  status?: IpPurchaseOrderStatus;
+  status?: IpPurchaseOrderStatus | 'ACTIVE';
   clientRef?: string;
   supplierRef?: string;
   productDescription?: string;

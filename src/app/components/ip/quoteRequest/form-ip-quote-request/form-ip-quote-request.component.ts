@@ -26,6 +26,12 @@ import { HistoryQuoteRequestModalComponent } from '@modals/ip/qr/history-quote-r
 const MESSAGES = Messages.pages.ip.quoteRequest;
 const TITLES = TitlesMessages;
 const TIMEOUT = environment.timeout;
+
+const STATUS_CHANGE_WARNINGS = {
+  noManualComplete: 'The QR is completed automatically when a Quotation containing its products is answered. To complete it manually you need the Complete QR permission',
+  manualCompleteRequiresAnswered: 'The Quote Request must be in ANSWERED status to be completed manually',
+  noRejectPermission: 'You do not have permission to reject this Quote Request'
+} as const;
 @Component({
   selector: 'app-form-ip-quote-request',
   templateUrl: './form-ip-quote-request.component.html',
@@ -206,6 +212,19 @@ export class FormIpQuoteRequestComponent extends CommonPageTab<ListIpQuoteReques
   changeStatus(event: DropdownChangeEvent) {
     const qrId = this.tabItem.item.id;
     const qrNumber = this.tabItem.item.name;
+    const currentStatus = this.item()?.status;
+
+    if (!currentStatus || currentStatus === event.value) {
+      this.resetFormStatus();
+      return;
+    }
+
+    const warning = this.statusChangeWarning(event.value);
+    if (warning) {
+      this.utilSV.setMessage(TITLES.warning, warning, 'warn');
+      this.resetFormStatus();
+      return;
+    }
 
     const actions: Record<string, () => void> = {
       CREATED: () => this.handleChangeStatus(
@@ -238,9 +257,24 @@ export class FormIpQuoteRequestComponent extends CommonPageTab<ListIpQuoteReques
     actions[event.value]?.();
   }
 
+  private statusChangeWarning(targetStatus: string): string | null {
+    if (targetStatus === 'COMPLETE') {
+      if (!this.permissions().completeIpQuoteRequest) {
+        return STATUS_CHANGE_WARNINGS.noManualComplete;
+      }
+      if (this.item()?.status !== 'ANSWERED') {
+        return STATUS_CHANGE_WARNINGS.manualCompleteRequiresAnswered;
+      }
+    }
+    if (targetStatus === 'REJECTED' && !this.permissions().rejectIpQuoteRequest) {
+      return STATUS_CHANGE_WARNINGS.noRejectPermission;
+    }
+    return null;
+  }
+
   private handleChangeStatus(
     message: string,
-    action: () => Observable<MessageResponse<ListIpQuoteRequest>>,
+    action: () => Observable<MessageResponse<IpQuoteRequest>>,
     newStatus: 'CREATED' | 'ANSWERED' | 'SENT' | 'COMPLETE' | 'REJECTED'
   ) {
     this.utilSV.confirm({
@@ -257,10 +291,10 @@ export class FormIpQuoteRequestComponent extends CommonPageTab<ListIpQuoteReques
     }
 
     private resetFormStatus() {
-      this.formTab.patchValue({ status: this.item()?.status ?? 'ACTIVE' });
+      this.formTab.patchValue({ status: this.item()?.status ?? '' });
     }
 
-  private executeChangeStatus(action: Observable<MessageResponse<ListIpQuoteRequest>>, newStatus:  'CREATED' | 'ANSWERED' | 'SENT' | 'COMPLETE' | 'REJECTED'){
+  private executeChangeStatus(action: Observable<MessageResponse<IpQuoteRequest>>, newStatus:  'CREATED' | 'ANSWERED' | 'SENT' | 'COMPLETE' | 'REJECTED'){
     this._loading.set(true);
     this.showForm = false;
     action
@@ -273,25 +307,36 @@ export class FormIpQuoteRequestComponent extends CommonPageTab<ListIpQuoteReques
       .subscribe({
       next: (resp) => {
         this.utilSV.setMessage(resp.title, resp.message, 'success');
-        this._item()!.status = newStatus;
-        this.tabItem.item.status = newStatus;
-        if (newStatus === 'COMPLETE' || newStatus === 'REJECTED') {
-          this.tabItem.type = 'view';
+        const updated = resp.data && resp.data.id ? resp.data : null;
+        if (updated) {
+          this._item.set(updated);
+          this.tabItem.item.status = updated.status;
+          this.tabItem.type = (updated.status === 'COMPLETE' || updated.status === 'REJECTED') ? 'view' : 'edit';
+          if (newStatus === 'SENT') {
+            this.tabItem.pristine = false;
+          }
+          this.rebuildForm();
         } else {
-          this.tabItem.type = 'edit';
-        }
-        if (newStatus !== 'SENT') {
-          this.tabItem.pristine = true;
-        }
+          this._item()!.status = newStatus;
+          this.tabItem.item.status = newStatus;
+          if (newStatus === 'COMPLETE' || newStatus === 'REJECTED') {
+            this.tabItem.type = 'view';
+          } else {
+            this.tabItem.type = 'edit';
+          }
+          if (newStatus !== 'SENT') {
+            this.tabItem.pristine = true;
+          }
 
-        if (newStatus === 'SENT') {
-          this.item()!.sentAt = new Date().toISOString();
-        } else  if (newStatus === 'ANSWERED') {
-          this.item()!.answeredAt = new Date().toISOString();
-        } else  if (newStatus === 'REJECTED') {
-          this.item()!.rejectAt = new Date().toISOString();
-        } else  if (newStatus === 'COMPLETE') {
-          this.item()!.completeAt = new Date().toISOString();
+          if (newStatus === 'SENT') {
+            this.item()!.sentAt = new Date().toISOString();
+          } else  if (newStatus === 'ANSWERED') {
+            this.item()!.answeredAt = new Date().toISOString();
+          } else  if (newStatus === 'REJECTED') {
+            this.item()!.rejectAt = new Date().toISOString();
+          } else  if (newStatus === 'COMPLETE') {
+            this.item()!.completeAt = new Date().toISOString();
+          }
         }
       },
       error: (err) => {
@@ -532,21 +577,6 @@ export class FormIpQuoteRequestComponent extends CommonPageTab<ListIpQuoteReques
     return this.formTab.get('products') as FormArray;
   }
 
-  getRemarksSize(): number {
-    let resp = 4;
-
-    this._item()!.listQuotations = [{}]
-
-    if (this.item()?.clonedQrs === undefined || this.item()?.clonedQrs === null ||  this.item()!.clonedQrs.length === 0) {
-      resp = resp + 4;
-    }
-
-    if (this.item()?.listQuotations === undefined || this.item()?.listQuotations === null ||  this.item()!.listQuotations.length === 0) {
-      resp = resp + 4;
-    }
-
-    return resp;
-  }
   protected override enableForm(): void {
     const item = this.item();
     const type = this.tabItem.type;

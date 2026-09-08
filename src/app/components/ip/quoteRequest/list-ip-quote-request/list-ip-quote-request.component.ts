@@ -35,7 +35,15 @@ export class ListIpQuoteRequestComponent extends CommonListTab<ListIpQuoteReques
   //! ----------------------------------------------
 
   //* Señales
-  listIpQuoteRequestStatus = computed<StaticListItem[]>(() => this.staticListSV.getListIpQuoteRequestStatus());
+  listIpQuoteRequestStatus = computed<StaticListItem[]>(() =>
+    [
+      {
+        key: 'ACTIVE',
+        value: 'ACTIVE'
+      },
+      ...this.staticListSV.getListIpQuoteRequestStatus()
+    ]
+  );
   private userData = computed<UserInfo | null>(() => this.storageSV.getPlain<UserInfo>(storageKeys.user_data.info))
   private _listEmployees = signal<BasicUser[]>([]);
   listEmployees = computed<BasicUser[]>(() => this._listEmployees());
@@ -58,7 +66,6 @@ export class ListIpQuoteRequestComponent extends CommonListTab<ListIpQuoteReques
 
   ngOnInit(): void {
     this._listEmployees.set(this.userSV.listEmployees());
-
     this.formFilter.patchValue({
       date: 'MONTH',
       salesRepId: this.userData()?.id
@@ -142,7 +149,7 @@ export class ListIpQuoteRequestComponent extends CommonListTab<ListIpQuoteReques
         null
       ],
       status: [
-        null
+        'ACTIVE'
       ],
       clientCode: [
         null

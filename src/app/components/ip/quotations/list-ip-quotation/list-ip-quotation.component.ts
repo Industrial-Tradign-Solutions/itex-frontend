@@ -36,7 +36,13 @@ export class ListIpQuotationComponent extends CommonListTab<ListIpQuotation, IpQ
   //! ----------------------------------------------
 
   //* Señales
-  listIpQuotationStatus = computed<StaticListItem[]>(() => this.staticListSV.getListIpQuotationStatus());
+  listIpQuotationStatus = computed<StaticListItem[]>(() => [
+    {
+      key: 'ACTIVE',
+      value: 'ACTIVE'
+    },
+    ...this.staticListSV.getListIpQuotationStatus()
+  ]);
   private userData = computed<UserInfo | null>(() => this.storageSV.getPlain<UserInfo>(storageKeys.user_data.info))
   private _listEmployees = signal<BasicUser[]>([]);
   listEmployees = computed<BasicUser[]>(() => this._listEmployees());
@@ -58,7 +64,7 @@ export class ListIpQuotationComponent extends CommonListTab<ListIpQuotation, IpQ
     this._listEmployees.set(this.userSV.listEmployees());
     this.formFilter.patchValue({
       date: 'MONTH',
-      salesRepId: this.userData()?.id,
+      salesRepId: this.userData()?.id
     });
     setTimeout(() => {
       this.search(true);
@@ -144,7 +150,7 @@ export class ListIpQuotationComponent extends CommonListTab<ListIpQuotation, IpQ
         null
       ],
       status: [
-        null
+        'ACTIVE'
       ],
       clientCode: [
         null

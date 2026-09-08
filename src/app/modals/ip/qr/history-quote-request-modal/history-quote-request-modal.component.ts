@@ -54,6 +54,8 @@ export class HistoryQuoteRequestModalComponent implements OnInit {
       ADD_OTHER_CHARGE: 'ADD OTHER CHARGE',
       REMOVE_OTHER_CHARGE: 'REMOVE OTHER CHARGE',
       UPDATE_OTHER_CHARGE: 'UPDATE OTHER CHARGE',
+      AUTO_REJECTED_TIME: 'AUTO REJECTED',
+      STATUS_CHANGE_BY_Q: 'STATUS CHANGE BY Q',
     };
     return actionMap[action] ?? action;
   }
@@ -103,6 +105,8 @@ export class HistoryQuoteRequestModalComponent implements OnInit {
       REMOVE_PRODUCT: 'unqualified',
       REMOVE_OTHER_CHARGE: 'unqualified',
       REJECTED: 'unqualified',
+      AUTO_REJECTED_TIME: 'unqualified',
+      STATUS_CHANGE_BY_Q: 'negotiation',
     };
     return tagMap[action] ?? 'negotiation';
   }
