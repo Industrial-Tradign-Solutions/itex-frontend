@@ -85,6 +85,7 @@ export const moduleActionsId = {
         CLONE_IP_QUOTATION: 4003004,
         REJECT_IP_QUOTATION: 4003005,
         EDIT_PAYMENT_TERMS_IP_QUOTATION: 4003006,
+        COMPLETE_IP_QUOTATION: 4003007,
       },
       purchase_order: {
         CREATE_PURCHASE_ORDER: 4004001,
