@@ -64,8 +64,7 @@ export class ListIpPurchaseOrderComponent extends CommonListTab<ListIpPurchaseOr
 
     this.formFilter.patchValue({
       date: 'MONTH',
-      salesRepId: this.userData()?.id,
-      status: 'ACTIVE'
+      salesRepId: this.userData()?.id
     });
     setTimeout(() => {
       this.search(true);
@@ -161,7 +160,7 @@ export class ListIpPurchaseOrderComponent extends CommonListTab<ListIpPurchaseOr
         null
       ],
       status: [
-        null
+        'ACTIVE'
       ],
       clientCode: [
         null

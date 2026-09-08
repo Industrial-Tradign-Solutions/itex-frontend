@@ -64,8 +64,7 @@ export class ListIpQuotationComponent extends CommonListTab<ListIpQuotation, IpQ
     this._listEmployees.set(this.userSV.listEmployees());
     this.formFilter.patchValue({
       date: 'MONTH',
-      salesRepId: this.userData()?.id,
-      status: 'ACTIVE'
+      salesRepId: this.userData()?.id
     });
     setTimeout(() => {
       this.search(true);
@@ -151,7 +150,7 @@ export class ListIpQuotationComponent extends CommonListTab<ListIpQuotation, IpQ
         null
       ],
       status: [
-        null
+        'ACTIVE'
       ],
       clientCode: [
         null
