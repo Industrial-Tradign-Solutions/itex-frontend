@@ -1,5 +1,6 @@
 import { BasicUser } from "@interfaces/administration/user";
 import { Client, ClientContact } from "@interfaces/partners/clients";
+import { IpDocumentStatus } from "../document-status.type";
 import { IpQuotationProduct } from "./ipQuotationProduct.type";
 import { IpQuotationOtherCharge } from "./IpQuotationOtherCharge.type";
 import { IpQuotationImportedOtherCharge } from "./IpQuotationImportedOtherCharge.type";
@@ -9,7 +10,7 @@ export type IpQuotation = {
   id: string;
   number: string;
   name: string;
-  status: string;
+  status: IpDocumentStatus;
   currency: string;
   client: Client;
   clientContact: ClientContact;

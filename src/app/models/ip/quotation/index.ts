@@ -1,4 +1,5 @@
 export { IpQuotation } from './IpQuotation.type';
+export { IpDocumentStatus, IpDocumentStatusFilter } from '../document-status.type';
 export { CreateIpQuotationRequest } from './createIpQuotation.type';
 export { IpQuotationFilter } from './ipQuotationFilter.type';
 export { ListIpQuotation } from './listIpQ.type';

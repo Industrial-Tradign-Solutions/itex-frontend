@@ -89,7 +89,7 @@
                 <td>{{quoteRequest.name}}</td>
                 <td>{{quoteRequest.supplier.name}}</td>
                 <td>
-                  <span [class]="'customer-badge status-' + getStatusColor(quoteRequest.status)">
+                  <span [class]="'customer-badge status-' + (quoteRequest.status | ipDocumentStatusColor)">
                       {{quoteRequest.status}}
                   </span>
                 </td>
