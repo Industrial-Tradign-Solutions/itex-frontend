@@ -13,6 +13,7 @@ import { TableModule } from 'primeng/table';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { CalendarModule } from 'primeng/calendar';
+import { PipesModule } from '@pipes/pipes.module';
 
 
 @NgModule({
@@ -33,7 +34,8 @@ import { CalendarModule } from 'primeng/calendar';
     TableModule,
     AutoCompleteModule,
     RadioButtonModule,
-    CalendarModule
+    CalendarModule,
+    PipesModule
   ],
   exports: [
     ListIpQuoteRequestComponent

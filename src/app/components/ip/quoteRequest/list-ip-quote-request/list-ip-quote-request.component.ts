@@ -9,6 +9,7 @@ import { IpQuoteRequestService } from '@services/ip';
 import { StorageService } from '@services/util';
 import { SortEvent } from 'primeng/api';
 import { Table } from 'primeng/table';
+import { PaginatorState } from 'primeng/paginator';
 import { storageKeys } from '../../../../../environments';
 import { UsersService } from '@services/admin';
 import { ClientBasic } from '@interfaces/partners/clients';
@@ -114,33 +115,17 @@ export class ListIpQuoteRequestComponent extends CommonListTab<ListIpQuoteReques
     this.open({item: quoteRequest, type, pristine: true});
   }
 
-  getStatusColor(status: 'CREATED' | 'SENT' | 'REJECTED' | 'ANSWERED' | 'COMPLETE'): string {
-    if (status === 'CREATED') {
-      return 'new';
-    } else if (status === 'REJECTED') {
-      return 'unqualified';
-    } else if (status === 'SENT') {
-      return 'renewal';
-    } else if (status === 'ANSWERED') {
-      return 'negotiation';
-    } else if (status === 'COMPLETE') {
-      return 'qualified';
-    } else {
-      return 'new';
-    }
-  }
-
   override resetForm(dt: Table): void {
     this.formBuild();
     dt.reset();
     this.changeDateRank();
   }
 
-  changePage(event: any) {
-    this.search(false, event.page, event.rows);
+  changePage(event: PaginatorState) {
+    this.search(false, event.page ?? 0, event.rows ?? 10);
   }
 
-  private formBuild(): any {
+  private formBuild(): void {
     this.formFilter = this.formBuilder.group({
       id: [
         new Date().getTime().toString()

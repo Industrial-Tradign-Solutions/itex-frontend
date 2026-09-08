@@ -2,7 +2,7 @@ import { Component, computed, EventEmitter, inject, OnInit, Output, signal } fro
 import { Messages, TitlesMessages } from '@config/messages';
 import { CommonPageTab } from '@config/tabs/commonPageTab';
 import { EmitedTab } from '@config/types/tabs';
-import { IpQuoteRequest, IpQuoteRequestProduct, IpQuoteRequestRequest, ListIpQuoteRequest, mapToIpQrRequest } from '@interfaces/ip/quoteRequest';
+import { IpQuoteRequest, IpQuoteRequestProduct, IpQuoteRequestRequest, ListIpQuoteRequest, mapToIpQrRequest, IpDocumentStatus } from '@interfaces/ip/quoteRequest';
 import { IpQuoteRequestPermissions } from '@pages/principal/ip/quote-request/quote-request.component';
 import { environment } from '../../../../../environments/environment';
 import { IpQuoteRequestService } from '@services/ip';
@@ -219,7 +219,7 @@ export class FormIpQuoteRequestComponent extends CommonPageTab<ListIpQuoteReques
       return;
     }
 
-    const warning = this.statusChangeWarning(event.value);
+    const warning = this.statusChangeWarning(event.value as IpDocumentStatus);
     if (warning) {
       this.utilSV.setMessage(TITLES.warning, warning, 'warn');
       this.resetFormStatus();
@@ -257,7 +257,7 @@ export class FormIpQuoteRequestComponent extends CommonPageTab<ListIpQuoteReques
     actions[event.value]?.();
   }
 
-  private statusChangeWarning(targetStatus: string): string | null {
+  private statusChangeWarning(targetStatus: IpDocumentStatus): string | null {
     if (targetStatus === 'COMPLETE') {
       if (!this.permissions().completeIpQuoteRequest) {
         return STATUS_CHANGE_WARNINGS.noManualComplete;
@@ -275,7 +275,7 @@ export class FormIpQuoteRequestComponent extends CommonPageTab<ListIpQuoteReques
   private handleChangeStatus(
     message: string,
     action: () => Observable<MessageResponse<IpQuoteRequest>>,
-    newStatus: 'CREATED' | 'ANSWERED' | 'SENT' | 'COMPLETE' | 'REJECTED'
+    newStatus: IpDocumentStatus
   ) {
     this.utilSV.confirm({
       message,
@@ -294,7 +294,7 @@ export class FormIpQuoteRequestComponent extends CommonPageTab<ListIpQuoteReques
       this.formTab.patchValue({ status: this.item()?.status ?? '' });
     }
 
-  private executeChangeStatus(action: Observable<MessageResponse<IpQuoteRequest>>, newStatus:  'CREATED' | 'ANSWERED' | 'SENT' | 'COMPLETE' | 'REJECTED'){
+  private executeChangeStatus(action: Observable<MessageResponse<IpQuoteRequest>>, newStatus: IpDocumentStatus){
     this._loading.set(true);
     this.showForm = false;
     action
