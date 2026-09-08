@@ -58,8 +58,13 @@ export class IpQuotationService extends  BaseAutoCompleteService<any>{
     if (filter.number)
       url = `${url}&number=${filter.number}`;
 
-    if (filter.status)
-      url = `${url}&status=${filter.status}`;
+    if (filter.status) {
+      if (filter.status === 'ACTIVE') {
+        url = `${url}&status=CREATED,SENT,ANSWERED`;
+      } else {
+        url = `${url}&status=${filter.status}`;
+      }
+    }
 
     if (filter.clientId)
       url = `${url}&clientId=${filter.clientId}`;
@@ -119,17 +124,17 @@ export class IpQuotationService extends  BaseAutoCompleteService<any>{
       );
   }
 
-  changeStatusQuotation(id: string, status: 'CREATED' | 'ANSWERED' | 'COMPLETE' | 'SENT' ): Observable<MessageResponse<ListIpQuotation>> {
+  changeStatusQuotation(id: string, status: 'CREATED' | 'ANSWERED' | 'COMPLETE' | 'SENT' ): Observable<MessageResponse<IpQuotation>> {
     const url  = `${ URL_SERVICES }/${id}/change-status?status=${status}`;
-    return this.http.patch<MessageResponse<ListIpQuotation>>( url, {}, {headers: this.authSV.headers()} )
+    return this.http.patch<MessageResponse<IpQuotation>>( url, {}, {headers: this.authSV.headers()} )
       .pipe(
         catchError( err => throwError( () => err.error.errorMessage ))
       );
   }
 
-  rejectQuotation(id: string): Observable<MessageResponse<ListIpQuotation>> {
+  rejectQuotation(id: string): Observable<MessageResponse<IpQuotation>> {
     const url  = `${ URL_SERVICES }/${id}`;
-    return this.http.delete<MessageResponse<ListIpQuotation>>( url, {headers: this.authSV.headers()} )
+    return this.http.delete<MessageResponse<IpQuotation>>( url, {headers: this.authSV.headers()} )
       .pipe(
         catchError( err => throwError( () => err.error.errorMessage ))
       );

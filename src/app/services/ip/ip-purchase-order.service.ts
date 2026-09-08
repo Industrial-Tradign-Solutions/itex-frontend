@@ -92,11 +92,12 @@ export class IpPurchaseOrderService extends BaseAutoCompleteService<any> {
     const url = `${URL_SERVICES}/clone/${id}`;
     return this.unwrap(this.http.patch<MessageResponse<ListIpPurchaseOrder>>(url, null, { headers: this.authSV.headers() }));
   }
-
   listAllPurchaseOrdersPage(filter: IpPurchaseOrderFilter, page: number, size: number): Observable<Page<ListIpPurchaseOrder>> {
+    const status = filter.status === 'ACTIVE' ? 'CREATED,SENT,ANSWERED' : filter.status;
+
     const params: Array<[string, string | undefined]> = [
       ['number', filter.number],
-      ['status', filter.status],
+      ['status', status],
       ['clientId', filter.clientId],
       ['supplierId', filter.supplierId],
       ['remarks', filter.remarks],
@@ -118,6 +119,7 @@ export class IpPurchaseOrderService extends BaseAutoCompleteService<any> {
 
     return this.unwrap(this.http.get<Page<ListIpPurchaseOrder>>(url, { headers: this.authSV.headers() }));
   }
+
 
   createPurchaseOrder(request: CreatePurchaseOrderRequest): Observable<MessageResponse<IpPurchaseOrder>> {
     const url = `${URL_SERVICES}`;

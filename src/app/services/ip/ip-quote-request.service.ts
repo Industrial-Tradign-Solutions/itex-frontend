@@ -5,10 +5,9 @@ import { MessageResponse } from '@interfaces/message-response';
 import { catchError, concatMap, map, Observable, of, Subject, throwError } from 'rxjs';
 import { AuthService } from '@services/security';
 import { HttpClient } from '@angular/common/http';
-import { IpQuoteRequestFilter, IpQuoteRequestOtherChargeRequest, IpQuoteRequestOtherCharges, IpQuoteRequestProduct, IpQuoteRequestProductRequest, IpQuoteRequestRequest, ListIpQuoteRequest, IpQuoteRequestHistoryResponse } from '@interfaces/ip/quoteRequest';
+import { IpQuoteRequest, IpQuoteRequestFilter, IpQuoteRequestOtherChargeRequest, IpQuoteRequestOtherCharges, IpQuoteRequestProduct, IpQuoteRequestProductRequest, IpQuoteRequestRequest, ListIpQuoteRequest, IpQuoteRequestHistoryResponse } from '@interfaces/ip/quoteRequest';
 import { Page } from '@interfaces/page.model';
 import { TypeTab } from '@config/types/tabs';
-import { IpQuoteRequest } from '@interfaces/ip/quoteRequest/ipQuoteRequest.type';
 
 const URL_SERVICES = environment.api_url + 'ip/qr';
 
@@ -104,8 +103,13 @@ export class IpQuoteRequestService extends  BaseAutoCompleteService<any> {
     if (filter.number)
       url = `${url}&number=${filter.number}`;
 
-    if (filter.status)
-      url = `${url}&status=${filter.status}`;
+    if (filter.status) {
+      if (filter.status === 'ACTIVE') {
+        url = `${url}&status=CREATED,SENT,ANSWERED`;
+      } else {
+        url = `${url}&status=${filter.status}`;
+      }
+    }
 
     if (filter.clientId)
       url = `${url}&clientId=${filter.clientId}`;
@@ -245,17 +249,17 @@ export class IpQuoteRequestService extends  BaseAutoCompleteService<any> {
       );
   }
 
-  changeStatusQuoteRequest(quoteRequestId: string, status: 'CREATED' | 'ANSWERED' | 'COMPLETE' | 'SENT' ): Observable<MessageResponse<ListIpQuoteRequest>> {
+  changeStatusQuoteRequest(quoteRequestId: string, status: 'CREATED' | 'ANSWERED' | 'COMPLETE' | 'SENT' ): Observable<MessageResponse<IpQuoteRequest>> {
     const url  = `${ URL_SERVICES }/${quoteRequestId}/change-status?status=${status}`;
-    return this.http.patch<MessageResponse<ListIpQuoteRequest>>( url, {}, {headers: this.authSV.headers()} )
+    return this.http.patch<MessageResponse<IpQuoteRequest>>( url, {}, {headers: this.authSV.headers()} )
       .pipe(
         catchError( err => throwError( () => err.error.errorMessage ))
       );
   }
 
-  rejectQuoteRequest(quoteRequestId: string): Observable<MessageResponse<ListIpQuoteRequest>> {
+  rejectQuoteRequest(quoteRequestId: string): Observable<MessageResponse<IpQuoteRequest>> {
     const url  = `${ URL_SERVICES }/${quoteRequestId}`;
-    return this.http.delete<MessageResponse<ListIpQuoteRequest>>( url, {headers: this.authSV.headers()} )
+    return this.http.delete<MessageResponse<IpQuoteRequest>>( url, {headers: this.authSV.headers()} )
       .pipe(
         catchError( err => throwError( () => err.error.errorMessage ))
       );
