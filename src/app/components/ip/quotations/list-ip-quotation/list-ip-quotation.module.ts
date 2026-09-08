@@ -14,6 +14,7 @@ import { AutoCompleteModule } from 'primeng/autocomplete';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { CalendarModule } from 'primeng/calendar';
 import { NewQuotationModalModule } from '@modals/ip/q/new-quotation-modal/new-quotation-modal.module';
+import { PipesModule } from '@pipes/pipes.module';
 
 @NgModule({
   declarations: [
@@ -34,7 +35,8 @@ import { NewQuotationModalModule } from '@modals/ip/q/new-quotation-modal/new-qu
     AutoCompleteModule,
     RadioButtonModule,
     CalendarModule,
-    NewQuotationModalModule
+    NewQuotationModalModule,
+    PipesModule
   ],
   exports: [
     ListIpQuotationComponent
