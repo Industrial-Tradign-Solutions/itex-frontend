@@ -95,22 +95,23 @@ export class IpPurchaseOrderService extends BaseAutoCompleteService<any> {
   listAllPurchaseOrdersPage(filter: IpPurchaseOrderFilter, page: number, size: number): Observable<Page<ListIpPurchaseOrder>> {
     const status = filter.status === 'ACTIVE' ? 'CREATED,SENT,ANSWERED' : filter.status;
 
-    const params: Array<[string, string | undefined]> = [
-      ['number', filter.number],
-      ['status', status],
-      ['clientId', filter.clientId],
-      ['supplierId', filter.supplierId],
-      ['remarks', filter.remarks],
-      ['salesRepId', filter.salesRepId],
-      ['clientRef', filter.clientRef],
-      ['supplierRef', filter.supplierRef],
-      ['productDescription', filter.productDescription],
-      ['shortBy', filter.shortBy],
-      ['shortOrder', filter.shortOrder != null ? `${filter.shortOrder}` : undefined],
-      ['date', filter.date],
-      ['initDate', filter.date === 'ALL' && filter.initDate ? filter.initDate.toISOString() : undefined],
-      ['endDate', filter.date === 'ALL' && filter.endDate ? filter.endDate.toISOString() : undefined]
-    ];
+    const params: Array<[string, string | undefined]> = filter.number
+      ? [['number', filter.number]]
+      : [
+        ['status', status],
+        ['clientId', filter.clientId],
+        ['supplierId', filter.supplierId],
+        ['remarks', filter.remarks],
+        ['salesRepId', filter.salesRepId],
+        ['clientRef', filter.clientRef],
+        ['supplierRef', filter.supplierRef],
+        ['productDescription', filter.productDescription],
+        ['shortBy', filter.shortBy],
+        ['shortOrder', filter.shortOrder != null ? `${filter.shortOrder}` : undefined],
+        ['date', filter.date],
+        ['initDate', filter.date === 'ALL' && filter.initDate ? filter.initDate.toISOString() : undefined],
+        ['endDate', filter.date === 'ALL' && filter.endDate ? filter.endDate.toISOString() : undefined]
+      ];
 
     const url = params.reduce(
       (acc, [key, value]) => value ? `${acc}&${key}=${value}` : acc,

@@ -55,40 +55,41 @@ export class IpQuotationService extends  BaseAutoCompleteService<any>{
   listAllQuotationsPage(filter: IpQuotationFilter, page: number, size: number): Observable<Page<ListIpQuotation>> {
     let url  = `${ URL_SERVICES }?page=${page}&size=${size}`;
 
-    if (filter.number)
+    if (filter.number) {
       url = `${url}&number=${filter.number}`;
-
-    if (filter.status) {
-      if (filter.status === 'ACTIVE') {
-        url = `${url}&status=CREATED,SENT,ANSWERED`;
-      } else {
-        url = `${url}&status=${filter.status}`;
+    } else {
+      if (filter.status) {
+        if (filter.status === 'ACTIVE') {
+          url = `${url}&status=CREATED,SENT,ANSWERED`;
+        } else {
+          url = `${url}&status=${filter.status}`;
+        }
       }
+
+      if (filter.clientId)
+        url = `${url}&clientId=${filter.clientId}`;
+
+      if (filter.remarks)
+        url = `${url}&remarks=${filter.remarks}`;
+
+      if (filter.salesRepId)
+        url = `${url}&salesRepId=${filter.salesRepId}`;
+
+      if (filter.shortBy)
+        url = `${url}&shortBy=${filter.shortBy}`;
+
+      if (filter.shortOrder)
+        url = `${url}&shortOrder=${filter.shortOrder}`;
+
+      if (filter.date)
+        url = `${url}&date=${filter.date}`;
+
+      if ( filter.date === 'ALL' && filter.initDate)
+        url = `${url}&initDate=${filter.initDate.toISOString()}`;
+
+      if ( filter.date === 'ALL' && filter.endDate)
+        url = `${url}&endDate=${filter.endDate.toISOString()}`;
     }
-
-    if (filter.clientId)
-      url = `${url}&clientId=${filter.clientId}`;
-
-    if (filter.remarks)
-      url = `${url}&remarks=${filter.remarks}`;
-
-    if (filter.salesRepId)
-      url = `${url}&salesRepId=${filter.salesRepId}`;
-
-    if (filter.shortBy)
-      url = `${url}&shortBy=${filter.shortBy}`;
-
-    if (filter.shortOrder)
-      url = `${url}&shortOrder=${filter.shortOrder}`;
-
-    if (filter.date)
-      url = `${url}&date=${filter.date}`;
-
-    if ( filter.date === 'ALL' && filter.initDate)
-      url = `${url}&initDate=${filter.initDate.toISOString()}`;
-
-    if ( filter.date === 'ALL' && filter.endDate)
-      url = `${url}&endDate=${filter.endDate.toISOString()}`;
 
     return this.http.get<Page<ListIpQuotation>>( url, {headers: this.authSV.headers()} )
       .pipe(
