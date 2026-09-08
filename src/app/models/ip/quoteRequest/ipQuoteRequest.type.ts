@@ -1,6 +1,7 @@
 import { BasicUser } from "@interfaces/administration/user";
 import { Client, ClientContact } from "@interfaces/partners/clients";
 import { Supplier, SupplierContact } from "@interfaces/partners/suppliers";
+import { IpDocumentStatus } from "../document-status.type";
 import { IpQuoteRequestProduct } from "./ipQuoteRequestProduct.type";
 import { ListIpQuoteRequest } from "./listIpQr.type";
 import { IpQuoteRequestOtherCharges } from "./ipQuoteRequestOtherCharges.type";
@@ -9,7 +10,7 @@ export type IpQuoteRequest = {
   id: string;
   createdAt: string;
   number: string;
-  status: string;
+  status: IpDocumentStatus;
   currency: string;
   client: Client;
   clientContact: ClientContact;

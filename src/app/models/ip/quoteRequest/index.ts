@@ -1,3 +1,4 @@
+export { IpDocumentStatus, IpDocumentStatusFilter } from '../document-status.type';
 export { mapToIpQrOtherChargeRequest, IpQuoteRequestOtherChargeRequest } from './ipQuoteRequestOtherChargeRequest.type';
 export { IpQuoteRequestOtherCharges } from './ipQuoteRequestOtherCharges.type';
 export { IpQuoteRequestProductRequest, mapToIpQrProductRequest } from './IpQuoteRequestProductReques.type';
