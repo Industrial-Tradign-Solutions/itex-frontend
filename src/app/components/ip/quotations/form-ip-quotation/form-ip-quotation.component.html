@@ -180,8 +180,10 @@
               <p-floatLabel>
                 <p-inputNumber
                   mode="decimal"
-                  [useGrouping]="false"
+                  [useGrouping]="true"
                   suffix=" lbs"
+                  [minFractionDigits]="5"
+                  [maxFractionDigits]="5"
                   [max]="999999999999"
                   formControlName="grossWeightLbs" />
                 <label>
@@ -270,7 +272,7 @@
                           (click)="openQuoteRequest(qr)"
                           tooltipPosition="left">
                         </button>
-                        @if (tabItem.type === 'edit' && permissions().updateIpQuotation && (item()?.status === 'CREATED' || item()?.status === 'SENT')) {
+                        @if (tabItem.type === 'edit' && permissions().updateIpQuotation && item()?.status === 'CREATED') {
                           <button
                             pButton
                             type="button"
@@ -388,15 +390,19 @@
             </div>
             <div class="field col-12 md:col-1 mt-1"></div>
             <div class="field col-12 md:col-2 mt-1">
-              <button pButton
-                label="Add QR"
-                icon="pi pi-plus"
-                severity="success"
-                [outlined]="true"
-                (click)="openModalAddQuoteRequests()"
-                [disabled]="!(tabItem.type === 'edit' && item()?.status === 'CREATED')"
-                type="button">
-              </button>
+              <span
+                [pTooltip]="(tabItem.type === 'edit' && item()?.status === 'CREATED') ? '' : 'Quote Requests can only be added while the Quotation is in CREATED status'"
+                tooltipPosition="top">
+                <button pButton
+                  label="Add QR"
+                  icon="pi pi-plus"
+                  severity="success"
+                  [outlined]="true"
+                  (click)="openModalAddQuoteRequests()"
+                  [disabled]="!(tabItem.type === 'edit' && item()?.status === 'CREATED')"
+                  type="button">
+                </button>
+              </span>
             </div>
           </div>
         </div>
@@ -477,6 +483,11 @@
                   <th style="min-width: 13rem" pFrozenColumn alignFrozen="right">
                     <div class="flex justify-content-end">
                       SELLING
+                    </div>
+                  </th>
+                  <th style="min-width: 13rem" pFrozenColumn alignFrozen="right">
+                    <div class="flex justify-content-end">
+                      PROFIT
                     </div>
                   </th>
                   <th style="min-width: 10rem; text-align: end;" pFrozenColumn alignFrozen="right">
@@ -593,6 +604,16 @@
                     </div>
                   </td>
                   <td style="text-align: end;" pFrozenColumn alignFrozen="right">
+                    <div class="formgrid grid">
+                      <div class="field col-12 md:col-12" style="text-align: right;">
+                        {{ product.value.unitProfit != null ? (product.value.unitProfit | customCurrency:getCurrency():'1.2-5') : '-' }}
+                      </div>
+                      <div class="field col-12 md:col-12" style="text-align: right;">
+                        {{ product.value.totalProfit != null ? (product.value.totalProfit | customCurrency:getCurrency():'1.2-2') : '-' }}
+                      </div>
+                    </div>
+                  </td>
+                  <td style="text-align: end;" pFrozenColumn alignFrozen="right">
                     @if (tabItem.type === 'edit' && permissions().updateIpQuotation) {
                       <button
                         pButton
@@ -664,7 +685,7 @@
                   [outlined]="true"
                   (click)="printQR()"
                   [loading]="loadingDownload()"
-                  [disabled]="tabItem.type === 'create' || item()?.products?.length === 0 || !tabItem.pristine"
+                  [disabled]="tabItem.type === 'create' || item()?.products?.length === 0 || (tabItem.type === 'edit' && !tabItem.pristine)"
                   type="button">
                 </button>
               </div>
@@ -687,8 +708,11 @@
                   <p-inputNumber
                     [inputStyle]="{ 'text-align': 'right' }"
                     mode="currency"
+                    [useGrouping]="true"
                     [currency]="getCurrency()"
                     currencyDisplay="code"
+                    [minFractionDigits]="5"
+                    [maxFractionDigits]="5"
                     [max]="999999999999"
                     formControlName="subTotal" />
                   <label>
@@ -701,6 +725,7 @@
                   <p-inputNumber
                     [inputStyle]="{ 'text-align': 'right' }"
                     mode="currency"
+                    [useGrouping]="true"
                     [currency]="getCurrency()"
                     currencyDisplay="code"
                     [minFractionDigits]="5"
@@ -717,8 +742,11 @@
                   <p-inputNumber
                     [inputStyle]="{ 'text-align': 'right' }"
                     mode="currency"
+                    [useGrouping]="true"
                     [currency]="getCurrency()"
                     currencyDisplay="code"
+                    [minFractionDigits]="5"
+                    [maxFractionDigits]="5"
                     [max]="999999999999"
                     formControlName="otherCharges" />
                   <label>
@@ -741,7 +769,10 @@
                   <p-inputNumber
                     [inputStyle]="{ 'text-align': 'right' }"
                     mode="currency"
+                    [useGrouping]="true"
                     [currency]="getCurrency()"
+                    [minFractionDigits]="5"
+                    [maxFractionDigits]="5"
                     currencyDisplay="code"
                     [max]="999999999999"
                     formControlName="total" />

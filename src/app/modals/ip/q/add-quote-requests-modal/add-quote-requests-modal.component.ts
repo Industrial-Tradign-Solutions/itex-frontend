@@ -98,22 +98,6 @@ export class AddQuoteRequestsModalComponent implements OnInit {
     });
   }
 
-  getStatusColor(status: 'CREATED' | 'SENT' | 'REJECTED' | 'ANSWERED' | 'COMPLETE'): string {
-    if (status === 'CREATED') {
-      return 'new';
-    } else if (status === 'REJECTED') {
-      return 'unqualified';
-    } else if (status === 'SENT') {
-      return 'renewal';
-    } else if (status === 'ANSWERED') {
-      return 'negotiation';
-    } else if (status === 'COMPLETE') {
-      return 'qualified';
-    } else {
-      return 'new';
-    }
-  }
-
   private disableLogin() {
     setTimeout(() => {
       this._loading.set(false);

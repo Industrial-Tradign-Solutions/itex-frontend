@@ -83,7 +83,6 @@
                     [options]="listIpQuoteRequestStatus()"
                     optionLabel="value"
                     appendTo="body"
-                    [showClear]="true"
                     formControlName="status"
                     optionValue="key" />
                   <label>
@@ -316,7 +315,7 @@
         {{quoteRequest.createdAt | date:'MMM dd, yyyy hh:mm a'}}
       </td>
       <td>
-        <span [class]="'customer-badge status-' + getStatusColor(quoteRequest.status)">
+        <span [class]="'customer-badge status-' + (quoteRequest.status | ipDocumentStatusColor)">
             {{quoteRequest.status}}
         </span>
       </td>
@@ -349,14 +348,14 @@
   </ng-template>
   <ng-template pTemplate="emptymessage">
     <tr >
-      <td style="text-align: center !important;" colspan="8">
+      <td style="text-align: center !important;" colspan="7">
         No quote requests found
       </td>
     </tr>
   </ng-template>
   <ng-template pTemplate="loadingbody">
     <tr>
-      <td style="text-align: center !important;" colspan="8">
+      <td style="text-align: center !important;" colspan="7">
         Loading quote requests, please wait
       </td>
     </tr>
@@ -364,7 +363,7 @@
   <ng-template pTemplate="footergrouped" >
     @if(page().page.totalPages > 1) {
       <tr>
-        <td style="text-align: center !important;" colspan="8">
+        <td style="text-align: center !important;" colspan="7">
             <p-paginator #paginator
               (onPageChange)="changePage($event)"
               [first]="0"

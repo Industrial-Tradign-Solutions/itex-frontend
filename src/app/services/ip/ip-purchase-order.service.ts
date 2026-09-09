@@ -92,24 +92,26 @@ export class IpPurchaseOrderService extends BaseAutoCompleteService<any> {
     const url = `${URL_SERVICES}/clone/${id}`;
     return this.unwrap(this.http.patch<MessageResponse<ListIpPurchaseOrder>>(url, null, { headers: this.authSV.headers() }));
   }
-
   listAllPurchaseOrdersPage(filter: IpPurchaseOrderFilter, page: number, size: number): Observable<Page<ListIpPurchaseOrder>> {
-    const params: Array<[string, string | undefined]> = [
-      ['number', filter.number],
-      ['status', filter.status],
-      ['clientId', filter.clientId],
-      ['supplierId', filter.supplierId],
-      ['remarks', filter.remarks],
-      ['salesRepId', filter.salesRepId],
-      ['clientRef', filter.clientRef],
-      ['supplierRef', filter.supplierRef],
-      ['productDescription', filter.productDescription],
-      ['shortBy', filter.shortBy],
-      ['shortOrder', filter.shortOrder != null ? `${filter.shortOrder}` : undefined],
-      ['date', filter.date],
-      ['initDate', filter.date === 'ALL' && filter.initDate ? filter.initDate.toISOString() : undefined],
-      ['endDate', filter.date === 'ALL' && filter.endDate ? filter.endDate.toISOString() : undefined]
-    ];
+    const status = filter.status === 'ACTIVE' ? 'CREATED,SENT,ANSWERED' : filter.status;
+
+    const params: Array<[string, string | undefined]> = filter.number
+      ? [['number', filter.number]]
+      : [
+        ['status', status],
+        ['clientId', filter.clientId],
+        ['supplierId', filter.supplierId],
+        ['remarks', filter.remarks],
+        ['salesRepId', filter.salesRepId],
+        ['clientRef', filter.clientRef],
+        ['supplierRef', filter.supplierRef],
+        ['productDescription', filter.productDescription],
+        ['shortBy', filter.shortBy],
+        ['shortOrder', filter.shortOrder != null ? `${filter.shortOrder}` : undefined],
+        ['date', filter.date],
+        ['initDate', filter.date === 'ALL' && filter.initDate ? filter.initDate.toISOString() : undefined],
+        ['endDate', filter.date === 'ALL' && filter.endDate ? filter.endDate.toISOString() : undefined]
+      ];
 
     const url = params.reduce(
       (acc, [key, value]) => value ? `${acc}&${key}=${value}` : acc,
@@ -118,6 +120,7 @@ export class IpPurchaseOrderService extends BaseAutoCompleteService<any> {
 
     return this.unwrap(this.http.get<Page<ListIpPurchaseOrder>>(url, { headers: this.authSV.headers() }));
   }
+
 
   createPurchaseOrder(request: CreatePurchaseOrderRequest): Observable<MessageResponse<IpPurchaseOrder>> {
     const url = `${URL_SERVICES}`;

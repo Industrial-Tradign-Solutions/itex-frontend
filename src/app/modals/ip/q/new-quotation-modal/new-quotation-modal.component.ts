@@ -40,7 +40,7 @@ export class NewQuotationModalComponent implements OnInit {
   client: string = '';
   viewCompletedQR: boolean = false;
   selectedQR: ListIpQuoteRequest[] = [];
-  currency!: any;
+  currency: string = 'USD';
   applicationAt: Date | null = null;
   //?------------------------------------------------------------
 
@@ -152,20 +152,5 @@ export class NewQuotationModalComponent implements OnInit {
       this._loading.set(false);
     }, TIMEOUT);
   }
-
-  getStatusColor(status: 'CREATED' | 'SENT' | 'REJECTED' | 'ANSWERED' | 'COMPLETE'): string {
-    if (status === 'CREATED') {
-      return 'new';
-    } else if (status === 'REJECTED') {
-      return 'unqualified';
-    } else if (status === 'SENT') {
-      return 'renewal';
-    } else if (status === 'ANSWERED') {
-      return 'negotiation';
-    } else if (status === 'COMPLETE') {
-      return 'qualified';
-    } else {
-      return 'new';
-    }
-  }
 }
+

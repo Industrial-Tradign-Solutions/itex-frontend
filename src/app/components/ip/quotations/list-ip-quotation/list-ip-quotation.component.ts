@@ -10,6 +10,7 @@ import { ClientsService } from '@services/partners';
 import { StorageService } from '@services/util';
 import { storageKeys } from '../../../../../environments';
 import { SortEvent } from 'primeng/api';
+import { PaginatorState } from 'primeng/paginator';
 import { TypeTab } from '@config/types/tabs';
 import { Table } from 'primeng/table';
 import { ClientBasic } from '@interfaces/partners/clients';
@@ -36,7 +37,13 @@ export class ListIpQuotationComponent extends CommonListTab<ListIpQuotation, IpQ
   //! ----------------------------------------------
 
   //* Señales
-  listIpQuotationStatus = computed<StaticListItem[]>(() => this.staticListSV.getListIpQuotationStatus());
+  listIpQuotationStatus = computed<StaticListItem[]>(() => [
+    {
+      key: 'ACTIVE',
+      value: 'ACTIVE'
+    },
+    ...this.staticListSV.getListIpQuotationStatus()
+  ]);
   private userData = computed<UserInfo | null>(() => this.storageSV.getPlain<UserInfo>(storageKeys.user_data.info))
   private _listEmployees = signal<BasicUser[]>([]);
   listEmployees = computed<BasicUser[]>(() => this._listEmployees());
@@ -58,7 +65,7 @@ export class ListIpQuotationComponent extends CommonListTab<ListIpQuotation, IpQ
     this._listEmployees.set(this.userSV.listEmployees());
     this.formFilter.patchValue({
       date: 'MONTH',
-      salesRepId: this.userData()?.id,
+      salesRepId: this.userData()?.id
     });
     setTimeout(() => {
       this.search(true);
@@ -96,9 +103,9 @@ export class ListIpQuotationComponent extends CommonListTab<ListIpQuotation, IpQ
       closeOnEscape: false
     });
     modal.onClose.subscribe({
-      next: (resp: any) => {
+      next: (resp: { valid: boolean; data?: ListIpQuotation }) => {
         if (resp && resp.valid && resp.data) {
-          this.open(resp.data);
+          this.open({ item: resp.data, type: 'edit', pristine: true });
           this.search(true);
         }
       }
@@ -109,33 +116,17 @@ export class ListIpQuotationComponent extends CommonListTab<ListIpQuotation, IpQ
     this.open({item: quotation, type, pristine: true});
   }
 
-  getStatusColor(status: 'CREATED' | 'SENT' | 'REJECTED' | 'ANSWERED' | 'COMPLETE'): string {
-    if (status === 'CREATED') {
-      return 'new';
-    } else if (status === 'REJECTED') {
-      return 'unqualified';
-    } else if (status === 'SENT') {
-      return 'renewal';
-    } else if (status === 'ANSWERED') {
-      return 'negotiation';
-    } else if (status === 'COMPLETE') {
-      return 'qualified';
-    } else {
-      return 'new';
-    }
-  }
-
   override resetForm(dt: Table): void {
     this.formBuild();
     dt.reset();
     this.changeDateRank();
   }
 
-  changePage(event: any) {
-    this.search(false, event.page, event.rows);
+  changePage(event: PaginatorState) {
+    this.search(false, event.page ?? 0, event.rows ?? 10);
   }
 
-  private formBuild(): any {
+  private formBuild(): void {
     this.formFilter = this.formBuilder.group({
       id: [
         new Date().getTime().toString()
@@ -144,7 +135,7 @@ export class ListIpQuotationComponent extends CommonListTab<ListIpQuotation, IpQ
         null
       ],
       status: [
-        null
+        'ACTIVE'
       ],
       clientCode: [
         null

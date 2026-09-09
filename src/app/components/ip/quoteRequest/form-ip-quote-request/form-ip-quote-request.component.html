@@ -583,7 +583,7 @@
                     [outlined]="true"
                     (click)="printQR()"
                     [loading]="loadingDownload()"
-                    [disabled]="!(permissions().cloneIpQuoteRequest && tabItem.type !== 'create') || item()?.products?.length === 0 || !tabItem.pristine"
+                    [disabled]="tabItem.type === 'create' || item()?.products?.length === 0 || (tabItem.type === 'edit' && !tabItem.pristine)"
                     type="button">
                   </button>
                 </div>

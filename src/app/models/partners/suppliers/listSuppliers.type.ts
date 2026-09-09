@@ -7,4 +7,5 @@ export type ListSuppliers = {
   city      ?: string;
   address   ?: string;
   status    ?: string;
+  brands    ?: string[];
 }

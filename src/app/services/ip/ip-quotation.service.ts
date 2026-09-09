@@ -55,35 +55,41 @@ export class IpQuotationService extends  BaseAutoCompleteService<any>{
   listAllQuotationsPage(filter: IpQuotationFilter, page: number, size: number): Observable<Page<ListIpQuotation>> {
     let url  = `${ URL_SERVICES }?page=${page}&size=${size}`;
 
-    if (filter.number)
+    if (filter.number) {
       url = `${url}&number=${filter.number}`;
+    } else {
+      if (filter.status) {
+        if (filter.status === 'ACTIVE') {
+          url = `${url}&status=CREATED,SENT,ANSWERED`;
+        } else {
+          url = `${url}&status=${filter.status}`;
+        }
+      }
 
-    if (filter.status)
-      url = `${url}&status=${filter.status}`;
+      if (filter.clientId)
+        url = `${url}&clientId=${filter.clientId}`;
 
-    if (filter.clientId)
-      url = `${url}&clientId=${filter.clientId}`;
+      if (filter.remarks)
+        url = `${url}&remarks=${filter.remarks}`;
 
-    if (filter.remarks)
-      url = `${url}&remarks=${filter.remarks}`;
+      if (filter.salesRepId)
+        url = `${url}&salesRepId=${filter.salesRepId}`;
 
-    if (filter.salesRepId)
-      url = `${url}&salesRepId=${filter.salesRepId}`;
+      if (filter.shortBy)
+        url = `${url}&shortBy=${filter.shortBy}`;
 
-    if (filter.shortBy)
-      url = `${url}&shortBy=${filter.shortBy}`;
+      if (filter.shortOrder)
+        url = `${url}&shortOrder=${filter.shortOrder}`;
 
-    if (filter.shortOrder)
-      url = `${url}&shortOrder=${filter.shortOrder}`;
+      if (filter.date)
+        url = `${url}&date=${filter.date}`;
 
-    if (filter.date)
-      url = `${url}&date=${filter.date}`;
+      if ( filter.date === 'ALL' && filter.initDate)
+        url = `${url}&initDate=${filter.initDate.toISOString()}`;
 
-    if ( filter.date === 'ALL' && filter.initDate)
-      url = `${url}&initDate=${filter.initDate.toISOString()}`;
-
-    if ( filter.date === 'ALL' && filter.endDate)
-      url = `${url}&endDate=${filter.endDate.toISOString()}`;
+      if ( filter.date === 'ALL' && filter.endDate)
+        url = `${url}&endDate=${filter.endDate.toISOString()}`;
+    }
 
     return this.http.get<Page<ListIpQuotation>>( url, {headers: this.authSV.headers()} )
       .pipe(
@@ -119,17 +125,17 @@ export class IpQuotationService extends  BaseAutoCompleteService<any>{
       );
   }
 
-  changeStatusQuotation(id: string, status: 'CREATED' | 'ANSWERED' | 'COMPLETE' | 'SENT' ): Observable<MessageResponse<ListIpQuotation>> {
+  changeStatusQuotation(id: string, status: 'CREATED' | 'ANSWERED' | 'COMPLETE' | 'SENT' ): Observable<MessageResponse<IpQuotation>> {
     const url  = `${ URL_SERVICES }/${id}/change-status?status=${status}`;
-    return this.http.patch<MessageResponse<ListIpQuotation>>( url, {}, {headers: this.authSV.headers()} )
+    return this.http.patch<MessageResponse<IpQuotation>>( url, {}, {headers: this.authSV.headers()} )
       .pipe(
         catchError( err => throwError( () => err.error.errorMessage ))
       );
   }
 
-  rejectQuotation(id: string): Observable<MessageResponse<ListIpQuotation>> {
+  rejectQuotation(id: string): Observable<MessageResponse<IpQuotation>> {
     const url  = `${ URL_SERVICES }/${id}`;
-    return this.http.delete<MessageResponse<ListIpQuotation>>( url, {headers: this.authSV.headers()} )
+    return this.http.delete<MessageResponse<IpQuotation>>( url, {headers: this.authSV.headers()} )
       .pipe(
         catchError( err => throwError( () => err.error.errorMessage ))
       );

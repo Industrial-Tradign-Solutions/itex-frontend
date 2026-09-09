@@ -10,6 +10,7 @@ import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { DropdownModule } from 'primeng/dropdown';
 import { CalendarModule } from 'primeng/calendar';
+import { PipesModule } from '@pipes/pipes.module';
 
 @NgModule({
   declarations: [
@@ -27,7 +28,8 @@ import { CalendarModule } from 'primeng/calendar';
     ButtonModule,
     TableModule,
     DropdownModule,
-    CalendarModule
+    CalendarModule,
+    PipesModule
 ],
   exports: [
     NewQuotationModalComponent

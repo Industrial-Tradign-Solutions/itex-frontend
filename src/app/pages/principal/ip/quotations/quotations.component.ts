@@ -31,7 +31,8 @@ export class QuotationsComponent extends CommonTabs<ListIpQuotation> implements 
     viewHistoryIpQuotation: false,
     cloneIpQuotation: false,
     rejectIpQuotation: false,
-    editPaymentTermsIpQuotation: false
+    editPaymentTermsIpQuotation: false,
+    completeIpQuotation: false
   });
   ipQuotationPermissions = computed<IpQuotationPermissions>(() => this._ipQuotationPermissions());
   //* -----------------------------------------------------------
@@ -86,6 +87,7 @@ export class QuotationsComponent extends CommonTabs<ListIpQuotation> implements 
       cloneIpQuotation: await this.permissionsSV.isValidAction(IP_QUOTATION_ACTIONS_ID.CLONE_IP_QUOTATION),
       rejectIpQuotation: await this.permissionsSV.isValidAction(IP_QUOTATION_ACTIONS_ID.REJECT_IP_QUOTATION),
       editPaymentTermsIpQuotation: await this.permissionsSV.isValidAction(IP_QUOTATION_ACTIONS_ID.EDIT_PAYMENT_TERMS_IP_QUOTATION),
+      completeIpQuotation: await this.permissionsSV.isValidAction(IP_QUOTATION_ACTIONS_ID.COMPLETE_IP_QUOTATION),
     });
   }
 }
@@ -97,4 +99,5 @@ export type IpQuotationPermissions = {
   cloneIpQuotation: boolean;
   rejectIpQuotation: boolean;
   editPaymentTermsIpQuotation: boolean;
+  completeIpQuotation: boolean;
 }

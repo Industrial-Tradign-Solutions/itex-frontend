@@ -1,7 +1,7 @@
 import { Component, computed, EventEmitter, inject, OnInit, Output, signal } from '@angular/core';
 import { Messages, TitlesMessages } from '@config/messages';
 import { CommonPageTab } from '@config/tabs/commonPageTab';
-import { IpQuotation, ListIpQuotation, mapToIpQuotationRequest, formatDateToSend, IpQuotationProduct } from '@interfaces/ip/quotation';
+import { IpQuotation, ListIpQuotation, mapToIpQuotationRequest, formatDateToSend, IpQuotationProduct, IpDocumentStatus } from '@interfaces/ip/quotation';
 import { IpQuotationPermissions } from '@pages/principal/ip/quotations/quotations.component';
 import { environment } from '../../../../../environments/environment';
 import { IpQuotationService } from '@services/ip';
@@ -30,6 +30,16 @@ const MESSAGES = Messages.pages.ip.quotation;
 const TITLES = TitlesMessages;
 const TIMEOUT = environment.timeout;
 
+const STATUS_CHANGE_WARNINGS = {
+  completeRequiresPo: 'The Quotation cannot be completed because it does not have any associated Purchase Order',
+  cannotCompleteQuotation: 'Cannot complete the quotation',
+  cannotRejectWithPo: 'The Quotation cannot be rejected because it has associated Purchase Orders',
+  noRejectPermission: 'You do not have permission to reject this Quotation',
+  cannotRevertWithPo: 'The Quotation status cannot be reverted because it has associated Purchase Orders',
+  cannotAddQr: 'Quote Requests can only be added while the Quotation is in CREATED status',
+  cannotRemoveQr: 'Quote Requests can only be removed while the Quotation is in CREATED status'
+} as const;
+
 @Component({
   selector: 'app-form-ip-quotation',
   templateUrl: './form-ip-quotation.component.html',
@@ -40,7 +50,7 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
   @Output() opened = new EventEmitter<EmitedTab<ListIpQuotation>>();
 
   //! Inyecciones
-  private quotetationSV       = inject(IpQuotationService);
+  private quotationSV       = inject(IpQuotationService);
   private clientSV            = inject(ClientsService);
   private userSV              = inject(UsersService);
   private storageSV           = inject(StorageService);
@@ -60,6 +70,7 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
   private _listClientContact = signal<ClientContact[]>([]);
   listClientContact = computed<ClientContact[]>(() => this._listClientContact());
   private userData = computed<UserInfo | null>(() => this.storageSV.getPlain<UserInfo>(storageKeys.user_data.info))
+  private hasPos = computed<boolean>(() => (this.item()?.listPurchaseOrders?.length ?? 0) > 0);
   //* -----------------------------------------------------------
   //? Variables
   //?------------------------------------------------------------
@@ -76,7 +87,7 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
     }
     this.onInitAction({
       updatePermission: this.permissions().updateIpQuotation,
-      openAndLock: this.quotetationSV.openAndLockQuotation(this.tabItem.item.id, this.tabItem.type),
+      openAndLock: this.quotationSV.openAndLockQuotation(this.tabItem.item.id, this.tabItem.type),
       module: 'Q'
     });
   }
@@ -104,41 +115,79 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
   changeStatus(event: DropdownChangeEvent) {
     const qId = this.tabItem.item.id;
     const qNumber = this.tabItem.item.name;
+    const currentStatus = this.item()?.status;
+
+    if (!currentStatus || currentStatus === event.value) {
+      this.resetFormStatus();
+      return;
+    }
+
+    const warning = this.statusChangeWarning(currentStatus, event.value as IpDocumentStatus);
+    if (warning) {
+      this.utilSV.setMessage(TITLES.warning, warning, 'warn');
+      this.resetFormStatus();
+      return;
+    }
 
     const actions: Record<string, () => void> = {
       CREATED: () => this.handleChangeStatus(
         MESSAGES.changeStatus(qNumber, 'CREATED'),
-        () => this.quotetationSV.changeStatusQuotation(qId, 'CREATED'),
+        () => this.quotationSV.changeStatusQuotation(qId, 'CREATED'),
         'CREATED'
       ),
       SENT: () => this.handleChangeStatus(
         MESSAGES.changeStatus(qNumber, 'SENT'),
-        () => this.quotetationSV.changeStatusQuotation(qId, 'SENT'),
+        () => this.quotationSV.changeStatusQuotation(qId, 'SENT'),
         'SENT'
       ),
       ANSWERED: () => this.handleChangeStatus(
         MESSAGES.changeStatus(qNumber, 'ANSWERED'),
-        () => this.quotetationSV.changeStatusQuotation(qId, 'ANSWERED'),
+        () => this.quotationSV.changeStatusQuotation(qId, 'ANSWERED'),
         'ANSWERED'
       ),
       COMPLETE: () => this.handleChangeStatus(
         MESSAGES.changeStatus(qNumber, 'COMPLETE'),
-        () => this.quotetationSV.changeStatusQuotation(qId, 'COMPLETE'),
+        () => this.quotationSV.changeStatusQuotation(qId, 'COMPLETE'),
         'COMPLETE'
       ),
       REJECTED: () => this.handleChangeStatus(
         MESSAGES.changeStatus(qNumber, 'REJECTED'),
-        () => this.quotetationSV.rejectQuotation(qId),
+        () => this.quotationSV.rejectQuotation(qId),
         'REJECTED'
       ),
     };
     actions[event.value]?.();
   }
 
+  private statusChangeWarning(currentStatus: IpDocumentStatus, targetStatus: IpDocumentStatus): string | null {
+    if (targetStatus === 'COMPLETE') {
+      if (!this.permissions().completeIpQuotation) {
+        return STATUS_CHANGE_WARNINGS.cannotCompleteQuotation;
+      }
+      if (!this.hasPos()) {
+        return STATUS_CHANGE_WARNINGS.completeRequiresPo;
+      }
+    }
+    if (targetStatus === 'REJECTED') {
+      if (this.hasPos()) {
+        return STATUS_CHANGE_WARNINGS.cannotRejectWithPo;
+      }
+      if (!this.permissions().rejectIpQuotation) {
+        return STATUS_CHANGE_WARNINGS.noRejectPermission;
+      }
+    }
+    if ((targetStatus === 'CREATED' || targetStatus === 'SENT')
+      && currentStatus === 'ANSWERED'
+      && this.hasPos()) {
+      return STATUS_CHANGE_WARNINGS.cannotRevertWithPo;
+    }
+    return null;
+  }
+
   private handleChangeStatus(
     message: string,
-    action: () => Observable<MessageResponse<ListIpQuotation>>,
-    newStatus: 'CREATED' | 'ANSWERED' | 'SENT' | 'COMPLETE' | 'REJECTED'
+    action: () => Observable<MessageResponse<IpQuotation>>,
+    newStatus: IpDocumentStatus
   ) {
     this.utilSV.confirm({
       message,
@@ -154,10 +203,10 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
   }
 
   private resetFormStatus() {
-    this.formTab.patchValue({ status: this.item()?.status ?? 'ACTIVE' });
+    this.formTab.patchValue({ status: this.item()?.status ?? '' });
   }
 
-  private executeChangeStatus(action: Observable<MessageResponse<ListIpQuotation>>, newStatus: 'CREATED' | 'ANSWERED' | 'SENT' | 'COMPLETE' | 'REJECTED') {
+  private executeChangeStatus(action: Observable<MessageResponse<IpQuotation>>, newStatus: IpDocumentStatus) {
     this._loading.set(true);
     this.showForm = false;
     action
@@ -170,25 +219,38 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
       .subscribe({
       next: (resp) => {
         this.utilSV.setMessage(resp.title, resp.message, 'success');
-        this._item()!.status = newStatus;
-        this.tabItem.item.status = newStatus;
-        if (newStatus === 'COMPLETE' || newStatus === 'REJECTED') {
-          this.tabItem.type = 'view';
+        const updated = resp.data && resp.data.id ? resp.data : null;
+        if (updated) {
+          this._item.set(updated);
+          this.tabItem.item.status = updated.status;
+          this.tabItem.type = (updated.status === 'COMPLETE' || updated.status === 'REJECTED') ? 'view' : 'edit';
+          // El backend devuelve el objeto completo (mismo que open-lock). Para SENT la
+          // cotización sigue editable/salvable, alineado al comportamiento previo.
+          if (newStatus === 'SENT') {
+            this.tabItem.pristine = false;
+          }
+          this.rebuildForm();
         } else {
-          this.tabItem.type = 'edit';
-        }
-        if (newStatus !== 'SENT') {
-          this.tabItem.pristine = true;
-        }
+          this._item()!.status = newStatus;
+          this.tabItem.item.status = newStatus;
+          if (newStatus === 'COMPLETE' || newStatus === 'REJECTED') {
+            this.tabItem.type = 'view';
+          } else {
+            this.tabItem.type = 'edit';
+          }
+          if (newStatus !== 'SENT') {
+            this.tabItem.pristine = true;
+          }
 
-        if (newStatus === 'SENT') {
-          this.item()!.sentAt = new Date().toISOString();
-        } else if (newStatus === 'ANSWERED') {
-          this.item()!.answeredAt = new Date().toISOString();
-        } else if (newStatus === 'REJECTED') {
-          this.item()!.rejectAt = new Date().toISOString();
-        } else if (newStatus === 'COMPLETE') {
-          this.item()!.completeAt = new Date().toISOString();
+          if (newStatus === 'SENT') {
+            this.item()!.sentAt = new Date().toISOString();
+          } else if (newStatus === 'ANSWERED') {
+            this.item()!.answeredAt = new Date().toISOString();
+          } else if (newStatus === 'REJECTED') {
+            this.item()!.rejectAt = new Date().toISOString();
+          } else if (newStatus === 'COMPLETE') {
+            this.item()!.completeAt = new Date().toISOString();
+          }
         }
       },
       error: (err) => {
@@ -377,7 +439,7 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
   private getSubmitAction(): Observable<MessageResponse<IpQuotation>> {
     const data = this.getRequest();
     if (this.tabItem.type === 'edit') {
-      return this.quotetationSV.updateQuotation(this.tabItem.item.id, data);
+      return this.quotationSV.updateQuotation(this.tabItem.item.id, data);
     } else {
       throw new Error('Invalid tab type');
     }
@@ -500,6 +562,12 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
       sellingExtendedPrice: [
         product?.sellingExtendedPrice ?? 0
       ],
+      unitProfit: [
+        product?.unitProfit ?? null
+      ],
+      totalProfit: [
+        product?.totalProfit ?? null
+      ],
       profitMargin: [
         product?.profitMargin ?? 0
       ],
@@ -528,7 +596,7 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
       message: `Are you sure to remove the product ${qProduct.description}?`,
       accept: () => {
         this._loading.set(true);
-        this.quotetationSV.removeQuotationProduct(qProduct.id, this.item()!.id)
+        this.quotationSV.removeQuotationProduct(qProduct.id, this.item()!.id)
         .subscribe({
           next: (resp) => {
             this.tabItem.pristine = false;
@@ -545,12 +613,16 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
 
   removeQuoteRequest(qr: {qqrId?: string, number?: string}) {
     if (!qr.qqrId) return;
+    if (this.item()?.status !== 'CREATED') {
+      this.utilSV.setMessage(TITLES.warning, STATUS_CHANGE_WARNINGS.cannotRemoveQr, 'warn');
+      return;
+    }
     this.utilSV.confirm({
       message: MESSAGES.removeQrFromQuotation(qr.number ?? ''),
       header: TITLES.confirmation,
       accept: () => {
         this._loading.set(true);
-        this.quotetationSV.removeQuoteRequestFromQuotation(this.item()!.id, qr.qqrId!)
+        this.quotationSV.removeQuoteRequestFromQuotation(this.item()!.id, qr.qqrId!)
         .subscribe({
           next: (resp) => {
             this.utilSV.setMessage(resp.title, resp.message, 'success');
@@ -631,7 +703,7 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
       accept: () => {
         this._loading.set(true);
         this.showForm = false;
-        this.quotetationSV.cloneQuotation(this.tabItem.item.id)
+        this.quotationSV.cloneQuotation(this.tabItem.item.id)
         .pipe(
           finalize(() => {
             setTimeout(() => {
@@ -661,6 +733,10 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
   openModalAddQuoteRequests() {
     if (this.tabItem.type !== 'edit') return;
     if (!this.item()) return;
+    if (this.item()!.status !== 'CREATED') {
+      this.utilSV.setMessage(TITLES.warning, STATUS_CHANGE_WARNINGS.cannotAddQr, 'warn');
+      return;
+    }
 
     const modal = this.dialogSV.open(AddQuoteRequestsModalComponent, {
       header: 'ADD QUOTE REQUESTS TO QUOTATION',
@@ -713,7 +789,7 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
   }
 
   printQR() {
-    this.downloadFile(this.quotetationSV.printQuotation(this.item()!.id), this.item()!.number);
+    this.downloadFile(this.quotationSV.printQuotation(this.item()!.id), this.item()!.number);
   }
 
   printAndSendQR() {
@@ -723,7 +799,7 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
     }
 
     this._loadingPrintAndSent.set(true);
-    this.quotetationSV.printQuotation(this.item()!.id)
+    this.quotationSV.printQuotation(this.item()!.id)
       .pipe(finalize(() => {
         setTimeout(() => {
           this._loadingPrintAndSent.set(false);
@@ -753,7 +829,7 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
             next: (modal) => {
               if (modal.valid && this.item()?.status === 'CREATED') {
                 this.executeChangeStatus(
-                  this.quotetationSV.changeStatusQuotation(this.item()!.id, 'SENT'),
+                  this.quotationSV.changeStatusQuotation(this.item()!.id, 'SENT'),
                   'SENT'
                 );
                 this.formTab.patchValue({ status: 'SENT' });

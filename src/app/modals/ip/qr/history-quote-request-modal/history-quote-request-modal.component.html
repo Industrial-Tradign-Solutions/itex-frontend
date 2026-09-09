@@ -126,6 +126,39 @@
           <li class="old">
             The quote request has been rejected.
           </li>
+        } @else if (item.action === 'AUTO_REJECTED_TIME') {
+          @if (item.data?.status) {
+            <li style="font-size: 13px;">
+              <b>Status: </b>
+              <span class="old">{{ item.data.status.old }}</span>
+              <span> → </span>
+              <span class="new">{{ item.data.status.new }}</span>
+            </li>
+          }
+          @if (item.data?.message) {
+            <li class="old">
+              {{ item.data.message }}
+            </li>
+          }
+        } @else if (item.action === 'STATUS_CHANGE_BY_Q') {
+          @if (item.data?.status) {
+            <li style="font-size: 13px;">
+              <b>Status: </b>
+              <span class="old">{{ item.data.status.old }}</span>
+              <span> → </span>
+              <span class="new">{{ item.data.status.new }}</span>
+            </li>
+          }
+          @if (item.data?.quotationNumber) {
+            <li>
+              <b>Quotation: </b> <i class="new">{{ item.data.quotationNumber }}</i>
+            </li>
+          }
+          @if (item.data?.message) {
+            <li class="new">
+              {{ item.data.message }}
+            </li>
+          }
         }
       </td>
     </tr>

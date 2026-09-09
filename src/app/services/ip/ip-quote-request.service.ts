@@ -5,10 +5,9 @@ import { MessageResponse } from '@interfaces/message-response';
 import { catchError, concatMap, map, Observable, of, Subject, throwError } from 'rxjs';
 import { AuthService } from '@services/security';
 import { HttpClient } from '@angular/common/http';
-import { IpQuoteRequestFilter, IpQuoteRequestOtherChargeRequest, IpQuoteRequestOtherCharges, IpQuoteRequestProduct, IpQuoteRequestProductRequest, IpQuoteRequestRequest, ListIpQuoteRequest, IpQuoteRequestHistoryResponse } from '@interfaces/ip/quoteRequest';
+import { IpQuoteRequest, IpQuoteRequestFilter, IpQuoteRequestOtherChargeRequest, IpQuoteRequestOtherCharges, IpQuoteRequestProduct, IpQuoteRequestProductRequest, IpQuoteRequestRequest, ListIpQuoteRequest, IpQuoteRequestHistoryResponse } from '@interfaces/ip/quoteRequest';
 import { Page } from '@interfaces/page.model';
 import { TypeTab } from '@config/types/tabs';
-import { IpQuoteRequest } from '@interfaces/ip/quoteRequest/ipQuoteRequest.type';
 
 const URL_SERVICES = environment.api_url + 'ip/qr';
 
@@ -101,47 +100,53 @@ export class IpQuoteRequestService extends  BaseAutoCompleteService<any> {
   listAllQuoteRequestsPage(filter: IpQuoteRequestFilter, page: number, size: number): Observable<Page<ListIpQuoteRequest>> {
     let url  = `${ URL_SERVICES }?page=${page}&size=${size}`;
 
-    if (filter.number)
+    if (filter.number) {
       url = `${url}&number=${filter.number}`;
+    } else {
+      if (filter.status) {
+        if (filter.status === 'ACTIVE') {
+          url = `${url}&status=CREATED,SENT,ANSWERED`;
+        } else {
+          url = `${url}&status=${filter.status}`;
+        }
+      }
 
-    if (filter.status)
-      url = `${url}&status=${filter.status}`;
+      if (filter.clientId)
+        url = `${url}&clientId=${filter.clientId}`;
 
-    if (filter.clientId)
-      url = `${url}&clientId=${filter.clientId}`;
+      if (filter.supplierId)
+        url = `${url}&supplierId=${filter.supplierId}`;
 
-    if (filter.supplierId)
-      url = `${url}&supplierId=${filter.supplierId}`;
+      if (filter.remarks)
+        url = `${url}&remarks=${filter.remarks}`;
 
-    if (filter.remarks)
-      url = `${url}&remarks=${filter.remarks}`;
+      if (filter.salesRepId)
+        url = `${url}&salesRepId=${filter.salesRepId}`;
 
-    if (filter.salesRepId)
-      url = `${url}&salesRepId=${filter.salesRepId}`;
+      if (filter.clientRef)
+        url = `${url}&clientRef=${filter.clientRef}`;
 
-    if (filter.clientRef)
-      url = `${url}&clientRef=${filter.clientRef}`;
+      if (filter.supplierRef)
+        url = `${url}&supplierRef=${filter.supplierRef}`;
 
-    if (filter.supplierRef)
-      url = `${url}&supplierRef=${filter.supplierRef}`;
+      if (filter.productDescription)
+        url = `${url}&productDescription=${filter.productDescription}`;
 
-    if (filter.productDescription)
-      url = `${url}&productDescription=${filter.productDescription}`;
+      if (filter.shortBy)
+        url = `${url}&shortBy=${filter.shortBy}`;
 
-    if (filter.shortBy)
-      url = `${url}&shortBy=${filter.shortBy}`;
+      if (filter.shortOrder)
+        url = `${url}&shortOrder=${filter.shortOrder}`;
 
-    if (filter.shortOrder)
-      url = `${url}&shortOrder=${filter.shortOrder}`;
+      if (filter.date)
+        url = `${url}&date=${filter.date}`;
 
-    if (filter.date)
-      url = `${url}&date=${filter.date}`;
+      if ( filter.date === 'ALL' && filter.initDate)
+        url = `${url}&initDate=${filter.initDate.toISOString()}`;
 
-    if ( filter.date === 'ALL' && filter.initDate)
-      url = `${url}&initDate=${filter.initDate.toISOString()}`;
-
-    if ( filter.date === 'ALL' && filter.endDate)
-      url = `${url}&endDate=${filter.endDate.toISOString()}`;
+      if ( filter.date === 'ALL' && filter.endDate)
+        url = `${url}&endDate=${filter.endDate.toISOString()}`;
+    }
 
     return this.http.get<Page<ListIpQuoteRequest>>( url, {headers: this.authSV.headers()} )
       .pipe(
@@ -245,17 +250,17 @@ export class IpQuoteRequestService extends  BaseAutoCompleteService<any> {
       );
   }
 
-  changeStatusQuoteRequest(quoteRequestId: string, status: 'CREATED' | 'ANSWERED' | 'COMPLETE' | 'SENT' ): Observable<MessageResponse<ListIpQuoteRequest>> {
+  changeStatusQuoteRequest(quoteRequestId: string, status: 'CREATED' | 'ANSWERED' | 'COMPLETE' | 'SENT' ): Observable<MessageResponse<IpQuoteRequest>> {
     const url  = `${ URL_SERVICES }/${quoteRequestId}/change-status?status=${status}`;
-    return this.http.patch<MessageResponse<ListIpQuoteRequest>>( url, {}, {headers: this.authSV.headers()} )
+    return this.http.patch<MessageResponse<IpQuoteRequest>>( url, {}, {headers: this.authSV.headers()} )
       .pipe(
         catchError( err => throwError( () => err.error.errorMessage ))
       );
   }
 
-  rejectQuoteRequest(quoteRequestId: string): Observable<MessageResponse<ListIpQuoteRequest>> {
+  rejectQuoteRequest(quoteRequestId: string): Observable<MessageResponse<IpQuoteRequest>> {
     const url  = `${ URL_SERVICES }/${quoteRequestId}`;
-    return this.http.delete<MessageResponse<ListIpQuoteRequest>>( url, {headers: this.authSV.headers()} )
+    return this.http.delete<MessageResponse<IpQuoteRequest>>( url, {headers: this.authSV.headers()} )
       .pipe(
         catchError( err => throwError( () => err.error.errorMessage ))
       );
