@@ -73,6 +73,10 @@ export class ListSuppliersComponent extends CommonListTab<ListSuppliers, Supplie
     this.citiesSV.loadCities();
   }
 
+  concatBrands(brands: string[]): string {
+    return brands.slice(0, 4).join(', ');
+  }
+
 
 
   get filteredCities() {

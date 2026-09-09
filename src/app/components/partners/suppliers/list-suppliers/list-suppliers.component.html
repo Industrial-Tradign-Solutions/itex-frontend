@@ -138,10 +138,16 @@
             <p-sortIcon field="name" />
         </div>
       </th>
+      <!--
       <th style="min-width: 9rem" pSortableColumn="taxId">
         <div class="flex justify-content-between">
             TAX ID
             <p-sortIcon field="taxId" />
+        </div>
+      </th> -->
+      <th style="min-width: 10rem" >
+        <div class="flex justify-content-between">
+          BRANDS
         </div>
       </th>
 
@@ -176,7 +182,7 @@
         {{supplier.name}}
       </td>
       <td>
-        {{supplier.taxId}}
+        {{concatBrands(supplier.brands)}}
       </td>
       <td>
         {{supplier.address}}
