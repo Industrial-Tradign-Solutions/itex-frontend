@@ -207,11 +207,6 @@ export class AuthService {
     this.storageSV.delete(USER_DATA_KEYS.menu_list);
     this.storageSV.delete(USER_DATA_KEYS.menu_options);
 
-    const lists: string[] = Object.values(storageKeys.lists);
-    lists.forEach(list => {
-      this.storageSV.delete(list);
-    });
-
     const listsStatics: string[] = Object.values(storageKeys.static_lists);
     listsStatics.forEach(list => {
       this.storageSV.delete(list);

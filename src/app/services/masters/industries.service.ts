@@ -1,11 +1,10 @@
 import { Injectable, Signal } from '@angular/core';
 import { BasicIndustry, Industry, IndustryRequest, ListsIndustries } from '@interfaces/masters/industries';
 import { environment } from '../../../environments/environment';
-import { storageKeys } from '../../../environments';
+import { Observable } from 'rxjs';
 import { BaseService } from '@services/base-service.service';
 
 const URL_SERVICES = environment.api_url + 'master/industries';
-const LIST_INDUSTRIES_KEY = storageKeys.lists.list_industries;
 
 @Injectable({
   providedIn: 'root'
@@ -13,11 +12,11 @@ const LIST_INDUSTRIES_KEY = storageKeys.lists.list_industries;
 export class IndustriesService extends BaseService<Industry, IndustryRequest, Industry, BasicIndustry, ListsIndustries>{
 
   constructor() {
-    super(URL_SERVICES, LIST_INDUSTRIES_KEY);
+    super(URL_SERVICES);
   }
 
-  loadIndustries(addDisables: boolean, disableItem?: BasicIndustry | BasicIndustry[]): void {
-    this.loadList(addDisables, this.getListBasicIndustries.bind(this), disableItem);
+  loadIndustries(addDisables: boolean, disableItem?: BasicIndustry | BasicIndustry[]): Observable<BasicIndustry[]> {
+    return this.loadList(addDisables, this.getListBasicIndustries.bind(this), disableItem);
   }
 
   get listIndustries(): Signal<BasicIndustry[]> {

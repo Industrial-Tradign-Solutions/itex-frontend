@@ -12,7 +12,7 @@ import { DropdownChangeEvent } from 'primeng/dropdown';
 import { BasicBrand } from '@interfaces/masters/brands';
 import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { BasicCountry } from '@interfaces/masters/locations/countries';
-import { finalize, Observable } from 'rxjs';
+import { finalize, forkJoin, Observable } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { SubstituteIpProductModalComponent } from '@modals/ip/products/substitute-ip-product-modal/substitute-ip-product-modal.component';
 import { MessageResponse } from '@interfaces/message-response';
@@ -72,17 +72,26 @@ export class FormIpProductsComponent extends CommonPageTab<ListIpProduct, IpProd
 
   constructor() {
     super(MESSAGES);
-    if (!this.brandsSV.listBrands().length) {
-      this.brandsSV.loadBrands(false);
-    }
-    this.countrySV.loadCountries();
   }
 
   ngOnInit(): void {
-    this.onInitAction({
-      updatePermission: this.permissions().updateIpProduct,
-      openAndLock: this.productSV.openAndLockProduct(this.tabItem.item.id, this.tabItem.type),
-      module: 'products'
+    this._loading.set(true);
+    forkJoin({
+      brands: this.brandsSV.loadBrands(false),
+      countries: this.countrySV.loadCountries()
+    }).subscribe({
+      next: () => {
+        this.onInitAction({
+          updatePermission: this.permissions().updateIpProduct,
+          openAndLock: this.productSV.openAndLockProduct(this.tabItem.item.id, this.tabItem.type),
+          module: 'products'
+        });
+      },
+      error: err => {
+        this._loading.set(false);
+        this.utilSV.setMessage('¡Error!', err, 'error');
+        this.onClose.emit({ index: this.index + 1 });
+      }
     });
   }
 

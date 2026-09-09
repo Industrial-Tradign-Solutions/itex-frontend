@@ -146,8 +146,8 @@ export class ListClientsComponent {
     this.citiesSV.searchAutoComplete(event);
   }
 
-  loadCities() {
-    this.citiesSV.loadCities();
+  loadCities(): void {
+    this.citiesSV.loadCities().subscribe();
   }
 
   resetForm(dt: Table) {
@@ -159,8 +159,8 @@ export class ListClientsComponent {
     return this.citiesSV.filteredCities;
   }
 
-  loadCountries() {
-    this.countriesSV.loadCountries();
+  loadCountries(): void {
+    this.countriesSV.loadCountries().subscribe();
   }
 
   searchByCountry(event: KeyboardEvent) {

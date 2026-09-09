@@ -1,4 +1,5 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { forkJoin } from 'rxjs';
 import { CommonListTab } from '@config/tabs/commonListTab';
 import { BasicUser, UserInfo } from '@interfaces/administration/user';
 import { IpQuotationFilter, ListIpQuotation } from '@interfaces/ip/quotation';
@@ -56,20 +57,26 @@ export class ListIpQuotationComponent extends CommonListTab<ListIpQuotation, IpQ
 
   constructor() {
     super();
-    this.userSV.loadEmployees(true);
-    this.clientSV.loadAllBasic();
     this.formBuild();
   }
 
   ngOnInit(): void {
-    this._listEmployees.set(this.userSV.listEmployees());
-    this.formFilter.patchValue({
-      date: 'MONTH',
-      salesRepId: this.userData()?.id
+    forkJoin({
+      employees: this.userSV.loadEmployees(true),
+      clients: this.clientSV.loadAllBasic()
+    }).subscribe({
+      next: ({ employees }) => {
+        this._listEmployees.set(employees);
+        this.formFilter.patchValue({
+          date: 'MONTH',
+          salesRepId: this.userData()?.id
+        });
+        setTimeout(() => {
+          this.search(true);
+        }, 100);
+      },
+      error: err => this.utilSV.setMessage('¡Error!', err, 'error')
     });
-    setTimeout(() => {
-      this.search(true);
-    }, 100);
   }
 
   customSort(event: SortEvent) {

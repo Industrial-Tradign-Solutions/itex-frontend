@@ -1,8 +1,9 @@
 import { inject, Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '@services/security';
-import { WebSocketMessage } from '@interfaces/webSocketMessage.model';
+import { isWebSocketSessionData, WebSocketMessage } from '@interfaces/webSocketMessage.model';
 import { StorageService } from './storage.service';
 import { UserInfo } from '@interfaces/administration/user';
 import { storageKeys } from '../../../environments';
@@ -22,27 +23,21 @@ export class WebSocketService {
   private storageSV = inject(StorageService);
   private utilSV    = inject(UtilService);
 
-  private socket$!: WebSocketSubject<any>;
+  private socket$!: WebSocketSubject<WebSocketMessage>;
 
   constructor(private authSV: AuthService) {
     this.authSV.getToken().then(token => {
-      this.socket$ = webSocket(`${SOCKET_URL}?token=${token}`);
+      this.socket$ = webSocket<WebSocketMessage>(`${SOCKET_URL}?token=${token}`);
     });
   }
-  connect() {
+
+  connect(): Observable<WebSocketMessage> {
     return this.socket$.asObservable();
   }
 
   socketTransformData(message: WebSocketMessage) {
     switch(message.webSocketMessageType) {
-      case 'LIST':
-        this.configSocketMessageList(message);
-        break;
       case 'ERROR':
-
-        break;
-      case 'NOTIFICATION':
-
         break;
       case 'LOGOUT':
         this.configSocketMessageLogout(message);
@@ -55,32 +50,42 @@ export class WebSocketService {
 
   private configSocketMessageLogout(message: WebSocketMessage) {
     if (message.webSocketMessageValue === 'CLOSE_ALL_SESSIONS') {
-      this.closeSessionAction(message.data);
-    } else if (message.webSocketMessageValue === 'NOTIFICATION_LOGOUT') {
-      this.utilSV.setMessage(TITLE_MESSAGES.notification, message.data,'warn');
-    } else {
-      const user = this.storageSV.getPlain<UserInfo>(storageKeys.user_data.info);
-      if (user === null) return;
+      this.closeSessionAction(this.getTextData(message));
+      return;
+    }
 
-      if (user.id === message.data.userId) {
-        switch(message.webSocketMessageValue) {
-          case 'NEW_LOGIN':
-            const token = this.storageSV.getPlain<string>(storageKeys.user_data.token);
-            if (token !== message.data.token) {
-              this.closeSessionAction(MESSAGES.login_other_device);
-            }
-            break;
-          case 'DISABLE_USER':
-            this.closeSessionAction(MESSAGES.disable('user'), true);
-            break;
-          case 'DISABLE_ROLE':
-            this.closeSessionAction(MESSAGES.disable('role'), true);
-            break;
-          default:
-            break;
-        }
+    if (message.webSocketMessageValue === 'NOTIFICATION_LOGOUT') {
+      this.utilSV.setMessage(TITLE_MESSAGES.notification, this.getTextData(message), 'warn');
+      return;
+    }
+
+    if (!isWebSocketSessionData(message.data)) return;
+
+    const user = this.storageSV.getPlain<UserInfo>(storageKeys.user_data.info);
+    if (user === null) return;
+
+    if (user.id === message.data.userId) {
+      switch(message.webSocketMessageValue) {
+        case 'NEW_LOGIN':
+          const token = this.storageSV.getPlain<string>(storageKeys.user_data.token);
+          if (token !== message.data.token) {
+            this.closeSessionAction(MESSAGES.login_other_device);
+          }
+          break;
+        case 'DISABLE_USER':
+          this.closeSessionAction(MESSAGES.disable('user'), true);
+          break;
+        case 'DISABLE_ROLE':
+          this.closeSessionAction(MESSAGES.disable('role'), true);
+          break;
+        default:
+          break;
       }
     }
+  }
+
+  private getTextData(message: WebSocketMessage): string {
+    return typeof message.data === 'string' ? message.data : '';
   }
 
   private closeSessionAction(message: string, closeOrders: boolean = false) {
@@ -94,12 +99,5 @@ export class WebSocketService {
         this.authSV.logoutAction();
       }
     }, 5000);
-  }
-
-  private configSocketMessageList(message: WebSocketMessage) {
-    this.storageSV.set(message.webSocketMessageValue, message.data);
-
-    if (message.webSocketMessageValue === storageKeys.lists.list_departmens || message.webSocketMessageValue === storageKeys.lists.list_roles)
-      this.storageSV.delete(storageKeys.lists.list_users);
   }
 }

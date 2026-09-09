@@ -17,7 +17,7 @@ import { FormGroup, Validators } from '@angular/forms';
 import { DropdownChangeEvent } from 'primeng/dropdown';
 import { AutoCompleteCompleteEvent, AutoCompleteSelectEvent } from 'primeng/autocomplete';
 import { DialogService } from 'primeng/dynamicdialog';
-import { finalize, Observable } from 'rxjs';
+import { finalize, forkJoin, Observable } from 'rxjs';
 import { MessageResponse } from '@interfaces/message-response';
 import { FormArray } from '@angular/forms';
 import { AddQuotationProductModalComponent } from '@modals/ip/q/add-quotation-product-modal/add-quotation-product-modal.component';
@@ -77,18 +77,29 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
 
   constructor() {
     super(MESSAGES);
-    this.userSV.loadEmployees(false);
-    this.clientSV.loadAllBasic();
   }
 
   ngOnInit(): void {
     if (this.tabItem.item.status === 'COMPLETE' || this.tabItem.item.status === 'REJECTED') {
       this.tabItem.type = 'view';
     }
-    this.onInitAction({
-      updatePermission: this.permissions().updateIpQuotation,
-      openAndLock: this.quotationSV.openAndLockQuotation(this.tabItem.item.id, this.tabItem.type),
-      module: 'Q'
+    this._loading.set(true);
+    forkJoin({
+      employees: this.userSV.loadEmployees(false),
+      clients: this.clientSV.loadAllBasic()
+    }).subscribe({
+      next: () => {
+        this.onInitAction({
+          updatePermission: this.permissions().updateIpQuotation,
+          openAndLock: this.quotationSV.openAndLockQuotation(this.tabItem.item.id, this.tabItem.type),
+          module: 'Q'
+        });
+      },
+      error: err => {
+        this._loading.set(false);
+        this.utilSV.setMessage('¡Error!', err, 'error');
+        this.onClose.emit({ index: this.index + 1 });
+      }
     });
   }
 

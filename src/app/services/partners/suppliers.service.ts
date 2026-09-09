@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { AuthService } from '@services/security';
-import { catchError, concatMap, Observable, of, Subject, throwError } from 'rxjs';
+import { catchError, concatMap, Observable, of, Subject, tap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ListSuppliers, Supplier, SupplierBasic, SupplierFilter, SupplierRequest } from '@interfaces/partners/suppliers';
 import { Page } from '@interfaces/page.model';
@@ -31,30 +31,18 @@ export class SuppliersService {
     this.openAndLockProcessQueue();
   }
 
-  loadAllBasic(): void {
+  loadAllBasic(): Observable<SupplierBasic[]> {
     let url  = `${ URL_SERVICES }/list-active`;
-    this.http.get<SupplierBasic[]>( url, {headers: this.authSV.headers()} )
+    return this.http.get<SupplierBasic[]>( url, {headers: this.authSV.headers()} )
       .pipe(
+        tap(resp => this._list.set(resp)),
         catchError( err => throwError( () => err.error.errorMessage ))
-      )
-      .subscribe({
-        next: resp => {
-          this._list.set(resp);
-        }
-      });
+      );
   }
 
   searchAutoComplete(event: AutoCompleteCompleteEvent) {
-    let filtered: SupplierBasic[] = [];
-    let query = event.query;
-
-    for (let i = 0; i < (this.list() as any[]).length; i++) {
-      let item = (this.list() as any[])[i];
-      if (item.name.toLowerCase().indexOf(query.toLowerCase()) == 0) {
-          filtered.push(item);
-      }
-    }
-    this.filteredList = filtered;
+    const query = (event.query ?? '').toLowerCase();
+    this.filteredList = this.list().filter(item => item.name.toLowerCase().startsWith(query));
   }
 
   listAllSuppliersPage(filter: SupplierFilter, page: number, size: number): Observable<Page<ListSuppliers>> {

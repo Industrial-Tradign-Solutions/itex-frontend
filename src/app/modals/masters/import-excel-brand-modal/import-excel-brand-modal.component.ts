@@ -42,7 +42,13 @@ export class ImportExcelBrandModalComponent {
 
   constructor() {
     this._loading.set(true);
-    this.supplierSV.loadAllBasic();
+    this.supplierSV.loadAllBasic().subscribe({
+      next: () => this.stopLoading(),
+      error: () => this.stopLoading()
+    });
+  }
+
+  private stopLoading(): void {
     setTimeout(() => {
       this._loading.set(false);
     }, TIMEOUT);

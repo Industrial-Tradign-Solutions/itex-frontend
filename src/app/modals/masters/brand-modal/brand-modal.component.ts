@@ -36,7 +36,16 @@ export class BrandModalComponent {
   formBrand!: FormGroup;
 
   constructor() {
-    this.supplierSV.loadAllBasic();
+    this.supplierSV.loadAllBasic().subscribe({
+      next: () => this.initForm(),
+      error: err => {
+        this._error.set(err);
+        this.initForm();
+      }
+    });
+  }
+
+  private initForm(): void {
     setTimeout(() => {
       this.buildForm();
     }, TIMEOUT);
