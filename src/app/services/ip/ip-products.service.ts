@@ -1,4 +1,4 @@
-import { inject, Injectable, Signal, signal } from '@angular/core';
+import { inject, Injectable, Signal } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { catchError, concatMap, map, Observable, of, Subject, tap, throwError } from 'rxjs';
 import { BasicIpProduct, IpProduct, IpProductAddSurplusRequest, IpProductOutSurplusRequest, IpProductsFilter, IpProductsHistory, IpProductsRequest, ListIpProduct } from '@interfaces/ip/products';
@@ -8,12 +8,10 @@ import { MessageResponse } from '@interfaces/message-response';
 import { Page } from '@interfaces/page.model';
 import { TypeTab } from '@config/types/tabs';
 import { BaseAutoCompleteService } from '@services/base-auto-complete-service.service';
-import { storageKeys } from '../../../environments';
 import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { IpImportProductsRequest, IpImportProductsResponse, IpImportProductsValidateRequest } from '@interfaces/ip/products/ipProductImportRequest.type';
 
 const URL_SERVICES = environment.api_url + 'ip/products';
-const IP_PRODUCTS_STORAGE_KEY = storageKeys.lists.list_ip_products;
 
 @Injectable({
   providedIn: 'root'
@@ -157,7 +155,6 @@ export class IpProductsService extends BaseAutoCompleteService<BasicIpProduct> {
     let url  = `${ URL_SERVICES }/replace`;
     return this.http.patch<MessageResponse<IpProduct>>( url, data, {headers: this.authSV.headers()} )
       .pipe(
-        tap(() => this.storageSV.delete(IP_PRODUCTS_STORAGE_KEY)),
         catchError( err => throwError( () => err.error.errorMessage ))
     );
   }
@@ -198,15 +195,14 @@ export class IpProductsService extends BaseAutoCompleteService<BasicIpProduct> {
       );
   }
 
-  loadBasicProducts(): void{
-    this.loadBasicsAction().subscribe({
-      next: resp => {
-        this._listItems = resp.map((product) => ({
-          ...product,
-          showName: `(${product.mfrReference ?? ''}) - ${product.description ?? ''}`
-        }));
-      }
-    });
+  loadBasicProducts(): Observable<BasicIpProduct[]> {
+    return this.loadBasicsAction().pipe(
+      map(resp => resp.map((product) => ({
+        ...product,
+        showName: `(${product.mfrReference ?? ''}) - ${product.description ?? ''}`
+      }))),
+      tap(products => this._listItems = products)
+    );
   }
 
   private loadBasicsAction(): Observable<BasicIpProduct[]> {

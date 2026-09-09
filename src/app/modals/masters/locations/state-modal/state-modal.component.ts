@@ -4,8 +4,9 @@ import { BasicCountry } from '@interfaces/masters/locations/countries';
 import { State, StateRequest } from '@interfaces/masters/locations/states';
 import { MessageResponse } from '@interfaces/message-response';
 import { CountriesService, StatesService } from '@services/masters';
+import { UtilService } from '@services/util';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { Observable } from 'rxjs';
+import { Observable, of, switchMap } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 
@@ -22,6 +23,7 @@ export class StateModalComponent {
   private ref         = inject(DynamicDialogRef);
   private countrieSV  = inject(CountriesService);
   private stateSV     = inject(StatesService);
+  private utilSV      = inject(UtilService);
   private formBuilder = inject(FormBuilder);
   //! -----------------------------------------------
 
@@ -42,28 +44,27 @@ export class StateModalComponent {
     formState!: FormGroup;
 
     constructor() {
-      this.loadCountries();
-      setTimeout(() => {
-        if (this.type() === 'edit') {
-          this.stateSV.findById(this.state().id).subscribe({
-            next: resp => {
-              this._state.set(resp);
-              console.log(resp);
-              this.buildForm();
-            },
-            error: err => {
-              this._error.set(err);
-              this.formState.disable();
-            }
-          });
-        } else {
+      this.getCountriesAction().pipe(
+        switchMap(() => this.getStateAction())
+      ).subscribe({
+        next: state => {
+          if (state) this._state.set(state);
           this.buildForm();
+        },
+        error: err => {
+          this.utilSV.setMessage('Error!', err, 'error');
+          this.closeModal();
         }
-      }, TIMEOUT);
+      });
     }
 
-    loadCountries() {
-      this.countrieSV.loadCountries();
+    private getStateAction(): Observable<State | null> {
+      if (this.type() !== 'edit') return of(null);
+      return this.stateSV.findById(this.state().id);
+    }
+
+    private getCountriesAction(): Observable<BasicCountry[]> {
+      return this.countrieSV.loadCountries();
     }
 
     get listCountries(): Signal<BasicCountry[]> {

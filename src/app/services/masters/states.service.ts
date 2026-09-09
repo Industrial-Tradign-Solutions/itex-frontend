@@ -1,13 +1,11 @@
 import { Injectable, Signal } from '@angular/core';
 import { environment } from '../../../environments/environment';
-import { storageKeys } from '../../../environments';
 import { Observable } from 'rxjs';
 import { MessageResponse } from '@interfaces/message-response';
 import { BasicState, ListsStates, State, StateRequest } from '@interfaces/masters/locations/states';
 import { BaseService } from '@services/base-service.service';
 
 const URL_SERVICES = environment.api_url + 'master/locations/states';
-const LIST_STATES_KEY = storageKeys.lists.list_states;
 
 @Injectable({
   providedIn: 'root'
@@ -15,11 +13,11 @@ const LIST_STATES_KEY = storageKeys.lists.list_states;
 export class StatesService extends BaseService<State, StateRequest, State, BasicState, ListsStates>{
 
   constructor() {
-    super(URL_SERVICES, LIST_STATES_KEY);
+    super(URL_SERVICES);
   }
 
-  loadStates(disableItem?: BasicState | BasicState[]) {
-    this.loadList(true, this.getListBasicStates.bind(this), disableItem);
+  loadStates(disableItem?: BasicState | BasicState[]): Observable<BasicState[]> {
+    return this.loadList(true, this.getListBasicStates.bind(this), disableItem);
   }
 
   get listStates(): Signal<BasicState[]> {

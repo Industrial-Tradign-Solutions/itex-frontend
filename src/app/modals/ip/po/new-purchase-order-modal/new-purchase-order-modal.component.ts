@@ -50,13 +50,18 @@ export class NewPurchaseOrderModalComponent implements OnInit {
   oldKeyAutoCompleteClient: string = '';
 
   constructor() {
-    this.clientSV.loadAllBasic();
+    this.clientSV.loadAllBasic().subscribe({
+      next: () => this.stopLoading(),
+      error: err => {
+        this.utilSV.setMessage('Error!', err, 'error');
+        this.stopLoading();
+      }
+    });
     this.buildForm();
   }
 
   ngOnInit(): void {
     this.form.patchValue({ currency: 'USD' });
-    this.stopLoading();
   }
 
   private buildForm() {

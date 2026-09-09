@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnInit, Signal, signal } from '@angular/core';
+import { Component, computed, inject, Signal, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { BasicRole } from '@interfaces/administration/roles';
 import { User, UserRequest } from '@interfaces/administration/user';
@@ -8,7 +8,7 @@ import { RolesService, UsersService } from '@services/admin';
 import { DepartmentService } from '@services/masters';
 import { UtilService } from '@services/util';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { Observable } from 'rxjs';
+import { forkJoin, Observable } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 
 const TIMEOUT = environment.timeout;
@@ -18,7 +18,7 @@ const TIMEOUT = environment.timeout;
   templateUrl: './user-modal.component.html',
   styleUrls: ['./user-modal.component.scss']
 })
-export class UserModalComponent implements OnInit {
+export class UserModalComponent {
 
   //! Inyecciones
   private config      = inject(DynamicDialogConfig);
@@ -46,6 +46,19 @@ export class UserModalComponent implements OnInit {
 
   formUser!: FormGroup;
   constructor() {
+    forkJoin({
+      roles: this.getRolesAction(),
+      departments: this.getDepartmentsAction()
+    }).subscribe({
+      next: () => this.initForm(),
+      error: err => {
+        this.utilSV.setMessage('Error!', err, 'error');
+        this.closeModal();
+      }
+    });
+  }
+
+  private initForm(): void {
     setTimeout(() => {
       if (this.type() === 'edit' || this.type() === 'view') {
         this.userSV.findById(this.config.data.user.id)
@@ -65,28 +78,30 @@ export class UserModalComponent implements OnInit {
     }, TIMEOUT);
   }
 
-  ngOnInit(): void {
-    this.loadDepartments();
-    this.loadRoles();
+  loadRoles(): void {
+    this.getRolesAction().subscribe();
   }
 
-  loadRoles() {
+  private getRolesAction(): Observable<BasicRole[]> {
     if(this.user() && !this.user().role.active) {
-      this.roleSV.loadRoles(false,{
+      return this.roleSV.loadRoles(false,{
         ...this.user().role,
         name: this.user().role.name + ' (DISABLED)'
       });
-    } else {
-      this.roleSV.loadRoles(false);
     }
+    return this.roleSV.loadRoles(false);
   }
 
   get listRoles(): Signal<BasicRole[]> {
     return this.roleSV.listRoles;
   }
 
-  loadDepartments() {
-    this.departmentSV.loadDepartments(true);
+  loadDepartments(): void {
+    this.getDepartmentsAction().subscribe();
+  }
+
+  private getDepartmentsAction(): Observable<BasicDepartment[]> {
+    return this.departmentSV.loadDepartments(true);
   }
 
   get listDepartments(): Signal<BasicDepartment[]> {

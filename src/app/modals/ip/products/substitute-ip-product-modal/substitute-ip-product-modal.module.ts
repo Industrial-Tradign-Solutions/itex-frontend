@@ -4,6 +4,7 @@ import { SubstituteIpProductModalComponent } from './substitute-ip-product-modal
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { ButtonModule } from 'primeng/button';
+import { ProgressBarModule } from 'primeng/progressbar';
 
 
 
@@ -16,7 +17,8 @@ import { ButtonModule } from 'primeng/button';
     FormsModule,
     ReactiveFormsModule,
     AutoCompleteModule,
-    ButtonModule
+    ButtonModule,
+    ProgressBarModule
   ],
   exports: [
     SubstituteIpProductModalComponent

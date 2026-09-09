@@ -1,13 +1,12 @@
 import { Injectable, Signal } from '@angular/core';
 import { environment } from '../../../environments/environment';
-import { storageKeys } from '../../../environments/storage-keys';
+import { Observable } from 'rxjs';
 import { BasicRole, ListsRoles, Role, RoleRequest } from '@interfaces/administration/roles';
 import { BaseService } from '@services/base-service.service';
 import { ActionType, MenuItemType } from '@config/types/menu';
 
 
 const URL_SERVICES = environment.api_url + 'admin/roles';
-const LIST_ROLES_KEY = storageKeys.lists.list_roles;
 
 @Injectable({
   providedIn: 'root'
@@ -15,7 +14,7 @@ const LIST_ROLES_KEY = storageKeys.lists.list_roles;
 export class RolesService extends BaseService<Role, RoleRequest, Role, BasicRole, ListsRoles > {
 
   constructor() {
-    super(URL_SERVICES, LIST_ROLES_KEY);
+    super(URL_SERVICES);
   }
 
   async getListMenusByIdRole(roleId: string): Promise<{unassignedMenus:MenuItemType[], assignedMenus:MenuItemType[] }> {
@@ -85,8 +84,8 @@ export class RolesService extends BaseService<Role, RoleRequest, Role, BasicRole
     });
   }
 
-  loadRoles(addDisables: boolean, disableItems?: BasicRole | BasicRole[]): void {
-    this.loadList(addDisables, this.getListBasicRoles.bind(this), disableItems);
+  loadRoles(addDisables: boolean, disableItems?: BasicRole | BasicRole[]): Observable<BasicRole[]> {
+    return this.loadList(addDisables, this.getListBasicRoles.bind(this), disableItems);
   }
 
   get listRoles(): Signal<BasicRole[]> {

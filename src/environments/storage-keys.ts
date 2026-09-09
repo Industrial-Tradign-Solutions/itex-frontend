@@ -13,17 +13,6 @@ export const storageKeys = {
   config: {
     urlNavigate: 'STORAGE_URL_NAVIGATE'
   },
-  lists: {
-    list_roles: 'LIST_ROLES',
-    list_industries: 'LIST_INDUSTRIES',
-    list_departmens: 'LIST_DEPARTMENTS',
-    list_countries: 'LIST_COUNTRIES',
-    list_states: 'LIST_STATES',
-    list_cities: 'LIST_CITIES',
-    list_users: 'LIST_USERS',
-    list_brands: 'LIST_BRANDS',
-    list_ip_products: 'LIST_IP_PRODUCTS'
-  },
   dark_mode: 'DARK_MODE',
   static_lists: {
     client_status: 'static_client_status',

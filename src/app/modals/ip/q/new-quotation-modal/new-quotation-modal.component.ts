@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnInit, signal, ViewChild } from '@angular/core';
+import { Component, computed, inject, signal, ViewChild } from '@angular/core';
 import { ClientBasic } from '@interfaces/partners/clients';
 import { IpQuotationService, IpQuoteRequestService } from '@services/ip';
 import { ClientsService } from '@services/partners';
@@ -19,7 +19,7 @@ const TIMEOUT = environment.timeout;
   templateUrl: './new-quotation-modal.component.html',
   styleUrl: './new-quotation-modal.component.scss'
 })
-export class NewQuotationModalComponent implements OnInit {
+export class NewQuotationModalComponent {
   //! Inyecciones
   private quoteRequestSV     = inject(IpQuoteRequestService);
   private ipQuotationSV      = inject(IpQuotationService);
@@ -45,10 +45,16 @@ export class NewQuotationModalComponent implements OnInit {
   //?------------------------------------------------------------
 
   constructor() {
-    this.clientSV.loadAllBasic();
+    this.clientSV.loadAllBasic().subscribe({
+      next: () => this.initModal(),
+      error: err => {
+        this.utilSV.setMessage('Error!', err, 'error');
+        this.initModal();
+      }
+    });
   }
 
-  ngOnInit(): void {
+  private initModal(): void {
     this.currency = 'USD';
     this.disableLogin();
   }

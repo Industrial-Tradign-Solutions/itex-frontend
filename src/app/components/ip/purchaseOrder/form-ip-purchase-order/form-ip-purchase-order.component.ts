@@ -20,7 +20,7 @@ import { constants, emailBodyTemplates, storageKeys } from '../../../../../envir
 import { ClientBasic, ClientContact, ClientInfoDep } from '@interfaces/partners/clients';
 import { AutoCompleteCompleteEvent, AutoCompleteSelectEvent } from 'primeng/autocomplete';
 import { SupplierBasic, SupplierContact, SupplierInfoDep } from '@interfaces/partners/suppliers';
-import { finalize, Observable } from 'rxjs';
+import { finalize, forkJoin, Observable } from 'rxjs';
 import { MessageResponse } from '@interfaces/message-response';
 import { ChangeQuotationModalComponent } from '@modals/ip/po/change-quotation-modal/change-quotation-modal.component';
 import { AddPoProductModalComponent } from '@modals/ip/po/add-po-product-modal/add-po-product-modal.component';
@@ -76,20 +76,31 @@ export class FormIpPurchaseOrderComponent extends CommonPageTab<ListIpPurchaseOr
 
   constructor() {
     super(MESSAGES);
-    this.userSV.loadEmployees(false);
-    this.supplierSV.loadAllBasic();
-    this.clientSV.loadAllBasic();
-    this.citySV.loadCities();
   }
 
   ngOnInit(): void {
     if (this.tabItem.item.status === 'COMPLETE' || this.tabItem.item.status === 'REJECTED') {
       this.tabItem.type = 'view';
     }
-    this.onInitAction({
-      updatePermission: this.permissions().updatePurchaseOrder,
-      openAndLock: this.ipPurchaseOrderSV.openAndLockPurchaseOrder(this.tabItem.item.id, this.tabItem.type),
-      module: 'PO'
+    this._loading.set(true);
+    forkJoin({
+      employees: this.userSV.loadEmployees(false),
+      suppliers: this.supplierSV.loadAllBasic(),
+      clients: this.clientSV.loadAllBasic(),
+      cities: this.citySV.loadCities()
+    }).subscribe({
+      next: () => {
+        this.onInitAction({
+          updatePermission: this.permissions().updatePurchaseOrder,
+          openAndLock: this.ipPurchaseOrderSV.openAndLockPurchaseOrder(this.tabItem.item.id, this.tabItem.type),
+          module: 'PO'
+        });
+      },
+      error: err => {
+        this._loading.set(false);
+        this.utilSV.setMessage('¡Error!', err, 'error');
+        this.onClose.emit({ index: this.index + 1 });
+      }
     });
   }
 

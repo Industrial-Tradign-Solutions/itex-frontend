@@ -69,8 +69,8 @@ export class ListSuppliersComponent extends CommonListTab<ListSuppliers, Supplie
     this.citiesSV.searchAutoComplete(event);
   }
 
-  loadCities() {
-    this.citiesSV.loadCities();
+  loadCities(): void {
+    this.citiesSV.loadCities().subscribe();
   }
 
   concatBrands(brands: string[]): string {
@@ -83,8 +83,8 @@ export class ListSuppliersComponent extends CommonListTab<ListSuppliers, Supplie
     return this.citiesSV.filteredCities;
   }
 
-  loadCountries() {
-    this.countriesSV.loadCountries();
+  loadCountries(): void {
+    this.countriesSV.loadCountries().subscribe();
   }
 
   searchByCountry(event: KeyboardEvent) {

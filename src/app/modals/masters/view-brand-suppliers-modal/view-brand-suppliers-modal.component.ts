@@ -49,7 +49,7 @@ export class ViewBrandSuppliersModalComponent implements OnInit{
   supplierId: string | null = null;
 
   ngOnInit(): void {
-    this.supplierSV.loadAllBasic();
+    this.supplierSV.loadAllBasic().subscribe();
     this.loadListSuppliers();
     this.loadBrandsActions();
   }

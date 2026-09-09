@@ -5,8 +5,9 @@ import { BasicCountry } from '@interfaces/masters/locations/countries';
 import { BasicState } from '@interfaces/masters/locations/states';
 import { MessageResponse } from '@interfaces/message-response';
 import { CityService, CountriesService, StatesService } from '@services/masters';
+import { UtilService } from '@services/util';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { Observable } from 'rxjs';
+import { forkJoin, Observable, of, switchMap } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 
 const TIMEOUT = environment.timeout;
@@ -24,6 +25,7 @@ export class CityModalComponent {
   private countrieSV  = inject(CountriesService);
   private stateSV     = inject(StatesService);
   private citySV      = inject(CityService)
+  private utilSV      = inject(UtilService);
   private formBuilder = inject(FormBuilder);
   //! -----------------------------------------------
 
@@ -46,37 +48,46 @@ export class CityModalComponent {
   formCity!: FormGroup;
 
   constructor() {
-    this.loadCountries();
-    this.loadStates();
-    setTimeout(() => {
-      if (this.type() === 'edit') {
-        this.citySV.findById(this.city().id).subscribe({
-          next: resp => {
-            this._city.set(resp);
-            this.buildForm();
-          },
-          error: err => {
-            this._error.set(err);
-            this.formCity.disable();
-          }
-        });
-      } else {
+    forkJoin({
+      countries: this.getCountriesAction(),
+      states: this.getStatesAction()
+    }).pipe(
+      switchMap(() => this.getCityAction())
+    ).subscribe({
+      next: city => {
+        if (city) this._city.set(city);
         this.buildForm();
+      },
+      error: err => {
+        this.utilSV.setMessage('Error!', err, 'error');
+        this.closeModal();
       }
-    }, TIMEOUT);
+    });
   }
 
+  private getCityAction(): Observable<City | null> {
+    if (this.type() !== 'edit') return of(null);
+    return this.citySV.findById(this.city().id);
+  }
 
-  loadStates() {
-    this.stateSV.loadStates();
+  loadStates(): void {
+    this.getStatesAction().subscribe();
+  }
+
+  private getStatesAction(): Observable<BasicState[]> {
+    return this.stateSV.loadStates();
   }
 
   private get listStatesPr(): BasicState[] {
     return this.stateSV.listStates();
   }
 
-  loadCountries() {
-    this.countrieSV.loadCountries();
+  loadCountries(): void {
+    this.getCountriesAction().subscribe();
+  }
+
+  private getCountriesAction(): Observable<BasicCountry[]> {
+    return this.countrieSV.loadCountries();
   }
 
   get listCountries(): Signal<BasicCountry[]> {
