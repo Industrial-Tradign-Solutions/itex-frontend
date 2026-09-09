@@ -1,5 +1,5 @@
 import { Component, computed, EventEmitter, inject, Input, OnInit, Output, signal, Signal } from '@angular/core';
-import { finalize, Observable } from 'rxjs';
+import { finalize, forkJoin, Observable } from 'rxjs';
 import { StaticListsService, UtilService } from '@services/util';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CityService, DepartmentService, IndustriesService } from '@services/masters';
@@ -73,13 +73,27 @@ export class FormClientProspectComponent implements OnInit {
   animation = 'fadeIn';
   //?------------------------------------------------------------
 
-  constructor() {
-    this.loadCities();
-    this.loadDepartments();
-  }
+  constructor() { }
 
   ngOnInit(): void {
     this._loading.set(true);
+    forkJoin({
+      cities: this.loadCitiesAction(),
+      departments: this.loadDepartmentsAction()
+    }).subscribe({
+      next: ({ departments }) => {
+        this._listDepartmentsInfo.set(departments);
+        this.openClient();
+      },
+      error: err => {
+        this._loading.set(false);
+        this.utilSV.setMessage('¡Error!', err, 'error');
+        this.onCloseClientProspect.emit({index: this.index + 1});
+      }
+    });
+  }
+
+  private openClient(): void {
     if (this.tabItem.type !== 'create') {
       if (!this.permissionsClient().updateClient) {
         this.tabItem.type = 'view';
@@ -100,7 +114,6 @@ export class FormClientProspectComponent implements OnInit {
             this.tabItem.item.name = resp.data.name;
             this.tabItem.item.code = resp.data.code;
             this.buildForm();
-            this._loading.set(false);
           }, TIMEOUT);
         }, error: err => {
           this.utilSV.setMessage('Warning', err, 'warn')
@@ -111,15 +124,26 @@ export class FormClientProspectComponent implements OnInit {
     } else {
       setTimeout(() => {
         this.buildForm();
-        this._loading.set(false);
       }, TIMEOUT);
     }
   }
 
   private buildForm() {
-    this.loadIndustries();
-    this.loadEmployees();
+    this._loading.set(true);
+    forkJoin({
+      industries: this.loadIndustriesAction(),
+      employees: this.loadEmployeesAction()
+    }).subscribe({
+      next: () => this.buildFormControls(),
+      error: err => {
+        this._loading.set(false);
+        this.utilSV.setMessage('¡Error!', err, 'error');
+        if (!this.formClient) this.onCloseClientProspect.emit({index: this.index + 1});
+      }
+    });
+  }
 
+  private buildFormControls() {
     this.formClient = this.formBuilder.group({
       name: [
         this.client()?.name ?? null,
@@ -221,6 +245,7 @@ export class FormClientProspectComponent implements OnInit {
     }
     this.enableForm();
     this.changStatus();
+    this._loading.set(false);
   }
 
   changStatus(change?: boolean) {
@@ -629,23 +654,20 @@ export class FormClientProspectComponent implements OnInit {
     return data;
   }
 
-  private loadDepartments() {
-    this.departmentsSV.listClientInfoTrue().subscribe({
-      next: resp => this._listDepartmentsInfo.set(resp)
-    });
+  private loadDepartmentsAction(): Observable<BasicDepartment[]> {
+    return this.departmentsSV.listClientInfoTrue();
   }
 
-  loadEmployees() {
-    this.loadEmployeesExec();
+  loadEmployees(): void {
+    this.loadEmployeesAction().subscribe();
   }
 
-  private async loadEmployeesExec() {
+  private loadEmployeesAction(): Observable<BasicUser[]> {
     if (!this.client() || !this.client()?.infoByDepartment) {
-      this.userSV.loadEmployees(false);
-      return;
+      return this.userSV.loadEmployees(false);
     }
-    let listUsers: BasicUser[] = [];
-    const promises = this.client()?.infoByDepartment.map(info => new Promise<void>((resolve) => {
+    const listUsers: BasicUser[] = [];
+    this.client()!.infoByDepartment.forEach(info => {
       if (
         info.accountRep && !info.accountRep.active &&
         !listUsers.some(item => item.id === info.accountRep.id) &&
@@ -659,18 +681,20 @@ export class FormClientProspectComponent implements OnInit {
           departments: info.accountRep.departments
         });
       }
-      resolve();
-    })) || [];
-    await Promise.all(promises);
-    this.userSV.loadEmployees(false, listUsers);
+    });
+    return this.userSV.loadEmployees(false, listUsers);
   }
 
   getListEmployees(depId: string): BasicUser[] {
     return this.userSV.listEmployees().filter(emp => emp.departments.some(dpto => dpto.id === depId));
   }
 
-  loadCities() {
-    this.citiesSV.loadCities();
+  loadCities(): void {
+    this.loadCitiesAction().subscribe();
+  }
+
+  private loadCitiesAction(): Observable<BasicCity[]> {
+    return this.citiesSV.loadCities();
   }
 
   changeCity(event: AutoCompleteSelectEvent) {
@@ -690,16 +714,19 @@ export class FormClientProspectComponent implements OnInit {
     this.citiesSV.searchAutoComplete(event);
   }
 
-  loadIndustries() {
+  loadIndustries(): void {
+    this.loadIndustriesAction().subscribe();
+  }
+
+  private loadIndustriesAction(): Observable<BasicIndustry[]> {
     if(this.client() && this.client()?.industry && !this.client()?.industry.active) {
-      this.industriesSV.loadIndustries(false, {
+      return this.industriesSV.loadIndustries(false, {
         id: this.client()?.industry.id?? '',
         name: this.client()?.industry.name + ' (DISABLED)',
         active: this.client()?.industry.active?? false
       });
-    } else {
-      this.industriesSV.loadIndustries(false);
     }
+    return this.industriesSV.loadIndustries(false);
   }
 
   get listIndustries(): Signal<BasicIndustry[]> {

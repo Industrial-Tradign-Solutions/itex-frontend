@@ -8,7 +8,7 @@ import { CityService, DepartmentService } from '@services/masters';
 import { StaticListItem } from '@interfaces/static-list.model';
 import { BasicDepartment } from '@interfaces/masters/departments';
 import { ContactModalComponent } from '@modals/partners/contact-modal/contact-modal.component';
-import { Observable } from 'rxjs';
+import { forkJoin, Observable } from 'rxjs';
 import { MessageResponse } from '@interfaces/message-response';
 import { AutoCompleteCompleteEvent, AutoCompleteSelectEvent } from 'primeng/autocomplete';
 import { BasicCity } from '@interfaces/masters/locations/cities';
@@ -40,15 +40,31 @@ export class FormSuppliersComponent extends CommonPageTab<ListSuppliers, Supplie
 
   constructor() {
     super(MESSAGES);
-    this.loadCities();
-    this.loadDepartments();
   }
 
   ngOnInit(): void {
-    this.onInitAction({
-      updatePermission: this.permissions().updateSupplier,
-      openAndLock: this.supplierSV.openAndLockSupplier(this.tabItem.item.id, this.tabItem.type),
-      module: 'supplier'
+    this.loadMasterLists();
+  }
+
+  private loadMasterLists(): void {
+    this._loading.set(true);
+    forkJoin({
+      cities: this.citiesSV.loadCities(),
+      departments: this.loadDepartments()
+    }).subscribe({
+      next: ({ departments }) => {
+        this._listDepartmentsInfo.set(departments);
+        this.onInitAction({
+          updatePermission: this.permissions().updateSupplier,
+          openAndLock: this.supplierSV.openAndLockSupplier(this.tabItem.item.id, this.tabItem.type),
+          module: 'supplier'
+        });
+      },
+      error: err => {
+        this._loading.set(false);
+        this.utilSV.setMessage('¡Error!', err, 'error');
+        this.onClose.emit({ index: this.index + 1 });
+      }
     });
   }
 
@@ -472,14 +488,12 @@ export class FormSuppliersComponent extends CommonPageTab<ListSuppliers, Supplie
     return data;
   }
 
-  private loadDepartments() {
-    this.departmentsSV.listSupplierInfoTrue().subscribe({
-      next: resp => this._listDepartmentsInfo.set(resp)
-    });
+  private loadDepartments(): Observable<BasicDepartment[]> {
+    return this.departmentsSV.listSupplierInfoTrue();
   }
 
-  loadCities() {
-    this.citiesSV.loadCities();
+  loadCities(): void {
+    this.citiesSV.loadCities().subscribe();
   }
 
   changeCity(event: AutoCompleteSelectEvent) {
