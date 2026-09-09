@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { StaticListsService, UtilService } from '@services/util';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
@@ -21,7 +21,7 @@ const TITLES = TitlesMessages;
   templateUrl: './quote-request-product-modal.component.html',
   styleUrl: './quote-request-product-modal.component.scss'
 })
-export class QuoteRequestProductModalComponent implements OnInit {
+export class QuoteRequestProductModalComponent {
   //! Inyecciones
   private config      = inject(DynamicDialogConfig);
   private ref         = inject(DynamicDialogRef);
@@ -46,11 +46,13 @@ export class QuoteRequestProductModalComponent implements OnInit {
   formProduct!: FormGroup;
 
   constructor() {
-    this.productSV.loadBasicProducts();
-  }
-
-  ngOnInit(): void {
-    setTimeout(() => this.initForm(), TIMEOUT);
+    this.productSV.loadBasicProducts().subscribe({
+      next: () => setTimeout(() => this.initForm(), TIMEOUT),
+      error: err => {
+        this.utilSV.setMessage(TITLES.error, err, 'error');
+        this._loading.set(false);
+      }
+    });
   }
 
   onSubmit(): void {
@@ -184,7 +186,7 @@ export class QuoteRequestProductModalComponent implements OnInit {
     });
   }
 
-  clearProduct(event: any) {
+  clearProduct(event: Event | undefined) {
     this.formProduct.patchValue({
       productClientRef: null,
       productClientDesc: null,

@@ -1,7 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { BasicIpProduct } from '@interfaces/ip/products';
 import { IpProductsService } from '@services/ip';
+import { UtilService } from '@services/util';
 import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { DynamicDialogRef } from 'primeng/dynamicdialog';
 
@@ -13,12 +14,26 @@ import { DynamicDialogRef } from 'primeng/dynamicdialog';
 export class SubstituteIpProductModalComponent {
   formSub!: FormGroup;
 
+  private _loading = signal<boolean>(true);
+  loading = computed<boolean>(() => this._loading());
+
   private formBuilder = inject(FormBuilder);
   private ref         = inject(DynamicDialogRef);
   private ipProdSV    = inject(IpProductsService);
+  private utilSV      = inject(UtilService);
 
   constructor() {
-    this.ipProdSV.loadBasicProducts();
+    this.ipProdSV.loadBasicProducts().subscribe({
+      next: () => this.buildForm(),
+      error: err => {
+        this.utilSV.setMessage('¡Error!', err, 'error');
+        this.buildForm();
+      }
+    });
+  }
+
+  private buildForm(): void {
+    this._loading.set(false);
     this.formSub = this.formBuilder.group({
       idPorduct: [
         null,
