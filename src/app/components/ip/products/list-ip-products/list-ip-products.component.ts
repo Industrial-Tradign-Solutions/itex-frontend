@@ -32,9 +32,7 @@ export class ListIpProductsComponent extends CommonListTab<ListIpProduct, IpProd
 
   constructor() {
     super();
-    if (!this.brandSV.listBrands().length) {
-      this.brandSV.loadBrands(true);
-    }
+    this.brandSV.loadBrands(true).subscribe();
     this.formBuild();
   }
 

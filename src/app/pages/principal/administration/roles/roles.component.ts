@@ -55,8 +55,8 @@ export class RolesComponent extends BasicPage implements OnInit, OnDestroy {
     return this.roleSV.listRoles();
   }
 
-  listActiveRolesAction() {
-    this.roleSV.loadRoles(false);
+  listActiveRolesAction(): void {
+    this.roleSV.loadRoles(false).subscribe();
   }
 
   private async loadRoleActions() {
