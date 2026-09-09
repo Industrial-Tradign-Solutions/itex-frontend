@@ -1,12 +1,10 @@
 import { Injectable, Signal } from '@angular/core';
 import { environment } from '../../../environments/environment';
-import { storageKeys } from '../../../environments/storage-keys';
 import { Observable, catchError, throwError } from 'rxjs';
 import { BasicDepartment, Department, DepartmentRequest, ListsDepartments } from '@interfaces/masters/departments';
 import { BaseService } from '@services/base-service.service';
 
 const URL_SERVICES = environment.api_url + 'master/departments';
-const LIST_DEPARTMENTS_KEY = storageKeys.lists.list_departmens;
 
 @Injectable({
   providedIn: 'root'
@@ -14,7 +12,7 @@ const LIST_DEPARTMENTS_KEY = storageKeys.lists.list_departmens;
 export class DepartmentService extends BaseService<Department, DepartmentRequest, Department, BasicDepartment, ListsDepartments>{
 
   constructor() {
-    super(URL_SERVICES, LIST_DEPARTMENTS_KEY);
+    super(URL_SERVICES);
   }
 
   listClientInfoTrue(): Observable<BasicDepartment[]> {
@@ -33,8 +31,8 @@ export class DepartmentService extends BaseService<Department, DepartmentRequest
       );
   }
 
-  loadDepartments(addDisables: boolean, disableDepartment?: BasicDepartment | BasicDepartment[]): void {
-    this.loadList(addDisables, this.getListBasicDepartments.bind(this), disableDepartment);
+  loadDepartments(addDisables: boolean, disableDepartment?: BasicDepartment | BasicDepartment[]): Observable<BasicDepartment[]> {
+    return this.loadList(addDisables, this.getListBasicDepartments.bind(this), disableDepartment);
   }
 
   get listDepartments(): Signal<BasicDepartment[]> {

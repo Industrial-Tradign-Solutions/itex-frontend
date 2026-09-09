@@ -1,7 +1,5 @@
 import { computed, inject, signal } from "@angular/core";
 import { AutoCompleteCompleteEvent } from "primeng/autocomplete";
-import { StorageService } from "./util";
-import { Observable } from "rxjs";
 
 export abstract class BaseAutoCompleteService<BASIC> {
 
@@ -9,19 +7,12 @@ export abstract class BaseAutoCompleteService<BASIC> {
   protected list = computed<BASIC[]>(() => this._list());
   protected filteredList: BASIC[] = [];
 
-  protected storageSV  = inject(StorageService);
-
   searchAutoComplete(event: AutoCompleteCompleteEvent) {
-    let filtered: BASIC[] = [];
-    let query = event.query;
-
-    for (let i = 0; i < (this.list() as any[]).length; i++) {
-      let item = (this.list() as any[])[i];
-      if (item.name.toLowerCase().indexOf(query.toLowerCase()) == 0) {
-          filtered.push(item);
-      }
-    }
-    this.filteredList = filtered;
+    const query = (event.query ?? '').toLowerCase();
+    this.filteredList = this.list().filter(item => {
+      const name = (item as Record<string, unknown>)['name'];
+      return typeof name === 'string' && name.toLowerCase().startsWith(query);
+    });
   }
 
   protected set _listItems(items: BASIC[]) {
@@ -29,6 +20,6 @@ export abstract class BaseAutoCompleteService<BASIC> {
   }
 
   protected addDisableItem(item: BASIC) {
-    this._list().push(item);
+    this._list.update(list => [...list, item]);
   }
 }

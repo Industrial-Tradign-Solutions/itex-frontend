@@ -5,11 +5,9 @@ import { BasicBrand, Brand, BrandFilter, BrandRequest } from '@interfaces/master
 import { catchError, Observable, throwError } from 'rxjs';
 import { Page } from '@interfaces/page.model';
 import { MessageResponse } from '@interfaces/message-response';
-import { storageKeys } from '../../../environments';
 import { Supplier } from '@interfaces/partners/suppliers';
 
 const URL_SERVICES = environment.api_url + 'master/brands';
-const BRANDS_STORAGE_KEY = storageKeys.lists.list_brands;
 
 @Injectable({
   providedIn: 'root'
@@ -17,7 +15,7 @@ const BRANDS_STORAGE_KEY = storageKeys.lists.list_brands;
 export class BrandsService extends BaseService<Brand, BrandRequest, Brand, BasicBrand, {enableBrands: BasicBrand[], disableBrands: BasicBrand[]}>{
 
   constructor() {
-    super(URL_SERVICES, BRANDS_STORAGE_KEY);
+    super(URL_SERVICES);
   }
 
   override listAll(): Observable<Brand[]> {
@@ -32,9 +30,8 @@ export class BrandsService extends BaseService<Brand, BrandRequest, Brand, Basic
     throw Error('Funcion no implementada');
   }
 
-  loadBrands(addDisables: boolean, disableBrands?: BasicBrand | BasicBrand[]): void {
-    this.storageSV.delete(BRANDS_STORAGE_KEY);
-    this.loadList(addDisables, this.getListBasicBrands.bind(this), disableBrands);
+  loadBrands(addDisables: boolean, disableBrands?: BasicBrand | BasicBrand[]): Observable<BasicBrand[]> {
+    return this.loadList(addDisables, this.getListBasicBrands.bind(this), disableBrands);
   }
 
   validateBrand(brandName: string): Observable<BasicBrand> {

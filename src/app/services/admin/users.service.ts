@@ -1,5 +1,4 @@
 import { Injectable, Signal } from "@angular/core";
-import { storageKeys } from "../../../environments";
 import { environment } from "../../../environments/environment";
 import { catchError, Observable, throwError } from "rxjs";
 import { MessageResponse } from "@interfaces/message-response";
@@ -9,7 +8,6 @@ import { BasicUser, ListsUser, ListUser, User, UserRequest } from "@interfaces/a
 
 
 const URL_SERVICES = environment.api_url + 'admin/users';
-const LIST_USERS_KEY = storageKeys.lists.list_users;
 
 @Injectable({
   providedIn: 'root'
@@ -17,7 +15,7 @@ const LIST_USERS_KEY = storageKeys.lists.list_users;
 export class UsersService extends BaseService<User, UserRequest, ListUser, BasicUser, ListsUser> {
 
   constructor() {
-    super(URL_SERVICES, LIST_USERS_KEY);
+    super(URL_SERVICES);
   }
 
   resetUserPass(user: User): Observable<MessageResponse<number>> {
@@ -36,8 +34,8 @@ export class UsersService extends BaseService<User, UserRequest, ListUser, Basic
       );
   }
 
-  loadEmployees(addDisables: boolean, disableEmployee?: BasicUser | BasicUser[]): void {
-    this.loadList(addDisables, this.getListBasicUsers.bind(this), disableEmployee);
+  loadEmployees(addDisables: boolean, disableEmployee?: BasicUser | BasicUser[]): Observable<BasicUser[]> {
+    return this.loadList(addDisables, this.getListBasicUsers.bind(this), disableEmployee);
   }
 
   get listEmployees(): Signal<BasicUser[]> {

@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { AuthService } from '@services/security';
-import { catchError, concatMap, Observable, of, Subject, throwError } from 'rxjs';
+import { catchError, concatMap, Observable, of, Subject, tap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { MessageResponse } from '@interfaces/message-response';
 import { Client, ClientBasic, ClientFilter, ClientRequest, ListClients } from '@interfaces/partners/clients';
@@ -32,17 +32,13 @@ export class ClientsService {
     this.openAndLockProcessQueue();
   }
 
-  loadAllBasic(): void {
+  loadAllBasic(): Observable<ClientBasic[]> {
     let url  = `${ URL_SERVICES }/list-active`;
-    this.http.get<ClientBasic[]>( url, {headers: this.authSV.headers()} )
+    return this.http.get<ClientBasic[]>( url, {headers: this.authSV.headers()} )
       .pipe(
+        tap(resp => this._list.set(resp)),
         catchError( err => throwError( () => err.error.errorMessage ))
-      )
-      .subscribe({
-        next: resp => {
-          this._list.set(resp);
-        }
-      });
+      );
   }
 
   searchAutoComplete(event: AutoCompleteCompleteEvent) {
