@@ -19,6 +19,7 @@ import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { environment } from '../../../../../environments/environment';
 import { NewQuotationModalComponent } from '@modals/ip/q/new-quotation-modal/new-quotation-modal.component';
 import { DialogService } from 'primeng/dynamicdialog';
+import { EmitedTab } from '../../../../config/types/tabs/emitedTab.type';
 
 const TIMEOUT = environment.timeout;
 
@@ -110,9 +111,9 @@ export class ListIpQuotationComponent extends CommonListTab<ListIpQuotation, IpQ
       closeOnEscape: false
     });
     modal.onClose.subscribe({
-      next: (resp: { valid: boolean; data?: ListIpQuotation }) => {
+      next: (resp: { valid: boolean; data?: EmitedTab<ListIpQuotation> }) => {
         if (resp && resp.valid && resp.data) {
-          this.open({ item: resp.data, type: 'edit', pristine: true });
+          this.open(resp.data);
           this.search(true);
         }
       }
