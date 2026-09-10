@@ -33,10 +33,9 @@
           </label>
         </p-floatLabel>
       </div>
-      <div class="field col-12 md:col-3 mt-4" >
+      <div class="field col-12 md:col-2 mt-4" >
         <p-floatLabel>
           <p-dropdown
-            selected
             [options]="listCurrency()"
             optionLabel="value"
             (onChange)="search()"
@@ -45,6 +44,24 @@
             optionValue="key" />
           <label>
             Currency
+          </label>
+        </p-floatLabel>
+      </div>
+      <div class="field col-12 md:col-3 mt-4">
+        <p-floatLabel>
+          <p-dropdown
+            [options]="listEmployees()"
+            optionLabel="fullName"
+            [filter]="true"
+            filterBy="fullName"
+            [showClear]="true"
+            placeholder="All Sales Reps"
+            (onChange)="search()"
+            [(ngModel)]="salesRep"
+            appendTo="body"
+            optionValue="id" />
+          <label>
+            Sales Rep
           </label>
         </p-floatLabel>
       </div>

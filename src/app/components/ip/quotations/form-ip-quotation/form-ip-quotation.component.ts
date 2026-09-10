@@ -24,7 +24,7 @@ import { AddQuotationProductModalComponent } from '@modals/ip/q/add-quotation-pr
 import { EditQuotationProductModalComponent, EditQuotationProductModalData } from '@modals/ip/q/edit-quotation-product-modal/edit-quotation-product-modal.component';
 import { ListOtherChargesModalComponent } from '@modals/ip/q/list-other-charges-modal/list-other-charges-modal.component';
 import { EditFreightChargesModalComponent } from '@modals/ip/q/edit-freight-charges-modal/edit-freight-charges-modal.component';
-import { AddQuoteRequestsModalComponent } from '@modals/ip/q/add-quote-requests-modal/add-quote-requests-modal.component';
+import { AddQuoteRequestsModalComponent, AddQuoteRequestsModalData } from '@modals/ip/q/add-quote-requests-modal/add-quote-requests-modal.component';
 import { HistoryQuotationModalComponent } from '@modals/ip/q/history-quotation-modal/history-quotation-modal.component';
 
 const MESSAGES = Messages.pages.ip.quotation;
@@ -765,17 +765,20 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
       return;
     }
 
+    const data: AddQuoteRequestsModalData = {
+      qId: this.item()!.id,
+      clientId: this.item()!.client.id,
+      currency: this.item()!.currency,
+      listAddQR: this.item()!.listQuoteRequests,
+      salesRep: this.item()!.salesRep ?? null
+    };
+
     const modal = this.dialogSV.open(AddQuoteRequestsModalComponent, {
       header: 'ADD QUOTE REQUESTS TO QUOTATION',
       width: '60rem',
       closable: false,
       closeOnEscape: false,
-      data: {
-        qId: this.item()!.id,
-        clientId: this.item()!.client.id,
-        currency: this.item()!.currency,
-        listAddQR: this.item()!.listQuoteRequests
-      }
+      data
     });
     modal.onClose.subscribe(this.handleValidModalClose);
   }
