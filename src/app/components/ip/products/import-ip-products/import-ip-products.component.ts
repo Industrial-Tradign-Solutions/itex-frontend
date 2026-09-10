@@ -128,7 +128,7 @@ export class ImportIpProductsComponent {
       row.push(prod.nmfc?.toString() ?? '');
       row.push(prod.htsScheduleBNumber?.toString() ?? '');
       row.push(prod.eccn ?? '');
-      row.push(prod.coo.name ?? '');
+      row.push(prod.coo?.name ?? '');
       row.push(prod.battery ? 'YES' : 'NO');
       row.push(prod.hazmat ? 'YES' : 'NO');
       row.push(prod.dualUse ? 'YES' : 'NO');
