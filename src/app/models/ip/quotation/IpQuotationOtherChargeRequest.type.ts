@@ -3,10 +3,15 @@ export type IpQuotationOtherChargeRequest = {
   value: number;
 }
 
-export function mapToIpQOtherChargeRequest(form: any): IpQuotationOtherChargeRequest {
-  const data = JSON.parse(JSON.stringify(form));
+export type IpQuotationOtherChargeFormValue = {
+  description?: string | null;
+  value?: number | null;
+}
+
+export function mapToIpQOtherChargeRequest(form: IpQuotationOtherChargeFormValue): IpQuotationOtherChargeRequest {
+  const data: IpQuotationOtherChargeFormValue = JSON.parse(JSON.stringify(form));
   return {
-    description: data.description,
-    value: data.value
+    description: data.description ?? '',
+    value: data.value ?? 0
   };
 }

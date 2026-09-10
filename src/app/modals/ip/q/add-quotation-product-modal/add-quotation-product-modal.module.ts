@@ -8,6 +8,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { TableModule } from 'primeng/table';
 import { CheckboxModule } from 'primeng/checkbox';
+import { TooltipModule } from 'primeng/tooltip';
 
 @NgModule({
   declarations: [
@@ -21,7 +22,8 @@ import { CheckboxModule } from 'primeng/checkbox';
     DropdownModule,
     InputNumberModule,
     TableModule,
-    CheckboxModule
+    CheckboxModule,
+    TooltipModule
   ],
   exports: [
     AddQuotationProductModalComponent

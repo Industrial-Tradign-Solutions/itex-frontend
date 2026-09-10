@@ -7,6 +7,8 @@ import { ProgressBarModule } from 'primeng/progressbar';
 import { TagModule } from 'primeng/tag';
 import { PipesModule } from '@pipes/pipes.module';
 import { CheckboxModule } from 'primeng/checkbox';
+import { DropdownModule } from 'primeng/dropdown';
+import { FloatLabelModule } from 'primeng/floatlabel';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 @NgModule({
@@ -22,7 +24,9 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
     ProgressBarModule,
     TagModule,
     PipesModule,
-    CheckboxModule
+    CheckboxModule,
+    DropdownModule,
+    FloatLabelModule
   ],
   exports: [
     AddQuoteRequestsModalComponent

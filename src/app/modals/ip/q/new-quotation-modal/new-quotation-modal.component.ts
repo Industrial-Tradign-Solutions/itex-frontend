@@ -1,16 +1,18 @@
-import { Component, computed, inject, signal, ViewChild } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { ClientBasic } from '@interfaces/partners/clients';
 import { IpQuotationService, IpQuoteRequestService } from '@services/ip';
 import { ClientsService } from '@services/partners';
+import { UsersService } from '@services/admin';
+import { StaticListsService, StorageService, UtilService } from '@services/util';
 import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { DynamicDialogRef } from 'primeng/dynamicdialog';
 import { environment } from '../../../../../environments/environment';
+import { storageKeys } from '../../../../../environments';
 import { ListIpQuoteRequest } from '@interfaces/ip/quoteRequest';
-import { finalize } from 'rxjs';
+import { BasicUser, UserInfo } from '@interfaces/administration/user';
+import { finalize, forkJoin } from 'rxjs';
 import { StaticListItem } from '@interfaces/static-list.model';
-import { StaticListsService } from '../../../../services/util/static-lists.service';
 import { CreateIpQuotationRequest, formatDateToSend } from '@interfaces/ip/quotation';
-import { UtilService } from '../../../../services/util/util.service';
 
 const TIMEOUT = environment.timeout;
 
@@ -24,8 +26,10 @@ export class NewQuotationModalComponent {
   private quoteRequestSV     = inject(IpQuoteRequestService);
   private ipQuotationSV      = inject(IpQuotationService);
   private clientSV           = inject(ClientsService);
+  private userSV             = inject(UsersService);
   private ref                = inject(DynamicDialogRef);
   private staticListSV       = inject(StaticListsService);
+  private storageSV          = inject(StorageService);
   private utilSV             = inject(UtilService);
   //! -----------------------------------------------------------
   //* Señales
@@ -33,11 +37,15 @@ export class NewQuotationModalComponent {
   loading = computed<boolean>(() => this._loading());
   private _listQR = signal<ListIpQuoteRequest[]>([]);
   listQR = computed<ListIpQuoteRequest[]>(() => this._listQR());
+  private _listEmployees = signal<BasicUser[]>([]);
+  listEmployees = computed<BasicUser[]>(() => this._listEmployees());
   listCurrency = computed<StaticListItem[]>(() => this.staticListSV.getListCurrency());
+  private userData = computed<UserInfo | null>(() => this.storageSV.getPlain<UserInfo>(storageKeys.user_data.info));
   //*____________________________________________________________
   //? Variables
   oldKeyAutoCompleteClient: string = '';
   client: string = '';
+  salesRep: string | null = '';
   viewCompletedQR: boolean = false;
   selectedQR: ListIpQuoteRequest[] = [];
   currency: string = 'USD';
@@ -45,8 +53,14 @@ export class NewQuotationModalComponent {
   //?------------------------------------------------------------
 
   constructor() {
-    this.clientSV.loadAllBasic().subscribe({
-      next: () => this.initModal(),
+    forkJoin({
+      clients: this.clientSV.loadAllBasic(),
+      employees: this.userSV.loadEmployees(false)
+    }).subscribe({
+      next: ({ employees }) => {
+        this._listEmployees.set(employees);
+        this.initModal();
+      },
       error: err => {
         this.utilSV.setMessage('Error!', err, 'error');
         this.initModal();
@@ -56,19 +70,26 @@ export class NewQuotationModalComponent {
 
   private initModal(): void {
     this.currency = 'USD';
+    this.salesRep = this.userData()?.id ?? '';
     this.disableLogin();
   }
 
   search() {
     if (this.client === '') return;
     this._loading.set(true);
-    this.quoteRequestSV.getListQuoteRequestByClientAvailableToQuotation(this.client, this.viewCompletedQR, this.currency)
+    // Al refiltrar cambian los candidatos: se descartan las selecciones previas
+    // para no llegar a enviar QR que ya no figuran en la tabla.
+    this.selectedQR = [];
+    this.quoteRequestSV.getListQuoteRequestByClientAvailableToQuotation(this.client, this.viewCompletedQR, this.currency, this.salesRep)
       .pipe(
         finalize(() => this.disableLogin())
       )
       .subscribe({
         next: resp => {
           this._listQR.set(resp);
+        },
+        error: err => {
+          this.utilSV.setMessage('Error!', err, 'error');
         }
       });
   }

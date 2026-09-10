@@ -23,6 +23,7 @@ import { AddQuotationProductModalModule } from '@modals/ip/q/add-quotation-produ
 import { EditQuotationProductModalModule } from '@modals/ip/q/edit-quotation-product-modal/edit-quotation-product-modal.module';
 import { OtherChargesModalModule } from '@modals/ip/q/other-charges-modal/other-charges-modal.module';
 import { ListOtherChargesModalModule } from '@modals/ip/q/list-other-charges-modal/list-other-charges-modal.module';
+import { EditFreightChargesModalModule } from '@modals/ip/q/edit-freight-charges-modal/edit-freight-charges-modal.module';
 import { AddQuoteRequestsModalModule } from '@modals/ip/q/add-quote-requests-modal/add-quote-requests-modal.module';
 import { HistoryQuotationModalModule } from '@modals/ip/q/history-quotation-modal/history-quotation-modal.module';
 import { DividerModule } from 'primeng/divider';
@@ -58,6 +59,7 @@ import { DividerModule } from 'primeng/divider';
     EditQuotationProductModalModule,
     OtherChargesModalModule,
     ListOtherChargesModalModule,
+    EditFreightChargesModalModule,
     AddQuoteRequestsModalModule,
     HistoryQuotationModalModule,
     DividerModule

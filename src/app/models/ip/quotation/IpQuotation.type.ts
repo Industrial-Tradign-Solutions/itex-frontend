@@ -25,6 +25,8 @@ export type IpQuotation = {
   incoterms: string;
   paymentTerms: string;
   applicationAt: string;
+  profitMarginFreightCharges?: number;
+  freightChargeMiamiITS?: number;
   pdfUrl: string;
   openBy: BasicUser;
   openAt: string;
@@ -38,6 +40,7 @@ export type IpQuotation = {
   grossWeightLbs?: number;
   subTotal?: number;
   freightCharges?: number;
+  totalFreightCharges?: number;
   totalOtherCharges?: number;
   total?: number;
 
