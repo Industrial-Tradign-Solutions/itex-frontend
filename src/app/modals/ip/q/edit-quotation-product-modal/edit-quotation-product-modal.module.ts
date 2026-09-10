@@ -6,6 +6,7 @@ import { ProgressBarModule } from 'primeng/progressbar';
 import { ButtonModule } from 'primeng/button';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputNumberModule } from 'primeng/inputnumber';
+import { TooltipModule } from 'primeng/tooltip';
 
 @NgModule({
   declarations: [
@@ -18,7 +19,8 @@ import { InputNumberModule } from 'primeng/inputnumber';
     ProgressBarModule,
     ButtonModule,
     DropdownModule,
-    InputNumberModule
+    InputNumberModule,
+    TooltipModule
   ],
   exports: [
     EditQuotationProductModalComponent

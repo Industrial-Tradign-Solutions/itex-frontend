@@ -1,10 +1,11 @@
-export type IpQuotationProductBulkItemRequest = {
+export type IpQuotationProductRequest = {
   quotationsQuoteRequestId: string;
   quoteRequestProductId: string;
   profitMargin: number;
   condition: string;
+  itsLeadTime: number;
 };
 
 export type IpQuotationProductBulkRequest = {
-  products: IpQuotationProductBulkItemRequest[];
+  products: IpQuotationProductRequest[];
 };

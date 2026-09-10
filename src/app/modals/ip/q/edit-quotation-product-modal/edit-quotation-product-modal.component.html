@@ -23,10 +23,37 @@
             <p-dropdown
               formControlName="condition"
               [options]="listCondition()"
-              optionValue="value"
-              optionLabel="key"
+              optionValue="key"
+              optionLabel="value"
               appendTo="body"
               placeholder="Select Condition" />
+          </div>
+          <div class="field col-12 md:col-6">
+            <label>
+              ITS Lead Time
+              <span class="required">*</span>
+            </label>
+            <p-inputNumber
+              formControlName="itsLeadTime"
+              mode="decimal"
+              [useGrouping]="false"
+              [min]="0"
+              [max]="999999"
+              [minFractionDigits]="0"
+              [maxFractionDigits]="0"
+              pTooltip="Additional ITS lead time, in the same unit as the Quote Request lead time"
+              tooltipPosition="top"/>
+          </div>
+          <div class="field col-12 md:col-6">
+            <label>
+              Lead Time Type
+            </label>
+            <p-dropdown
+              formControlName="leadTimeType"
+              [options]="listLeadTimeType()"
+              optionValue="key"
+              optionLabel="value"
+              appendTo="body"/>
           </div>
       </div>
     </div>

@@ -1,7 +1,7 @@
 import { Component, computed, EventEmitter, inject, OnInit, Output, signal } from '@angular/core';
 import { Messages, TitlesMessages } from '@config/messages';
 import { CommonPageTab } from '@config/tabs/commonPageTab';
-import { IpQuotation, ListIpQuotation, mapToIpQuotationRequest, formatDateToSend, IpQuotationProduct, IpDocumentStatus } from '@interfaces/ip/quotation';
+import { IpQuotation, ListIpQuotation, mapToIpQuotationRequest, formatDateToSend, IpQuotationProduct, IpDocumentStatus, FreightChargesModalData, FreightChargesModalResult } from '@interfaces/ip/quotation';
 import { IpQuotationPermissions } from '@pages/principal/ip/quotations/quotations.component';
 import { environment } from '../../../../../environments/environment';
 import { IpQuotationService } from '@services/ip';
@@ -21,8 +21,9 @@ import { finalize, forkJoin, Observable } from 'rxjs';
 import { MessageResponse } from '@interfaces/message-response';
 import { FormArray } from '@angular/forms';
 import { AddQuotationProductModalComponent } from '@modals/ip/q/add-quotation-product-modal/add-quotation-product-modal.component';
-import { EditQuotationProductModalComponent } from '@modals/ip/q/edit-quotation-product-modal/edit-quotation-product-modal.component';
+import { EditQuotationProductModalComponent, EditQuotationProductModalData } from '@modals/ip/q/edit-quotation-product-modal/edit-quotation-product-modal.component';
 import { ListOtherChargesModalComponent } from '@modals/ip/q/list-other-charges-modal/list-other-charges-modal.component';
+import { EditFreightChargesModalComponent } from '@modals/ip/q/edit-freight-charges-modal/edit-freight-charges-modal.component';
 import { AddQuoteRequestsModalComponent } from '@modals/ip/q/add-quote-requests-modal/add-quote-requests-modal.component';
 import { HistoryQuotationModalComponent } from '@modals/ip/q/history-quotation-modal/history-quotation-modal.component';
 
@@ -359,8 +360,14 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
       subTotal: [
         this.item()?.subTotal ?? 0,
       ],
-      freightCharges: [
-        this.item()?.freightCharges ?? 0,
+      totalFreightCharges: [
+        this.item()?.totalFreightCharges ?? 0,
+      ],
+      profitMarginFreightCharges: [
+        this.item()?.profitMarginFreightCharges ?? 0,
+      ],
+      freightChargeMiamiITS: [
+        this.item()?.freightChargeMiamiITS ?? 0,
       ],
       otherCharges: [
         this.item()?.totalOtherCharges ?? 0,
@@ -417,7 +424,9 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
       'grossWeightLbs',
       'subTotal',
       'otherCharges',
-      'freightCharges',
+      'totalFreightCharges',
+      'profitMarginFreightCharges',
+      'freightChargeMiamiITS',
       'total'
     ].forEach(field => controls[field].disable());
 
@@ -561,6 +570,12 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
       leadTimeType: [
         product?.quoteRequestProduct?.leadTimeType ?? 'WEEKS'
       ],
+      itsLeadTime: [
+        product?.itsLeadTime ?? 0
+      ],
+      totalLeadTime: [
+        product?.totalLeadTime ?? product?.quoteRequestProduct?.leadTime ?? 0
+      ],
       unitPrice: [
         product?.quoteRequestProduct?.unitPrice ?? 0
       ],
@@ -609,7 +624,7 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
         this._loading.set(true);
         this.quotationSV.removeQuotationProduct(qProduct.id, this.item()!.id)
         .subscribe({
-          next: (resp) => {
+          next: () => {
             this.tabItem.pristine = false;
             this.onSubmit();
           },
@@ -649,6 +664,17 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
     });
   }
 
+  /**
+   * Tras un cierre válido de un modal de sub-recursos (productos, QR, other
+   * charges, fletes) la Q debe reescribirse: se marca dirty y se envía el PUT
+   * para que el backend recalcule los totales.
+   */
+  private readonly handleValidModalClose = (resp?: { valid: boolean }): void => {
+    if (!resp?.valid) return;
+    this.tabItem.pristine = false;
+    this.onSubmit();
+  };
+
   openModalAddProducts() {
     if (this.tabItem.type !== 'edit') return;
 
@@ -665,14 +691,7 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
       }
     });
 
-    modal.onClose.subscribe({
-      next: (resp: { valid: boolean }) => {
-        if (resp && resp.valid) {
-          this.tabItem.pristine = false;
-          this.onSubmit();
-        }
-      }
-    });
+    modal.onClose.subscribe(this.handleValidModalClose);
   }
 
   openModalEditProduct(productId: string) {
@@ -681,29 +700,26 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
     const product = products.find(p => p.value.id === productId);
     if (!product) return;
 
+    const data: EditQuotationProductModalData = {
+      qId: this.item()?.id ?? '',
+      qProductId: productId,
+      quotationsQuoteRequestId: product.value.quotationsQuoteRequestId,
+      quoteRequestProductId: product.value.quoteRequestProductId,
+      profitMargin: product.value.profitMargin,
+      condition: product.value.condition,
+      itsLeadTime: product.value.itsLeadTime,
+      leadTimeType: product.value.leadTimeType
+    };
+
     const modal = this.dialogSV.open(EditQuotationProductModalComponent, {
       header: 'UPDATE PRODUCT',
       width: '35rem',
       closable: false,
       closeOnEscape: false,
-      data: {
-        qId: this.item()?.id,
-        qProductId: productId,
-        quotationsQuoteRequestId: product.value.quotationsQuoteRequestId,
-        quoteRequestProductId: product.value.quoteRequestProductId,
-        profitMargin: product.value.profitMargin,
-        condition: product.value.condition
-      }
+      data
     });
 
-    modal.onClose.subscribe({
-      next: (resp: { valid: boolean }) => {
-        if (resp && resp.valid) {
-          this.tabItem.pristine = false;
-          this.onSubmit();
-        }
-      }
-    });
+    modal.onClose.subscribe(this.handleValidModalClose);
   }
 
   cloneQ() {
@@ -761,14 +777,7 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
         listAddQR: this.item()!.listQuoteRequests
       }
     });
-    modal.onClose.subscribe({
-      next: (resp: { valid: boolean; quotation?: IpQuotation }) => {
-        if (resp && resp.valid) {
-          this.tabItem.pristine = false;
-          this.onSubmit();
-        }
-      }
-    });
+    modal.onClose.subscribe(this.handleValidModalClose);
   }
 
   openModalListOtherCharges() {
@@ -789,13 +798,33 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
         qStatus: this.item()!.status
       }
     });
-    modal.onClose.subscribe({
-      next: (resp: { valid: boolean }) => {
-        if (resp && resp.valid) {
-          this.tabItem.pristine = false;
-          this.onSubmit();
-        }
-      }
+    modal.onClose.subscribe(this.handleValidModalClose);
+  }
+
+  openModalFreightCharges() {
+    if (this.tabItem.type !== 'edit') return;
+    if (!this.item()) return;
+
+    const data: FreightChargesModalData = {
+      currency: this.item()!.currency,
+      freightCharges: this.item()!.freightCharges ?? 0,
+      profitMarginFreightCharges: this.formTab.controls['profitMarginFreightCharges'].value ?? 0,
+      freightChargeMiamiITS: this.formTab.controls['freightChargeMiamiITS'].value ?? 0
+    };
+
+    const modal = this.dialogSV.open(EditFreightChargesModalComponent, {
+      header: 'FREIGHT CHARGES',
+      width: '40rem',
+      closable: false,
+      closeOnEscape: false,
+      data
+    });
+
+    modal.onClose.subscribe((resp?: FreightChargesModalResult) => {
+      if (!resp?.valid || !resp.freightCharges) return;
+      this.formTab.patchValue(resp.freightCharges);
+      this.tabItem.pristine = false;
+      this.onSubmit();
     });
   }
 
@@ -838,12 +867,14 @@ export class FormIpQuotationComponent extends CommonPageTab<ListIpQuotation, IpQ
             ]
           }).onClose.subscribe({
             next: (modal) => {
+              // El estado lo confirma el backend: executeChangeStatus reconstruye
+              // el formulario en el éxito y restaura el previo si rechaza la
+              // transición (p. ej. ip.q.incoterms-required).
               if (modal.valid && this.item()?.status === 'CREATED') {
                 this.executeChangeStatus(
                   this.quotationSV.changeStatusQuotation(this.item()!.id, 'SENT'),
                   'SENT'
                 );
-                this.formTab.patchValue({ status: 'SENT' });
               }
             }
           });

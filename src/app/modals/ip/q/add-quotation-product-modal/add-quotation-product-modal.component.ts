@@ -7,7 +7,7 @@ import { Messages, TitlesMessages } from '@config/messages';
 import { StaticListItem } from '@interfaces/static-list.model';
 import { IpQuotationService } from '@services/ip';
 import { IpQuoteRequestService } from '@services/ip/ip-quote-request.service';
-import { IpQuotationProduct, IpQuotationProductBulkRequest, BulkProductTableItem } from '@interfaces/ip/quotation';
+import { IpQuotationProduct, IpQuotationProductBulkRequest, IpQuotationProductRequest, BulkProductTableItem } from '@interfaces/ip/quotation';
 import { finalize, forkJoin } from 'rxjs';
 
 const TIMEOUT = environment.timeout;
@@ -40,7 +40,9 @@ export class AddQuotationProductModalComponent implements OnInit {
     this._version();
     const selected = this._allItems().filter(i => i.selected);
     return selected.length > 0 && selected.every(i =>
-      i.profitMargin != null && i.profitMargin >= 0.01 && i.profitMargin <= 100 && i.condition != null
+      i.profitMargin != null && i.profitMargin >= 0.01 && i.profitMargin <= 100
+      && i.condition != null
+      && i.itsLeadTime != null && i.itsLeadTime >= 0
     );
   });
   listQuoteRequests = computed<{ qqrId?: string; id?: string; number?: string }[]>(() => this.config.data.listQuoteRequests ?? []);
@@ -104,7 +106,8 @@ export class AddQuotationProductModalComponent implements OnInit {
               selected: false,
               disabled: false,
               profitMargin: null,
-              condition: null
+              condition: null,
+              itsLeadTime: 0
             });
           });
         });
@@ -176,22 +179,22 @@ export class AddQuotationProductModalComponent implements OnInit {
       return;
     }
 
-    const invalid = selectedItems.find(i => i.profitMargin === null || i.condition === null);
+    const invalid = selectedItems.find(i => i.profitMargin === null || i.condition === null || i.itsLeadTime === null);
     if (invalid) {
-      this.utilSV.setMessage(TITLES.warning, 'Please fill Margin and Condition for all selected products', 'warn');
+      this.utilSV.setMessage(TITLES.warning, 'Please fill Margin, Condition and ITS Lead Time for all selected products', 'warn');
       return;
     }
 
     this._loading.set(true);
 
-    const payload: IpQuotationProductBulkRequest = {
-      products: selectedItems.map(i => ({
-        quotationsQuoteRequestId: i.quotationsQuoteRequestId,
-        quoteRequestProductId: i.quoteRequestProductId,
-        profitMargin: i.profitMargin ?? 0,
-        condition: i.condition!
-      }))
-    };
+    const products: IpQuotationProductRequest[] = selectedItems.map(i => ({
+      quotationsQuoteRequestId: i.quotationsQuoteRequestId,
+      quoteRequestProductId: i.quoteRequestProductId,
+      profitMargin: i.profitMargin ?? 0,
+      condition: i.condition!,
+      itsLeadTime: i.itsLeadTime ?? 0
+    }));
+    const payload: IpQuotationProductBulkRequest = { products };
 
     setTimeout(() => {
       this.quotationSV.createQuotationProductsBulk(this.qId(), payload)

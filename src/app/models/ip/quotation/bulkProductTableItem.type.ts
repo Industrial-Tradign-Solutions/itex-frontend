@@ -24,4 +24,5 @@ export type BulkProductTableItem = {
 
   profitMargin: number | null;
   condition: string | null;
+  itsLeadTime: number | null;
 };

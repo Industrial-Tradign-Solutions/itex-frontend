@@ -6,10 +6,42 @@ import { environment } from '../../../../../environments/environment';
 import { TitlesMessages } from '@config/messages';
 import { StaticListItem } from '@interfaces/static-list.model';
 import { IpQuotationService } from '@services/ip';
+import { IpQuotationProductRequest } from '@interfaces/ip/quotation';
 import { finalize } from 'rxjs';
 
 const TIMEOUT = environment.timeout;
 const TITLES = TitlesMessages;
+const MAX_LEAD_TIME = 999999;
+
+export type EditQuotationProductModalData = {
+  qId: string;
+  qProductId: string;
+  quotationsQuoteRequestId: string;
+  quoteRequestProductId: string;
+  profitMargin: number | null;
+  condition: string | null;
+  itsLeadTime: number | null;
+  leadTimeType: string | null;
+};
+
+/**
+ * Normaliza los datos que llegan por `DynamicDialogConfig`: centraliza los
+ * defaults y evita colgar propiedades sin garantir sobre un `data` dinámico.
+ */
+export function normalizeEditQuotationProductModalData(
+  raw: Partial<EditQuotationProductModalData> | undefined
+): EditQuotationProductModalData {
+  return {
+    qId: raw?.qId ?? '',
+    qProductId: raw?.qProductId ?? '',
+    quotationsQuoteRequestId: raw?.quotationsQuoteRequestId ?? '',
+    quoteRequestProductId: raw?.quoteRequestProductId ?? '',
+    profitMargin: raw?.profitMargin ?? 0,
+    condition: raw?.condition ?? null,
+    itsLeadTime: raw?.itsLeadTime ?? 0,
+    leadTimeType: raw?.leadTimeType ?? null
+  };
+}
 
 @Component({
   selector: 'app-edit-quotation-product-modal',
@@ -27,14 +59,18 @@ export class EditQuotationProductModalComponent implements OnInit {
   private quotationSV = inject(IpQuotationService);
 
   listCondition = computed<StaticListItem[]>(() => this.staticListSV.getListIpQuotationProductCondition());
+  listLeadTimeType = computed<StaticListItem[]>(() => this.staticListSV.getListLeadTimeType());
 
   private _loading = signal<boolean>(false);
   loading = computed<boolean>(() => this._loading());
 
-  qId = computed<string>(() => this.config.data.qId);
-  qProductId = computed<string>(() => this.config.data.qProductId);
-  quotationsQuoteRequestId = computed<string>(() => this.config.data.quotationsQuoteRequestId);
-  quoteRequestProductId = computed<string>(() => this.config.data.quoteRequestProductId);
+  private _data = signal<EditQuotationProductModalData>(
+    normalizeEditQuotationProductModalData(this.config.data)
+  );
+  qId = computed<string>(() => this._data().qId);
+  qProductId = computed<string>(() => this._data().qProductId);
+  quotationsQuoteRequestId = computed<string>(() => this._data().quotationsQuoteRequestId);
+  quoteRequestProductId = computed<string>(() => this._data().quoteRequestProductId);
 
   formProduct!: FormGroup;
 
@@ -43,14 +79,23 @@ export class EditQuotationProductModalComponent implements OnInit {
   }
 
   private buildForm(): void {
+    const { profitMargin, condition, itsLeadTime, leadTimeType } = this._data();
+
     this.formProduct = this.formBuilder.group({
       profitMargin: [
-        this.config.data.profitMargin ?? 0,
+        profitMargin,
         [Validators.required, Validators.min(0.01), Validators.max(100)]
       ],
       condition: [
-        this.config.data.condition ?? null,
+        condition,
         [Validators.required]
+      ],
+      itsLeadTime: [
+        itsLeadTime,
+        [Validators.required, Validators.min(0), Validators.max(MAX_LEAD_TIME)]
+      ],
+      leadTimeType: [
+        { value: leadTimeType, disabled: true }
       ]
     });
   }
@@ -62,11 +107,15 @@ export class EditQuotationProductModalComponent implements OnInit {
     }
 
     this._loading.set(true);
-    const data = {
+    const { profitMargin, condition, itsLeadTime } = this.formProduct.getRawValue() as
+      Pick<IpQuotationProductRequest, 'profitMargin' | 'condition' | 'itsLeadTime'>;
+
+    const data: IpQuotationProductRequest = {
       quotationsQuoteRequestId: this.quotationsQuoteRequestId(),
       quoteRequestProductId: this.quoteRequestProductId(),
-      profitMargin: this.formProduct.value.profitMargin,
-      condition: this.formProduct.value.condition
+      profitMargin,
+      condition,
+      itsLeadTime: itsLeadTime ?? 0
     };
 
     setTimeout(() => {
