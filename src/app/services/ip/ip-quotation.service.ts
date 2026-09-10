@@ -6,10 +6,12 @@ import { BaseAutoCompleteService } from '@services/base-auto-complete-service.se
 import { AuthService } from '@services/security';
 import { catchError, concatMap, map, Observable, of, Subject, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { AvailableForPurchaseOrder, CreateIpQuotationRequest, IpQuotation, IpQuotationFilter, ListIpQuotation, IpQuotationOtherCharge, IpQuotationOtherChargeRequest, IpQuotationImportedOtherCharge, IpQuotationOtherChargeAvailableFromQr, IpQuotationOtherChargeImportRequest, IpQuotationAddQrRequest, IpQuotationRequest, IpQuotationProductBulkRequest, IpQuotationProduct, IpQuotationHistoryResponse } from '@interfaces/ip/quotation';
+import { AvailableForPurchaseOrder, CreateIpQuotationRequest, IpQuotation, IpQuotationFilter, ListIpQuotation, IpQuotationOtherCharge, IpQuotationOtherChargeRequest, IpQuotationImportedOtherCharge, IpQuotationOtherChargeAvailableFromQr, IpQuotationOtherChargeImportRequest, IpQuotationAddQrRequest, IpQuotationRequest, IpQuotationProductBulkRequest, IpQuotationProductRequest, IpQuotationProduct, IpQuotationHistoryResponse } from '@interfaces/ip/quotation';
 import { Page } from '@interfaces/page.model';
+import { ApiErrorResponse, getApiErrorMessage, getApiErrorResponse } from '@interfaces/error-response';
 
 const URL_SERVICES = environment.api_url + 'ip/q';
+const GENERIC_ERROR = 'An unexpected error occurred while processing the Quotation';
 
 @Injectable({
   providedIn: 'root'
@@ -22,6 +24,12 @@ export class IpQuotationService extends  BaseAutoCompleteService<any>{
   //!---------------------------------------
 
   private openAndLockRequestQueue = new Subject<{ quotationId: string, type: TypeTab, observer: any }>();
+
+  private readonly toFormErrorsResponse = (err: unknown): ApiErrorResponse =>
+    getApiErrorResponse(err) ?? { errorMessage: GENERIC_ERROR };
+
+  private readonly toErrorMessage = (err: unknown): string =>
+    getApiErrorMessage(err, GENERIC_ERROR);
 
   constructor() {
     super();
@@ -121,7 +129,7 @@ export class IpQuotationService extends  BaseAutoCompleteService<any>{
     const url  = `${ URL_SERVICES }/${id}`;
     return this.http.put<MessageResponse<IpQuotation>>( url, request, {headers: this.authSV.headers()} )
       .pipe(
-        catchError( err => throwError( () => err.error ))
+        catchError( err => throwError( () => this.toFormErrorsResponse(err) ))
       );
   }
 
@@ -129,7 +137,9 @@ export class IpQuotationService extends  BaseAutoCompleteService<any>{
     const url  = `${ URL_SERVICES }/${id}/change-status?status=${status}`;
     return this.http.patch<MessageResponse<IpQuotation>>( url, {}, {headers: this.authSV.headers()} )
       .pipe(
-        catchError( err => throwError( () => err.error.errorMessage ))
+        // ip.q.incoterms-required y el resto de reglas de transición llegan como 404:
+        // el frontend se guía por errorMessage, nunca por statusCode.
+        catchError( err => throwError( () => this.toErrorMessage(err) ))
       );
   }
 
@@ -137,7 +147,7 @@ export class IpQuotationService extends  BaseAutoCompleteService<any>{
     const url  = `${ URL_SERVICES }/${id}`;
     return this.http.delete<MessageResponse<IpQuotation>>( url, {headers: this.authSV.headers()} )
       .pipe(
-        catchError( err => throwError( () => err.error.errorMessage ))
+        catchError( err => throwError( () => this.toErrorMessage(err) ))
       );
   }
 
@@ -152,7 +162,7 @@ export class IpQuotationService extends  BaseAutoCompleteService<any>{
       concatMap(({ quotationId, type, observer }) =>
         this.http.patch<{data: IpQuotation, isValidOpen: boolean}>(`${URL_SERVICES}/open-lock/${quotationId}?type=${type.toUpperCase()}`, null, {headers: this.authSV.headers()}).pipe(
           catchError(err => {
-            observer.error(err.error.errorMessage);
+            observer.error(this.toErrorMessage(err));
             return of(null);
           })
         ).pipe(
@@ -170,15 +180,15 @@ export class IpQuotationService extends  BaseAutoCompleteService<any>{
     const url = `${URL_SERVICES}/${qId}/product`;
     return this.http.post<MessageResponse<IpQuotationProduct[]>>(url, request, { headers: this.authSV.headers() })
       .pipe(
-        catchError(err => throwError(() => err.error.errorMessage))
+        catchError(err => throwError(() => this.toErrorMessage(err)))
       );
   }
 
-  updateQuotationProduct(qId: string, qProductId: string, qProduct: any): Observable<MessageResponse<any>> {
+  updateQuotationProduct(qId: string, qProductId: string, request: IpQuotationProductRequest): Observable<MessageResponse<IpQuotationProduct>> {
     let url  = `${ URL_SERVICES }/${qId}/product/${qProductId}`;
-    return this.http.put<MessageResponse<any>>( url, qProduct, {headers: this.authSV.headers()} )
+    return this.http.put<MessageResponse<IpQuotationProduct>>( url, request, {headers: this.authSV.headers()} )
       .pipe(
-        catchError( err => throwError( () => err.error.errorMessage ))
+        catchError( err => throwError( () => this.toErrorMessage(err) ))
     );
   }
 
@@ -186,15 +196,15 @@ export class IpQuotationService extends  BaseAutoCompleteService<any>{
     let url  = `${ URL_SERVICES }/${qId}/product/${qProductId}`;
     return this.http.delete<MessageResponse<any>>( url, {headers: this.authSV.headers()} )
       .pipe(
-        catchError( err => throwError( () => err.error.errorMessage ))
+        catchError( err => throwError( () => this.toErrorMessage(err) ))
     );
   }
 
-  getQuotationProduct(qProductId: string, qId: string): Observable<any> {
+  getQuotationProduct(qProductId: string, qId: string): Observable<IpQuotationProduct> {
     let url  = `${ URL_SERVICES }/${qId}/product/${qProductId}`;
-    return this.http.get<any>( url, {headers: this.authSV.headers()} )
+    return this.http.get<IpQuotationProduct>( url, {headers: this.authSV.headers()} )
       .pipe(
-        catchError( err => throwError( () => err.error.errorMessage ))
+        catchError( err => throwError( () => this.toErrorMessage(err) ))
     );
   }
 
