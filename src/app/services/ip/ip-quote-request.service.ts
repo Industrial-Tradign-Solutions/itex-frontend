@@ -266,8 +266,17 @@ export class IpQuoteRequestService extends  BaseAutoCompleteService<any> {
       );
   }
 
-  getListQuoteRequestByClientAvailableToQuotation(clientId: string, viewCompletedQR: boolean, currency: string): Observable<ListIpQuoteRequest[]> {
+  getListQuoteRequestByClientAvailableToQuotation(
+    clientId: string,
+    viewCompletedQR: boolean,
+    currency: string,
+    salesRepId?: string | null
+  ): Observable<ListIpQuoteRequest[]> {
     let url  = `${ URL_SERVICES }/available-for-quotation/${clientId}?view-completed-qr=${viewCompletedQR}&currency=${currency}`;
+    // Filtro opcional: sin salesRepId (o limpiado) se piden los QR de todos los reps.
+    if (salesRepId) {
+      url = `${url}&sales-rep-id=${salesRepId}`;
+    }
     return this.http.get<ListIpQuoteRequest[]>( url, {headers: this.authSV.headers()} )
       .pipe(
         catchError( err => throwError( () => err.error.errorMessage ))
