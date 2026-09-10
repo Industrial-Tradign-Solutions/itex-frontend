@@ -19,6 +19,7 @@
                 <th style="min-width: 22rem">DESCRIPTION</th>
                 <th style="min-width: 12rem">REFERENCE</th>
                 <th style="min-width: 8rem">LEAD TIME</th>
+                <th style="min-width: 10rem">ITS LEAD TIME</th>
                 <th style="min-width: 12rem; text-align: right;" pFrozenColumn alignFrozen="right">UNIT PRICE</th>
                 <th style="min-width: 12rem; text-align: right;" pFrozenColumn alignFrozen="right">EXTENDED PRICE</th>
                 <th style="min-width: 10rem" pFrozenColumn alignFrozen="right">MARGIN</th>
@@ -41,11 +42,27 @@
                 <td>{{ item.description || item.clientDescription }}</td>
                 <td>{{ item.mfrReference || item.clientReference }}</td>
                 <td>{{ item.leadTime + ' ' + item.leadTimeType }}</td>
+                <td>
+                  <p-inputNumber
+                    [(ngModel)]="item.itsLeadTime"
+                    mode="decimal"
+                    [useGrouping]="false"
+                    [min]="0"
+                    [max]="999999"
+                    [minFractionDigits]="0"
+                    [maxFractionDigits]="0"
+                    styleClass="w-full"
+                    pTooltip="Additional ITS lead time, in the same unit as the Quote Request lead time"
+                    tooltipPosition="top"
+                    [disabled]="!item.selected"
+                    (ngModelChange)="onFormChange()">
+                  </p-inputNumber>
+                </td>
                 <td style="text-align: end;" pFrozenColumn alignFrozen="right">
                   {{ currency() }} {{ item.unitPrice | number:'1.2-5' }}
                 </td>
                 <td style="text-align: end;" pFrozenColumn alignFrozen="right">
-                  {{ currency() }} {{ item.extendedPrice | number:'1.2-2' }}
+                  {{ currency() }} {{ item.extendedPrice | number:'1.2-5' }}
                 </td>
                 <td style="text-align: left;" pFrozenColumn alignFrozen="right">
                   <p-inputNumber

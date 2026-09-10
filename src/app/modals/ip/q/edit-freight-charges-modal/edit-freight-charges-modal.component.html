@@ -1,0 +1,86 @@
+@if (formFreight) {
+  <div class="animate__animated animate__fadeIn">
+    <form [formGroup]="formFreight" (ngSubmit)="onSubmit()">
+      <div class="p-fluid">
+        <div class="formgrid grid">
+          <div class="field col-12 md:col-6">
+            <label>
+              Freight Charges
+            </label>
+            <p-inputNumber
+              [inputStyle]="{ 'text-align': 'right' }"
+              mode="currency"
+              [currency]="currency()"
+              currencyDisplay="code"
+              [minFractionDigits]="5"
+              [maxFractionDigits]="5"
+              [max]="999999999999"
+              pTooltip="Freight Charges of the Quote Requests linked to products in this Quotation"
+              tooltipPosition="top"
+              formControlName="freightCharges" />
+          </div>
+          <div class="field col-12 md:col-6">
+            <label>
+              Profit Margin
+              <span class="required">*</span>
+            </label>
+            <p-inputNumber
+              [inputStyle]="{ 'text-align': 'right' }"
+              mode="currency"
+              [currency]="currency()"
+              currencyDisplay="code"
+              [minFractionDigits]="5"
+              [maxFractionDigits]="5"
+              [max]="999999999999"
+              formControlName="profitMarginFreightCharges" />
+          </div>
+          <div class="field col-12 md:col-6">
+            <label>
+              Total Freight Charges
+            </label>
+            <p-inputNumber
+              [inputStyle]="{ 'text-align': 'right' }"
+              mode="currency"
+              [currency]="currency()"
+              currencyDisplay="code"
+              [minFractionDigits]="5"
+              [maxFractionDigits]="5"
+              [max]="999999999999"
+              formControlName="totalFreightCharges" />
+          </div>
+          <div class="field col-12 md:col-6">
+            <label>
+              Freight Charge Miami ITS
+              <span class="required">*</span>
+            </label>
+            <p-inputNumber
+              [inputStyle]="{ 'text-align': 'right' }"
+              mode="currency"
+              [currency]="currency()"
+              currencyDisplay="code"
+              [minFractionDigits]="5"
+              [maxFractionDigits]="5"
+              [max]="999999999999"
+              formControlName="freightChargeMiamiITS" />
+          </div>
+        </div>
+      </div>
+      <div class="mt-3 flex justify-content-end column-gap-4">
+        <p-button
+          icon="pi pi-times-circle"
+          styleClass="p-button-sm p-button-danger"
+          label="Cancel"
+          (onClick)="closeModal()">
+        </p-button>
+        <button
+          pButton
+          type="submit"
+          label="Save"
+          icon="pi pi-save"
+          [disabled]="formFreight.invalid"
+          class="p-button-sm p-button-success">
+        </button>
+      </div>
+    </form>
+  </div>
+}

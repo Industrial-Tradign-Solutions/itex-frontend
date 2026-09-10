@@ -567,7 +567,7 @@
                     </div>
                   </td>
                   <td>
-                    {{product.value.leadTime + ' ' + product.value.leadTimeType}}
+                    {{product.value.totalLeadTime + ' ' + product.value.leadTimeType}}
                   </td>
                   <td style="text-align: center !important;" pFrozenColumn alignFrozen="right">
                     {{ product.value.profitMargin | number:'1.2-2' }}%
@@ -588,7 +588,7 @@
                         {{ product.value.unitPrice | customCurrency:getCurrency():'1.2-5' }}
                       </div>
                       <div class="field col-12 md:col-12" style="text-align: right;">
-                        {{product.value.extendedPrice | customCurrency:getCurrency():'1.2-2'}}
+                        {{product.value.extendedPrice | customCurrency:getCurrency():'1.2-5'}}
                       </div>
                     </div>
                   </td>
@@ -599,7 +599,7 @@
                         {{ product.value.sellingUnitPrice | customCurrency:getCurrency():'1.2-5' }}
                       </div>
                       <div class="field col-12 md:col-12" style="text-align: right;">
-                        {{product.value.sellingExtendedPrice | customCurrency:getCurrency():'1.2-2'}}
+                        {{product.value.sellingExtendedPrice | customCurrency:getCurrency():'1.2-5'}}
                       </div>
                     </div>
                   </td>
@@ -609,7 +609,7 @@
                         {{ product.value.unitProfit != null ? (product.value.unitProfit | customCurrency:getCurrency():'1.2-5') : '-' }}
                       </div>
                       <div class="field col-12 md:col-12" style="text-align: right;">
-                        {{ product.value.totalProfit != null ? (product.value.totalProfit | customCurrency:getCurrency():'1.2-2') : '-' }}
+                        {{ product.value.totalProfit != null ? (product.value.totalProfit | customCurrency:getCurrency():'1.2-5') : '-' }}
                       </div>
                     </div>
                   </td>
@@ -720,7 +720,7 @@
                   </label>
                 </p-floatLabel>
               </div>
-              <div class="field col-12 md:col-12 mt-3">
+              <div class="field col-12 md:col-10 mt-3">
                 <p-floatLabel>
                   <p-inputNumber
                     [inputStyle]="{ 'text-align': 'right' }"
@@ -731,11 +731,23 @@
                     [minFractionDigits]="5"
                     [maxFractionDigits]="5"
                     [max]="999999999999"
-                    formControlName="freightCharges" />
+                    formControlName="totalFreightCharges" />
                   <label>
                     Freight Charges
                   </label>
                 </p-floatLabel>
+              </div>
+              <div class="field col-12 md:col-2 mt-3" style="margin-left: -1rem;">
+                <button pButton
+                  icon="pi pi-pencil"
+                  severity="warning"
+                  [outlined]="true"
+                  pTooltip="Edit Freight Charges"
+                  tooltipPosition="left"
+                  (click)="openModalFreightCharges()"
+                  [disabled]="tabItem.type !== 'edit'"
+                  type="button">
+                </button>
               </div>
               <div class="field col-12 md:col-10 mt-3">
                 <p-floatLabel>

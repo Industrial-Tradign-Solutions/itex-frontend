@@ -3,12 +3,13 @@ export { IpDocumentStatus, IpDocumentStatusFilter } from '../document-status.typ
 export { CreateIpQuotationRequest } from './createIpQuotation.type';
 export { IpQuotationFilter } from './ipQuotationFilter.type';
 export { ListIpQuotation } from './listIpQ.type';
-export { IpQuotationRequest, mapToIpQuotationRequest, formatDateToSend } from './ipQuotationRequest.type';
+export { IpQuotationRequest, IpQuotationFormValue, mapToIpQuotationRequest, formatDateToSend } from './ipQuotationRequest.type';
 export * from './ipQuotationProduct.type';
 export * from './ipQuotationProductBulkRequest.type';
 export * from './bulkProductTableItem.type';
+export * from './ipQuotationFreight.type';
 export { IpQuotationOtherCharge } from './IpQuotationOtherCharge.type';
-export { IpQuotationOtherChargeRequest, mapToIpQOtherChargeRequest } from './IpQuotationOtherChargeRequest.type';
+export { IpQuotationOtherChargeRequest, IpQuotationOtherChargeFormValue, mapToIpQOtherChargeRequest } from './IpQuotationOtherChargeRequest.type';
 export { IpQuotationImportedOtherCharge } from './IpQuotationImportedOtherCharge.type';
 export { IpQuotationOtherChargeAvailableFromQr } from './IpQuotationOtherChargeAvailableFromQr.type';
 export { IpQuotationOtherChargeImportItem, IpQuotationOtherChargeImportRequest } from './IpQuotationOtherChargeImportRequest.type';
